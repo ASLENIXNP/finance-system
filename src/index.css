@@ -20,7 +20,13 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm;
+    margin: 6mm 10mm;
+  }
+
+  /* Disable animations and transitions in print */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
   }
 
   /* Completely remove non-printable chrome from the document layout */
@@ -46,7 +52,7 @@
     width: 100% !important;
     min-width: 100% !important;
     height: auto !important;
-    min-height: 100% !important;
+    min-height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
@@ -64,7 +70,8 @@
   .custom-scrollbar,
   .max-w-7xl,
   .max-w-3xl,
-  .max-w-xl {
+  .max-w-xl,
+  .animate-in {
     display: block !important;
     position: static !important;
     width: 100% !important;
@@ -77,6 +84,7 @@
     box-shadow: none !important;
     border: none !important;
     background: transparent !important;
+    transform: none !important;
   }
 
   /* Reset modal containers if printing from a modal (e.g. payslip) */
@@ -114,26 +122,34 @@
     visibility: visible;
   }
 
-  /* Printable containers styling */
-  #printable-invoice,
-  #printable-payslip {
+  /* Printable invoice - strictly single page */
+  #printable-invoice {
     display: block !important;
     position: static !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: auto !important;
+    height: auto !important;
+    max-height: 280mm !important;
     margin: 0 !important;
     padding: 0 !important;
     box-sizing: border-box !important;
     background: white !important;
     box-shadow: none !important;
     border: none !important;
-    overflow: visible !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  #printable-invoice > *,
-  #printable-payslip > * {
-    page-break-inside: avoid;
+  #printable-invoice > * {
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   #printable-invoice input,
@@ -148,20 +164,44 @@
     outline: none !important;
   }
 
+  /* Compact 1-Page Layout rules for Invoice */
   #printable-invoice .print-header {
-    padding: 0 0 4mm !important;
-    margin: 0 !important;
-    border-bottom: 2px solid #1f2937 !important;
+    padding: 0 0 2.5mm !important;
+    margin: 0 0 2.5mm !important;
+    border-bottom: 2px solid #0f172a !important;
+  }
+
+  #printable-invoice .print-header > div {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+  }
+
+  #printable-invoice .print-header img {
+    height: 48px !important;
+    width: auto !important;
+    object-fit: contain !important;
   }
 
   #printable-invoice .print-billing {
-    padding: 4mm 0 !important;
+    padding: 0 0 2.5mm !important;
+    margin: 0 0 2.5mm !important;
     background: transparent !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
+  #printable-invoice .print-billing > div {
+    display: grid !important;
+    grid-template-columns: 1.25fr 0.75fr !important;
+    gap: 16px !important;
+    width: 100% !important;
   }
 
   #printable-invoice .print-items {
-    padding: 4mm 0 !important;
+    padding: 0 !important;
+    margin: 0 0 2.5mm !important;
     overflow: visible !important;
   }
 
@@ -172,28 +212,68 @@
     table-layout: auto !important;
   }
 
-  #printable-invoice .print-items th,
+  #printable-invoice .print-items th {
+    padding: 3px 4px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border-bottom: 1.5px solid #0f172a !important;
+  }
+
   #printable-invoice .print-items td {
-    padding: 5px 4px !important;
+    padding: 3px 4px !important;
+    font-size: 11px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
     word-break: break-word;
   }
 
   #printable-invoice .print-summary {
-    padding: 4mm 0 2mm !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    padding: 2.5mm 0 1.5mm !important;
+    margin: 0 0 2.5mm !important;
     background: transparent !important;
-    border-top: 1px solid #d1d5db !important;
+    border-top: 1px solid #cbd5e1 !important;
   }
 
   #printable-invoice .print-signatures {
-    margin-top: 4mm !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    margin-top: 3mm !important;
     padding: 0 !important;
   }
 
   #printable-invoice .print-footer {
-    margin-top: 4mm !important;
-    padding-top: 3mm !important;
-    padding-bottom: 3mm !important;
-    border-top: 1px solid #d1d5db !important;
+    margin-top: 2mm !important;
+    padding-top: 2mm !important;
+    padding-bottom: 0 !important;
+    border-top: 1px solid #cbd5e1 !important;
+    font-size: 10px !important;
+    text-align: center !important;
+  }
+
+  /* Printable payslip styling */
+  #printable-payslip {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
 

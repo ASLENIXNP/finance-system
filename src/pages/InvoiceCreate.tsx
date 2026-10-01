@@ -137,7 +137,7 @@ const InvoiceCreate = () => {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 print:p-0 print:m-0 print:pb-0 print:overflow-visible">
       <div className="flex justify-between items-center mb-6 no-print">
         <div>
           <h2 className="text-2xl font-bold text-primary">Create Invoice</h2>
@@ -178,26 +178,25 @@ const InvoiceCreate = () => {
       </div>
 
       <div id="printable-invoice" className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:shadow-none print:border-none print:rounded-none print:p-0 print:m-0 print:w-full">
-        <div className="print-header p-8 md:p-12 border-b border-slate-100 print:border-b-2 print:border-slate-800 print:p-0 print:pb-4">
-          <div className="flex justify-between items-start flex-col md:flex-row print:flex-row gap-8 print:gap-4">
-            <div className="flex items-center gap-6">
-              <img src="/logo.png" alt="Aslenix Logo" className="h-20 w-auto object-contain" />
+        <div className="print-header p-8 md:p-12 border-b border-slate-100 print:border-b-2 print:border-slate-800 print:p-0 print:pb-2">
+          <div className="flex justify-between items-start flex-row gap-6 print:gap-4 w-full">
+            <div className="flex items-center gap-4">
+              <img src="/logo.png" alt="Aslenix Logo" className="h-16 w-auto object-contain print:h-12" />
               <div>
-                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-primary uppercase print:text-black">
+                <h1 className="text-xl md:text-2xl font-black tracking-tight text-primary uppercase print:text-black">
                   ASLENIX TECH AND SOLUTION
                 </h1>
-                <p className="text-slate-500 font-medium print:text-slate-700">Budhanagar, Kathmandu, Nepal</p>
-                <div className="text-sm text-slate-500 mt-2 space-y-1 print:text-slate-600">
-                  <p><span className="font-medium">PAN:</span> 123456789 (Placeholder)</p>
-                  <p><span className="font-medium">Phone:</span> +977 1-4000000</p>
-                  <p><span className="font-medium">Email:</span> contact@aslenix.com</p>
-                  <p><span className="font-medium">Web:</span> www.aslenix.com</p>
+                <p className="text-slate-500 font-medium text-xs print:text-slate-700">Budhanagar, Kathmandu, Nepal</p>
+                <div className="text-xs text-slate-500 mt-1 flex flex-wrap gap-x-3 print:text-slate-600">
+                  <span><span className="font-medium">PAN:</span> 123456789 (Placeholder)</span>
+                  <span><span className="font-medium">Phone:</span> +977 1-4000000</span>
+                  <span><span className="font-medium">Email:</span> contact@aslenix.com</span>
                 </div>
               </div>
             </div>
-            <div className="md:text-right print:text-right w-full md:w-auto print:w-auto">
-              <h2 className="text-4xl font-black text-slate-200 uppercase tracking-widest print:text-slate-400 mb-6 print:mb-3">INVOICE</h2>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-left md:text-right print:text-right">
+            <div className="text-right">
+              <h2 className="text-3xl font-black text-slate-200 uppercase tracking-widest print:text-slate-400 mb-2 print:mb-1">INVOICE</h2>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-right">
                 <div className="font-semibold text-slate-500">Invoice No:</div>
                 <div className="font-bold text-primary print:text-black">{invoiceNumber}</div>
 
@@ -266,12 +265,12 @@ const InvoiceCreate = () => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 print:shadow-none">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Payment Status</h3>
-              <div className="flex items-center gap-3 mb-6">
-                <span className="px-3 py-1 bg-red-50 text-red-600 rounded-full text-sm font-bold border border-red-100 uppercase tracking-wider print:border-red-600">Unpaid</span>
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 print:shadow-none print:p-3 print:rounded-lg">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 print:mb-2 print:text-xs">Payment Status</h3>
+              <div className="flex items-center gap-3 mb-6 print:mb-2">
+                <span className="px-3 py-1 bg-red-50 text-red-600 rounded-full text-sm font-bold border border-red-100 uppercase tracking-wider print:border-red-600 print:text-xs print:py-0.5">Unpaid</span>
               </div>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm print:space-y-1 print:text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Total Amount:</span>
                   <span className="font-bold text-primary">रु. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
@@ -280,57 +279,57 @@ const InvoiceCreate = () => {
                   <span className="text-slate-500 font-medium">Amount Paid:</span>
                   <span className="font-bold text-primary">रु. 0.00</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-slate-100">
+                <div className="flex justify-between pt-2 border-t border-slate-100 print:pt-1">
                   <span className="text-slate-700 font-bold">Balance Due:</span>
-                  <span className="font-bold text-red-600 text-base">रु. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  <span className="font-bold text-red-600 text-base print:text-sm">रु. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="print-items p-8 md:p-12 overflow-x-auto print:p-0 print:py-3 print:overflow-visible">
+        <div className="print-items p-8 md:p-12 overflow-x-auto print:p-0 print:py-1 print:overflow-visible">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b-2 border-slate-200 print:border-black text-sm uppercase tracking-wider text-slate-400 font-bold">
-                <th className="pb-4 w-10 text-center print:pb-2 print:text-black">S.N.</th>
-                <th className="pb-4 w-auto print:pb-2 print:text-black">Item Details</th>
-                <th className="pb-4 text-center w-16 print:pb-2 print:text-black">Qty</th>
-                <th className="pb-4 text-center w-16 print:pb-2 print:text-black">Unit</th>
-                <th className="pb-4 text-right w-24 print:pb-2 print:text-black whitespace-nowrap">Rate (Rs)</th>
-                <th className="pb-4 text-right w-20 print:pb-2 print:text-black whitespace-nowrap">Disc (Rs)</th>
-                <th className="pb-4 text-right w-16 print:pb-2 print:text-black whitespace-nowrap">Tax (%)</th>
-                <th className="pb-4 text-right w-28 print:pb-2 print:text-black whitespace-nowrap">Amount (Rs)</th>
+                <th className="pb-4 w-10 text-center print:pb-1.5 print:text-black print:text-[10px]">S.N.</th>
+                <th className="pb-4 w-auto print:pb-1.5 print:text-black print:text-[10px]">Item Details</th>
+                <th className="pb-4 text-center w-16 print:pb-1.5 print:text-black print:text-[10px]">Qty</th>
+                <th className="pb-4 text-center w-16 print:pb-1.5 print:text-black print:text-[10px]">Unit</th>
+                <th className="pb-4 text-right w-24 print:pb-1.5 print:text-black whitespace-nowrap print:text-[10px]">Rate (Rs)</th>
+                <th className="pb-4 text-right w-20 print:pb-1.5 print:text-black whitespace-nowrap print:text-[10px]">Disc (Rs)</th>
+                <th className="pb-4 text-right w-16 print:pb-1.5 print:text-black whitespace-nowrap print:text-[10px]">Tax (%)</th>
+                <th className="pb-4 text-right w-28 print:pb-1.5 print:text-black whitespace-nowrap print:text-[10px]">Amount (Rs)</th>
                 <th className="pb-4 w-12 print:hidden"></th>
               </tr>
             </thead>
-            <tbody className="text-slate-700 text-sm align-top">
+            <tbody className="text-slate-700 text-sm align-top print:text-xs">
               {items.map((item, index) => (
                 <tr key={item.id} className="border-b border-slate-100 group">
-                  <td className="py-4 text-center font-medium text-slate-400">{index + 1}</td>
-                  <td className="py-4 pr-4">
+                  <td className="py-4 text-center font-medium text-slate-400 print:py-1.5">{index + 1}</td>
+                  <td className="py-4 pr-4 print:py-1.5">
                     <input type="text" className="w-full font-bold text-primary bg-transparent outline-none print:p-0" defaultValue={item.name} placeholder="Item Name" />
-                    <textarea className="w-full text-slate-500 text-xs mt-1 bg-transparent outline-none resize-none h-10 print:h-auto print:p-0" defaultValue={item.desc} placeholder="Item Description" />
+                    <textarea className="w-full text-slate-500 text-xs mt-1 bg-transparent outline-none resize-none h-10 print:h-auto print:p-0 print:text-[10px]" defaultValue={item.desc} placeholder="Item Description" />
                   </td>
-                  <td className="py-4 px-2">
+                  <td className="py-4 px-2 print:py-1.5">
                     <input type="number" className="w-full text-center bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:border-none print:bg-transparent print:p-0" defaultValue={item.qty} />
                   </td>
-                  <td className="py-4 px-2">
+                  <td className="py-4 px-2 print:py-1.5">
                     <input type="text" className="w-full text-center bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:border-none print:bg-transparent print:p-0" defaultValue={item.unit} />
                   </td>
-                  <td className="py-4 px-2">
+                  <td className="py-4 px-2 print:py-1.5">
                     <input type="number" className="w-full text-right bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:border-none print:bg-transparent print:p-0" defaultValue={item.rate} />
                   </td>
-                  <td className="py-4 px-2">
+                  <td className="py-4 px-2 print:py-1.5">
                     <input type="number" className="w-full text-right bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:border-none print:bg-transparent print:p-0" defaultValue={item.discount} />
                   </td>
-                  <td className="py-4 px-2">
+                  <td className="py-4 px-2 print:py-1.5">
                     <select className="w-full text-right bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:appearance-none print:border-none print:bg-transparent print:p-0" defaultValue="13">
                       <option value="0">0%</option>
                       <option value="13">13% (VAT)</option>
                     </select>
                   </td>
-                  <td className="py-4 text-right font-bold text-primary">
+                  <td className="py-4 text-right font-bold text-primary print:py-1.5">
                     {((item.qty * item.rate) - item.discount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="py-4 text-center print:hidden">
@@ -350,66 +349,66 @@ const InvoiceCreate = () => {
           </div>
         </div>
 
-        <div className="print-summary p-8 md:p-12 flex flex-col md:flex-row print:flex-row justify-between items-start gap-12 print:gap-8 bg-slate-50/30 print:bg-transparent border-t border-slate-100 print:border-black print:p-0 print:py-4">
-          <div className="w-full md:w-1/2 print:w-1/2 space-y-6 print:space-y-3">
+        <div className="print-summary p-8 md:p-12 flex flex-col md:flex-row print:flex-row justify-between items-start gap-12 print:gap-8 bg-slate-50/30 print:bg-transparent border-t border-slate-100 print:border-black print:p-0 print:py-2">
+          <div className="w-full md:w-1/2 print:w-1/2 space-y-6 print:space-y-2">
             <div>
-              <h4 className="text-sm font-bold text-slate-700 mb-2">Bank Details</h4>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 text-sm print:border-none print:p-0 print:bg-transparent">
-                <p><span className="font-semibold text-slate-500 w-32 inline-block">Bank Name:</span> <span className="font-medium text-primary">Global IME Bank</span></p>
-                <p><span className="font-semibold text-slate-500 w-32 inline-block">Account Name:</span> <span className="font-medium text-primary">Aslenix Tech and Solution</span></p>
-                <p><span className="font-semibold text-slate-500 w-32 inline-block">Account No:</span> <span className="font-medium text-primary">01234567890123</span></p>
-                <p><span className="font-semibold text-slate-500 w-32 inline-block">Branch:</span> <span className="font-medium text-primary">Baneshwor Branch</span></p>
+              <h4 className="text-sm font-bold text-slate-700 mb-2 print:mb-1 print:text-xs">Bank Details</h4>
+              <div className="bg-white p-4 rounded-xl border border-slate-200 text-sm print:border-none print:p-0 print:bg-transparent print:text-xs">
+                <p><span className="font-semibold text-slate-500 w-28 inline-block">Bank Name:</span> <span className="font-medium text-primary">Global IME Bank</span></p>
+                <p><span className="font-semibold text-slate-500 w-28 inline-block">Account Name:</span> <span className="font-medium text-primary">Aslenix Tech and Solution</span></p>
+                <p><span className="font-semibold text-slate-500 w-28 inline-block">Account No:</span> <span className="font-medium text-primary">01234567890123</span></p>
+                <p><span className="font-semibold text-slate-500 w-28 inline-block">Branch:</span> <span className="font-medium text-primary">Baneshwor Branch</span></p>
               </div>
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-700 mb-2">Terms & Conditions</h4>
+              <h4 className="text-sm font-bold text-slate-700 mb-2 print:mb-1 print:text-xs">Terms & Conditions</h4>
               <textarea
-                className="w-full text-xs text-slate-500 bg-transparent outline-none resize-none h-24 print:h-auto"
+                className="w-full text-xs text-slate-500 bg-transparent outline-none resize-none h-24 print:h-12 print:text-[10px]"
                 defaultValue={"1. Payment is required within 15 days of invoice date.\n2. Late payments may be subject to a 2% monthly fee.\n3. All disputes are subject to Kathmandu jurisdiction."}
               />
             </div>
           </div>
 
-          <div className="w-full md:w-80 print:w-72 space-y-3 print:space-y-1.5">
-            <div className="flex justify-between text-sm">
+          <div className="w-full md:w-80 print:w-72 space-y-3 print:space-y-1">
+            <div className="flex justify-between text-sm print:text-xs">
               <span className="font-semibold text-slate-500">Subtotal:</span>
               <span className="font-medium text-primary">रु. {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             {totalDiscount > 0 && (
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm print:text-xs">
                 <span className="font-semibold text-slate-500">Discount:</span>
                 <span className="font-medium text-emerald-600">- रु. {totalDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             )}
-            <div className="flex justify-between text-sm pb-3 border-b border-slate-200">
+            <div className="flex justify-between text-sm pb-3 border-b border-slate-200 print:pb-1 print:text-xs">
               <span className="font-semibold text-slate-500">Taxable Amount:</span>
               <span className="font-medium text-primary">रु. {taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm print:text-xs">
               <span className="font-semibold text-slate-500">VAT (13%):</span>
               <span className="font-medium text-primary">रु. {totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
-            <div className="flex justify-between items-center pt-4 border-t-2 border-slate-800 print:border-black mt-2">
-              <span className="font-bold text-lg text-primary">Grand Total:</span>
-              <span className="font-black text-2xl text-accent print:text-black">रु. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <div className="flex justify-between items-center pt-4 border-t-2 border-slate-800 print:border-black mt-2 print:mt-1 print:pt-1">
+              <span className="font-bold text-lg text-primary print:text-sm">Grand Total:</span>
+              <span className="font-black text-2xl text-accent print:text-black print:text-base">रु. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>
 
-        <div className="print-signatures p-8 md:p-12 pt-0 mt-8 md:mt-16 print:mt-6 flex justify-between items-end print:p-0 print:pt-4">
-          <div className="text-center w-48">
-            <div className="border-b border-slate-300 h-10 mb-2"></div>
-            <p className="text-sm font-bold text-primary">Authorized Signature</p>
-            <p className="text-xs text-slate-500">For Aslenix Tech and Solution</p>
+        <div className="print-signatures p-8 md:p-12 pt-0 mt-8 md:mt-16 print:mt-3 flex justify-between items-end print:p-0 print:pt-2">
+          <div className="text-center w-48 print:w-36">
+            <div className="border-b border-slate-300 h-10 mb-2 print:h-6 print:mb-1"></div>
+            <p className="text-sm font-bold text-primary print:text-xs">Authorized Signature</p>
+            <p className="text-xs text-slate-500 print:text-[10px]">For Aslenix Tech and Solution</p>
           </div>
-          <div className="text-center w-48">
-            <div className="border-b border-slate-300 h-10 mb-2"></div>
-            <p className="text-sm font-bold text-primary">Customer Signature</p>
-            <p className="text-xs text-slate-500">Received in good condition</p>
+          <div className="text-center w-48 print:w-36">
+            <div className="border-b border-slate-300 h-10 mb-2 print:h-6 print:mb-1"></div>
+            <p className="text-sm font-bold text-primary print:text-xs">Customer Signature</p>
+            <p className="text-xs text-slate-500 print:text-[10px]">Received in good condition</p>
           </div>
         </div>
 
-        <div className="print-footer bg-slate-800 text-slate-400 text-center py-4 text-xs mt-8 print:bg-transparent print:text-black print:border-t print:border-slate-300">
+        <div className="print-footer bg-slate-800 text-slate-400 text-center py-4 text-xs mt-8 print:bg-transparent print:text-black print:border-t print:border-slate-300 print:mt-2 print:py-1 print:text-[10px]">
           Thank you for your business!
         </div>
       </div>
