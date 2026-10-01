@@ -27,7 +27,11 @@ import {
   Sparkles,
   X,
   Briefcase,
-  Hash
+  Hash,
+  Camera,
+  Upload,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
@@ -48,6 +52,7 @@ export interface Employee {
   bank_branch: string;
   joining_date: string;
   is_active: boolean;
+  photo_url?: string;
   notes?: string;
 }
 
@@ -153,6 +158,25 @@ export const calculatePayrollValues = (
   };
 };
 
+export const DEFAULT_PRESET_PHOTOS = [
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80',
+];
+
+export const getEmployeePhoto = (emp: { name: string; photo_url?: string }) => {
+  if (emp.photo_url && emp.photo_url.trim() !== '') {
+    return emp.photo_url;
+  }
+  // Assign a deterministic high-resolution portrait from presets if not explicitly provided
+  const sum = (emp.name || 'User').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const idx = Math.abs(sum) % DEFAULT_PRESET_PHOTOS.length;
+  return DEFAULT_PRESET_PHOTOS[idx];
+};
+
 const initialEmployees: Employee[] = [
   {
     id: 'EMP-001',
@@ -169,6 +193,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'Putalisadak',
     joining_date: '2081-10-01',
     is_active: true,
+    photo_url: DEFAULT_PRESET_PHOTOS[1],
   },
   {
     id: 'EMP-002',
@@ -185,6 +210,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'New Baneshwor',
     joining_date: '2081-11-15',
     is_active: true,
+    photo_url: DEFAULT_PRESET_PHOTOS[4],
   },
   {
     id: 'EMP-003',
@@ -201,6 +227,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'Thamel',
     joining_date: '2082-01-01',
     is_active: true,
+    photo_url: DEFAULT_PRESET_PHOTOS[3],
   },
   {
     id: 'EMP-004',
@@ -217,6 +244,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'Lalitpur',
     joining_date: '2082-03-01',
     is_active: true,
+    photo_url: DEFAULT_PRESET_PHOTOS[2],
   },
   {
     id: 'EMP-005',
@@ -233,6 +261,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'Lazimpat',
     joining_date: '2082-05-15',
     is_active: true,
+    photo_url: DEFAULT_PRESET_PHOTOS[5],
   }
 ];
 
@@ -512,8 +541,33 @@ const Payroll = () => {
     bank_branch: '',
     joining_date: getTodayBsDate(),
     is_active: true,
+    photo_url: '',
     notes: ''
   });
+
+  // Employee Directory Filters & View Mode
+  const [employeeViewMode, setEmployeeViewMode] = useState<'cards' | 'table'>('cards');
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
+  const [employeeDeptFilter, setEmployeeDeptFilter] = useState('All');
+
+  // Filtered employees for Employee Directory Tab
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(emp => {
+      const q = employeeSearchTerm.toLowerCase().trim();
+      const matchesSearch = !q || (
+        emp.name.toLowerCase().includes(q) ||
+        emp.employee_code.toLowerCase().includes(q) ||
+        emp.designation.toLowerCase().includes(q) ||
+        emp.department.toLowerCase().includes(q) ||
+        (emp.email && emp.email.toLowerCase().includes(q)) ||
+        (emp.phone && emp.phone.includes(q)) ||
+        (emp.pan_number && emp.pan_number.toLowerCase().includes(q)) ||
+        (emp.bank_name && emp.bank_name.toLowerCase().includes(q))
+      );
+      const matchesDept = employeeDeptFilter === 'All' || emp.department === employeeDeptFilter;
+      return matchesSearch && matchesDept;
+    });
+  }, [employees, employeeSearchTerm, employeeDeptFilter]);
 
   // Save to localStorage
   const saveEmployees = (updated: Employee[]) => {
@@ -725,7 +779,10 @@ const Payroll = () => {
   const handleOpenEmployeeModal = (emp?: Employee) => {
     if (emp) {
       setEditingEmployeeId(emp.id);
-      setEmployeeFormData({ ...emp });
+      setEmployeeFormData({ 
+        ...emp,
+        photo_url: emp.photo_url || ''
+      });
     } else {
       setEditingEmployeeId(null);
       const nextCode = `EMP-${String(employees.length + 1).padStart(3, '0')}`;
@@ -741,8 +798,9 @@ const Payroll = () => {
         bank_name: 'Nabil Bank',
         bank_account_no: '',
         bank_branch: 'Kathmandu',
-        joining_date: new Date().toISOString().split('T')[0],
+        joining_date: getTodayBsDate(),
         is_active: true,
+        photo_url: '',
         notes: ''
       });
     }
@@ -750,8 +808,10 @@ const Payroll = () => {
   };
 
   // Save Employee Profile & Fixed Salary
-  const handleSaveEmployee = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveEmployee = (e?: React.FormEvent) => {
+    if (e?.preventDefault) {
+      e.preventDefault();
+    }
     if (!employeeFormData.name || !employeeFormData.designation) {
       alert('Name and designation are required.');
       return;
@@ -763,7 +823,8 @@ const Payroll = () => {
           return {
             ...emp,
             ...(employeeFormData as Employee),
-            fixed_salary: Number(employeeFormData.fixed_salary) || 0
+            fixed_salary: Number(employeeFormData.fixed_salary) || 0,
+            photo_url: employeeFormData.photo_url ?? emp.photo_url
           };
         }
         return emp;
@@ -783,8 +844,9 @@ const Payroll = () => {
         bank_name: employeeFormData.bank_name || 'Nabil Bank',
         bank_account_no: employeeFormData.bank_account_no || '',
         bank_branch: employeeFormData.bank_branch || '',
-        joining_date: employeeFormData.joining_date || new Date().toISOString().split('T')[0],
+        joining_date: employeeFormData.joining_date || getTodayBsDate(),
         is_active: employeeFormData.is_active ?? true,
+        photo_url: employeeFormData.photo_url || '',
         notes: employeeFormData.notes || ''
       };
       saveEmployees([...employees, newEmp]);
@@ -1431,124 +1493,463 @@ const Payroll = () => {
 
       {/* TAB 2: EMPLOYEES & FIXED SALARY DIRECTORY */}
       {activeTab === 'employees' && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-            <div>
-              <h2 className="text-base font-bold text-primary">Employee Salary Directory</h2>
-              <p className="text-xs text-slate-500">Employee profiles, bank accounts, and monthly fixed base salaries set by the accountant.</p>
+        <div className="space-y-5">
+          {/* Header & Controls Toolbar */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">Employee Directory & Compensation</h2>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">
+                    {filteredEmployees.length} {filteredEmployees.length === 1 ? 'Staff Member' : 'Staff Members'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Individual profile containers with photos, designation, bank accounts, and monthly fixed base salaries.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+                {/* View Mode Toggle: Cards vs Table */}
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+                  <button
+                    type="button"
+                    onClick={() => setEmployeeViewMode('cards')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      employeeViewMode === 'cards'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="Card Containers View"
+                  >
+                    <LayoutGrid size={14} />
+                    <span>Cards</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEmployeeViewMode('table')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      employeeViewMode === 'table'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="List Table View"
+                  >
+                    <List size={14} />
+                    <span>Table</span>
+                  </button>
+                </div>
+
+                {/* Add New Employee Button */}
+                <button
+                  onClick={() => handleOpenEmployeeModal()}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-slate-800 hover:to-slate-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/30 active:scale-[0.98] cursor-pointer border border-slate-700/60 ml-auto lg:ml-0"
+                >
+                  <UserPlus size={17} className="text-blue-400" />
+                  <span>Add New Employee</span>
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => handleOpenEmployeeModal()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-slate-800 hover:to-slate-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/30 active:scale-[0.98] cursor-pointer border border-slate-700/60"
-            >
-              <UserPlus size={17} className="text-blue-400" />
-              <span>Add New Employee</span>
-            </button>
+
+            {/* Filter & Search Bar */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-3 border-t border-slate-100">
+              <div className="relative flex-1 w-full">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search by name, ID code, designation, email, phone, or bank..."
+                  value={employeeSearchTerm}
+                  onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-medium text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                />
+                {employeeSearchTerm && (
+                  <button
+                    onClick={() => setEmployeeSearchTerm('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Filter size={15} className="text-slate-400 shrink-0" />
+                <select
+                  value={employeeDeptFilter}
+                  onChange={(e) => setEmployeeDeptFilter(e.target.value)}
+                  className="w-full sm:w-44 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-accent/20 cursor-pointer"
+                >
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept === 'All' ? 'All Departments' : dept}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-slate-500 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-100">
-                  <tr>
-                    <th className="px-5 py-3.5">Code & Name</th>
-                    <th className="px-4 py-3.5">Designation & Dept</th>
-                    <th className="px-4 py-3.5">Contact Details</th>
-                    <th className="px-4 py-3.5">PAN Number</th>
-                    <th className="px-4 py-3.5">Bank Information</th>
-                    <th className="px-4 py-3.5 text-right">Fixed Monthly Salary</th>
-                    <th className="px-4 py-3.5 text-center">Status</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {employees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-slate-50/70 transition-colors">
-                      {/* Code & Name */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-accent/10 text-accent font-bold flex items-center justify-center text-xs">
-                            {emp.name.split(' ').map(n => n[0]).join('')}
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
+                <User size={18} />
+              </div>
+              <div>
+                <p className="text-[11px] font-medium text-slate-500 uppercase">Total Profiles</p>
+                <p className="text-base font-bold text-slate-900">{employees.length}</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
+                <CheckCircle2 size={18} />
+              </div>
+              <div>
+                <p className="text-[11px] font-medium text-slate-500 uppercase">Active Staff</p>
+                <p className="text-base font-bold text-emerald-700">
+                  {employees.filter(e => e.is_active).length}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                <Building2 size={18} />
+              </div>
+              <div>
+                <p className="text-[11px] font-medium text-slate-500 uppercase">Departments</p>
+                <p className="text-base font-bold text-indigo-700">
+                  {new Set(employees.map(e => e.department)).size}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-sm">
+                <Banknote size={18} />
+              </div>
+              <div>
+                <p className="text-[11px] font-medium text-slate-500 uppercase">Monthly Payroll</p>
+                <p className="text-sm font-bold text-slate-900 truncate">
+                  {formatNPR(employees.reduce((acc, e) => acc + (e.is_active ? e.fixed_salary : 0), 0))}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* VIEW 1: INDIVIDUAL EMPLOYEE CARD CONTAINERS WITH PHOTOS */}
+          {employeeViewMode === 'cards' && (
+            <div>
+              {filteredEmployees.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                    <User size={28} />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800">No employees found</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    No employee profiles match the current filter or search criteria.
+                  </p>
+                  <button
+                    onClick={() => { setEmployeeSearchTerm(''); setEmployeeDeptFilter('All'); }}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredEmployees.map((emp) => {
+                    const photoSrc = getEmployeePhoto(emp);
+                    return (
+                      <div
+                        key={emp.id}
+                        className="bg-white rounded-2xl border border-slate-200/90 hover:border-blue-400/60 shadow-sm hover:shadow-xl transition-all duration-300 p-5 flex flex-col justify-between group relative overflow-hidden"
+                      >
+                        {/* Top decorative accent bar */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 opacity-90" />
+
+                        <div>
+                          {/* Card Header: Profile Photo, Name, Code & Status */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3.5">
+                              {/* Photo Avatar with Status Indicator */}
+                              <div className="relative shrink-0">
+                                <img
+                                  src={photoSrc}
+                                  alt={emp.name}
+                                  className="w-16 h-16 rounded-2xl object-cover ring-2 ring-white shadow-md border border-slate-200/80 group-hover:scale-105 transition-transform duration-200"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=0284c7&color=fff&size=128`;
+                                  }}
+                                />
+                                <span
+                                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                                    emp.is_active ? 'bg-emerald-500 ring-2 ring-emerald-100' : 'bg-slate-400'
+                                  }`}
+                                  title={emp.is_active ? 'Active Employee' : 'Inactive'}
+                                />
+                              </div>
+
+                              <div className="min-w-0">
+                                <h3 className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors leading-tight line-clamp-1">
+                                  {emp.name}
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                  <span className="px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
+                                    {emp.employee_code}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                    {emp.department}
+                                  </span>
+                                </div>
+                                <p className="text-xs font-semibold text-slate-600 mt-1 line-clamp-1">
+                                  {emp.designation}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Status Pill */}
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
+                              emp.is_active
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-slate-100 text-slate-600 border border-slate-200'
+                            }`}>
+                              {emp.is_active ? 'Active' : 'Inactive'}
+                            </span>
                           </div>
-                          <div>
-                            <p className="font-semibold text-slate-900 leading-tight">{emp.name}</p>
-                            <span className="text-xs font-mono font-medium text-slate-400">{emp.employee_code}</span>
+
+                          {/* Fixed Monthly Base Salary Showcase Container */}
+                          <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-slate-50/60 border border-emerald-200/80 shadow-xs">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-950 flex items-center gap-1">
+                                <Sparkles size={13} className="text-emerald-600" />
+                                Fixed Monthly Salary
+                              </span>
+                              <span className="text-[10px] font-semibold text-emerald-700 bg-white/80 px-2 py-0.5 rounded border border-emerald-200">
+                                Benchmark
+                              </span>
+                            </div>
+                            <div className="flex items-baseline justify-between">
+                              <p className="text-xl font-bold font-mono text-emerald-950">
+                                {formatNPR(emp.fixed_salary)}
+                              </p>
+                              <span className="text-[11px] text-slate-500 font-mono">
+                                ≈ {formatNPR(emp.fixed_salary / 26)}/day
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Contact, Banking & Statutory Details */}
+                          <div className="mt-3.5 space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                                <Mail size={13} />
+                                Email:
+                              </span>
+                              <a
+                                href={`mailto:${emp.email}`}
+                                className="font-medium text-slate-800 hover:text-blue-600 truncate max-w-[190px]"
+                                title={emp.email}
+                              >
+                                {emp.email || 'N/A'}
+                              </a>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                                <Phone size={13} />
+                                Phone:
+                              </span>
+                              <span className="font-mono font-medium text-slate-800">
+                                {emp.phone || 'N/A'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                                <Landmark size={13} />
+                                Bank:
+                              </span>
+                              <span
+                                className="font-medium text-slate-800 truncate max-w-[190px]"
+                                title={`${emp.bank_name} - ${emp.bank_account_no}`}
+                              >
+                                {emp.bank_name} {emp.bank_account_no ? `(••••${emp.bank_account_no.slice(-4)})` : ''}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                                <ShieldCheck size={13} />
+                                PAN:
+                              </span>
+                              <span className="font-mono font-medium text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/60 text-[11px]">
+                                {emp.pan_number || 'N/A'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                                <Calendar size={13} />
+                                Joined (BS):
+                              </span>
+                              <span className="font-medium text-slate-700 text-[11px]">
+                                {formatNepaliDate(emp.joining_date)}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </td>
 
-                      {/* Designation & Dept */}
-                      <td className="px-4 py-4">
-                        <p className="font-medium text-slate-800">{emp.designation}</p>
-                        <span className="text-xs text-slate-500">{emp.department}</span>
-                      </td>
-
-                      {/* Contact */}
-                      <td className="px-4 py-4 text-xs">
-                        <p className="text-slate-800">{emp.email}</p>
-                        <p className="text-slate-400 mt-0.5">{emp.phone}</p>
-                      </td>
-
-                      {/* PAN */}
-                      <td className="px-4 py-4 font-mono text-xs text-slate-700">
-                        {emp.pan_number || 'N/A'}
-                      </td>
-
-                      {/* Bank Details */}
-                      <td className="px-4 py-4 text-xs">
-                        <p className="font-medium text-slate-800">{emp.bank_name}</p>
-                        <p className="text-slate-400 font-mono mt-0.5">{emp.bank_account_no}</p>
-                      </td>
-
-                      {/* Fixed Monthly Salary */}
-                      <td className="px-4 py-4 text-right">
-                        <p className="font-bold text-emerald-700 text-base">
-                          {formatNPR(emp.fixed_salary)}
-                        </p>
-                        <span className="text-[10px] text-slate-400">Fixed base / mo</span>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-4 text-center">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          emp.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'
-                        }`}>
-                          {emp.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                        {/* Card Actions Footer */}
+                        <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2">
                           <button
                             onClick={() => handleOpenSalaryModal(undefined, emp.id)}
-                            title="Calculate / Generate Payroll for this Employee"
-                            className="p-1.5 text-accent hover:bg-accent/10 rounded-lg transition-colors cursor-pointer"
+                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl text-xs font-semibold shadow-sm hover:shadow transition-all active:scale-[0.98] cursor-pointer"
+                            title="Calculate Salary & Attendance for this Employee"
                           >
-                            <Calendar size={16} />
+                            <Calendar size={14} />
+                            <span>Calculate Salary</span>
                           </button>
+
                           <button
                             onClick={() => handleOpenEmployeeModal(emp)}
-                            title="Edit Employee & Fixed Salary"
-                            className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            title="Edit Employee Profile & Photo"
+                            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 cursor-pointer"
                           >
-                            <Edit size={16} />
+                            <Edit size={15} />
                           </button>
+
                           <button
                             onClick={() => handleDeleteClick(emp.id, 'employee')}
                             title="Delete Employee"
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200/60 cursor-pointer"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={15} />
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* VIEW 2: TABLE VIEW (WITH PHOTOS) */}
+          {employeeViewMode === 'table' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-slate-600">
+                  <thead className="bg-slate-50 text-slate-500 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th className="px-5 py-3.5">Employee</th>
+                      <th className="px-4 py-3.5">Designation & Dept</th>
+                      <th className="px-4 py-3.5">Contact Details</th>
+                      <th className="px-4 py-3.5">PAN Number</th>
+                      <th className="px-4 py-3.5">Bank Information</th>
+                      <th className="px-4 py-3.5 text-right">Fixed Monthly Salary</th>
+                      <th className="px-4 py-3.5 text-center">Status</th>
+                      <th className="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredEmployees.map((emp) => {
+                      const photoSrc = getEmployeePhoto(emp);
+                      return (
+                        <tr key={emp.id} className="hover:bg-slate-50/70 transition-colors">
+                          {/* Code & Name with Photo */}
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={photoSrc}
+                                alt={emp.name}
+                                className="w-10 h-10 rounded-xl object-cover ring-2 ring-white shadow-sm border border-slate-200 shrink-0"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=0284c7&color=fff&size=80`;
+                                }}
+                              />
+                              <div>
+                                <p className="font-semibold text-slate-900 leading-tight">{emp.name}</p>
+                                <span className="text-xs font-mono font-medium text-slate-400">{emp.employee_code}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Designation & Dept */}
+                          <td className="px-4 py-4">
+                            <p className="font-medium text-slate-800">{emp.designation}</p>
+                            <span className="text-xs text-slate-500">{emp.department}</span>
+                          </td>
+
+                          {/* Contact */}
+                          <td className="px-4 py-4 text-xs">
+                            <p className="text-slate-800">{emp.email}</p>
+                            <p className="text-slate-400 mt-0.5">{emp.phone}</p>
+                          </td>
+
+                          {/* PAN */}
+                          <td className="px-4 py-4 font-mono text-xs text-slate-700">
+                            {emp.pan_number || 'N/A'}
+                          </td>
+
+                          {/* Bank Details */}
+                          <td className="px-4 py-4 text-xs">
+                            <p className="font-medium text-slate-800">{emp.bank_name}</p>
+                            <p className="text-slate-400 font-mono mt-0.5">{emp.bank_account_no}</p>
+                          </td>
+
+                          {/* Fixed Monthly Salary */}
+                          <td className="px-4 py-4 text-right">
+                            <p className="font-bold text-emerald-700 text-base">
+                              {formatNPR(emp.fixed_salary)}
+                            </p>
+                            <span className="text-[10px] text-slate-400">Fixed base / mo</span>
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-4 py-4 text-center">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
+                              emp.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {emp.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-5 py-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => handleOpenSalaryModal(undefined, emp.id)}
+                                title="Calculate / Generate Payroll for this Employee"
+                                className="p-1.5 text-accent hover:bg-accent/10 rounded-lg transition-colors cursor-pointer"
+                              >
+                                <Calendar size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleOpenEmployeeModal(emp)}
+                                title="Edit Employee & Fixed Salary"
+                                className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteClick(emp.id, 'employee')}
+                                title="Delete Employee"
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1587,43 +1988,78 @@ const Payroll = () => {
 
             <form onSubmit={handleSaveSalaryRecord} className="p-6 overflow-y-auto space-y-5 custom-scrollbar flex-1">
               {/* Employee Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Select Employee *</label>
-                  <select
-                    required
-                    value={salaryFormData.employee_id}
-                    onChange={(e) => setSalaryFormData({ ...salaryFormData, employee_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                  >
-                    {employees.map(e => (
-                      <option key={e.id} value={e.id}>
-                        {e.name} ({e.employee_code}) - Fixed: {formatNPR(e.fixed_salary)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Month & Year *</label>
-                  <div className="flex gap-2">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Select Employee *</label>
                     <select
-                      value={salaryFormData.month}
-                      onChange={(e) => setSalaryFormData({ ...salaryFormData, month: e.target.value })}
-                      className="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                      required
+                      value={salaryFormData.employee_id}
+                      onChange={(e) => setSalaryFormData({ ...salaryFormData, employee_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                     >
-                      {monthsList.map(m => (
-                        <option key={m} value={m}>{m}</option>
+                      {employees.map(e => (
+                        <option key={e.id} value={e.id}>
+                          {e.name} ({e.employee_code}) - Fixed: {formatNPR(e.fixed_salary)}
+                        </option>
                       ))}
                     </select>
-                    <input
-                      type="number"
-                      value={salaryFormData.year}
-                      onChange={(e) => setSalaryFormData({ ...salaryFormData, year: Number(e.target.value) })}
-                      className="w-20 px-2 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-center font-bold"
-                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Month & Year *</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={salaryFormData.month}
+                        onChange={(e) => setSalaryFormData({ ...salaryFormData, month: e.target.value })}
+                        className="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                      >
+                        {monthsList.map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        value={salaryFormData.year}
+                        onChange={(e) => setSalaryFormData({ ...salaryFormData, year: Number(e.target.value) })}
+                        className="w-20 px-2 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-center font-bold"
+                      />
+                    </div>
                   </div>
                 </div>
+
+                {/* Selected Employee Mini Banner with Photo */}
+                {calculatedSalaryDetails.selectedEmp && (
+                  <div className="p-3 bg-gradient-to-r from-slate-50 via-blue-50/30 to-indigo-50/20 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={getEmployeePhoto(calculatedSalaryDetails.selectedEmp)}
+                        alt={calculatedSalaryDetails.selectedEmp.name}
+                        className="w-11 h-11 rounded-xl object-cover ring-2 ring-white shadow-xs border border-slate-200"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(calculatedSalaryDetails.selectedEmp?.name || 'User')}&background=0284c7&color=fff&size=80`;
+                        }}
+                      />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs text-slate-900">{calculatedSalaryDetails.selectedEmp.name}</span>
+                          <span className="font-mono text-[10px] bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">
+                            {calculatedSalaryDetails.selectedEmp.employee_code}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                          {calculatedSalaryDetails.selectedEmp.designation} • {calculatedSalaryDetails.selectedEmp.department}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] text-slate-400 block uppercase font-bold">Fixed Base</span>
+                      <span className="font-bold text-xs text-emerald-700 font-mono">
+                        {formatNPR(calculatedSalaryDetails.selectedEmp.fixed_salary)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Attendance Inputs */}
@@ -1905,6 +2341,123 @@ const Payroll = () => {
             </div>
 
             <form onSubmit={handleSaveEmployee} className="p-7 overflow-y-auto space-y-6 custom-scrollbar flex-1 bg-white">
+              {/* Employee Photo / Avatar Upload Section */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/20 to-blue-50/30 border border-slate-200/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-slate-800 uppercase tracking-wide">
+                    <Camera size={15} className="text-indigo-600" />
+                    <span>Employee Profile Photo</span>
+                  </span>
+                  {employeeFormData.photo_url && (
+                    <button
+                      type="button"
+                      onClick={() => setEmployeeFormData(prev => ({ ...prev, photo_url: '' }))}
+                      className="text-xs text-rose-600 hover:text-rose-700 font-medium hover:underline cursor-pointer"
+                    >
+                      Reset Photo
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* Avatar Preview */}
+                  <div className="relative group shrink-0">
+                    <img
+                      src={
+                        employeeFormData.photo_url ||
+                        getEmployeePhoto({ name: employeeFormData.name || 'Employee', photo_url: '' })
+                      }
+                      alt={employeeFormData.name || 'Preview'}
+                      className="w-20 h-20 rounded-2xl object-cover ring-4 ring-white shadow-md border border-slate-200 bg-slate-100"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(employeeFormData.name || 'User')}&background=0284c7&color=fff&size=160`;
+                      }}
+                    />
+                    <label 
+                      className="absolute -bottom-1 -right-1 p-1.5 bg-slate-900 text-white rounded-xl shadow-md hover:bg-slate-800 transition-colors cursor-pointer"
+                      title="Upload custom photo"
+                    >
+                      <Camera size={14} />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (uploadEvt) => {
+                              const result = uploadEvt.target?.result as string;
+                              if (result) {
+                                setEmployeeFormData(prev => ({ ...prev, photo_url: result }));
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Upload button & URL input */}
+                  <div className="flex-1 w-full space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-300 hover:border-slate-400 rounded-xl text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors cursor-pointer">
+                        <Upload size={14} className="text-indigo-600" />
+                        <span>Upload From Computer</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (uploadEvt) => {
+                                const result = uploadEvt.target?.result as string;
+                                if (result) {
+                                  setEmployeeFormData(prev => ({ ...prev, photo_url: result }));
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                      <span className="text-xs text-slate-400">or enter image URL below:</span>
+                    </div>
+
+                    <input
+                      type="url"
+                      placeholder="https://example.com/photo.jpg"
+                      value={employeeFormData.photo_url || ''}
+                      onChange={(e) => setEmployeeFormData(prev => ({ ...prev, photo_url: e.target.value }))}
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    />
+
+                    {/* Preset Headshots picker */}
+                    <div className="flex items-center gap-2 pt-1 overflow-x-auto">
+                      <span className="text-[11px] font-medium text-slate-400 shrink-0">Preset Headshots:</span>
+                      <div className="flex items-center gap-1.5">
+                        {DEFAULT_PRESET_PHOTOS.map((preset, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setEmployeeFormData(prev => ({ ...prev, photo_url: preset }))}
+                            className={`w-7 h-7 rounded-lg overflow-hidden border-2 transition-transform hover:scale-110 cursor-pointer ${
+                              employeeFormData.photo_url === preset ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-slate-200 opacity-80 hover:opacity-100'
+                            }`}
+                            title={`Select Headshot ${idx + 1}`}
+                          >
+                            <img src={preset} alt="" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Section 1: Personal & Role Details */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
