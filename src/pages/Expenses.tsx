@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { Search, Plus, Filter, CreditCard, ArrowUpRight, Edit, Trash2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Plus, Filter, CreditCard, ArrowUpRight, Edit, Trash2, RotateCcw } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import { NepaliDatePicker } from '../components/NepaliDatePicker';
+import { formatNepaliDate, toBsDateString, getTodayBsDate } from '../lib/nepaliDate';
 
 export interface ExpenseItem {
   id: string;
@@ -13,14 +15,17 @@ export interface ExpenseItem {
 }
 
 const initialExpenseData: ExpenseItem[] = [
-  { id: 'EXP-001', date: 'Oct 02, 2026', vendor: 'Vianet Communications', category: 'Office / Internet', amount: 3500, method: 'eSewa', receipt: 'REC-1029' },
-  { id: 'EXP-002', date: 'Oct 01, 2026', vendor: 'Digital Ocean', category: 'Technology / Cloud Services', amount: 6500, method: 'Credit Card', receipt: 'INV-DO-992' },
-  { id: 'EXP-003', date: 'Sep 28, 2026', vendor: 'Kathmandu Properties', category: 'Office / Rent', amount: 45000, method: 'Bank Transfer', receipt: 'RENT-Sep' },
-  { id: 'EXP-004', date: 'Sep 25, 2026', vendor: 'Facebook Ads', category: 'Marketing / Social Media', amount: 15000, method: 'Credit Card', receipt: 'FB-8821' },
+  { id: 'EXP-001', date: '2083-06-16', vendor: 'Vianet Communications', category: 'Office / Internet', amount: 3500, method: 'eSewa', receipt: 'REC-1029' },
+  { id: 'EXP-002', date: '2083-06-15', vendor: 'Digital Ocean', category: 'Technology / Cloud Services', amount: 6500, method: 'Credit Card', receipt: 'INV-DO-992' },
+  { id: 'EXP-003', date: '2083-06-12', vendor: 'Kathmandu Properties', category: 'Office / Rent', amount: 45000, method: 'Bank Transfer', receipt: 'RENT-ASW' },
+  { id: 'EXP-004', date: '2083-06-09', vendor: 'Facebook Ads', category: 'Marketing / Social Media', amount: 15000, method: 'Credit Card', receipt: 'FB-8821' },
 ];
 
 const Expenses = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [methodFilter, setMethodFilter] = useState('All');
+
   const [expenseData, setExpenseData] = useState<ExpenseItem[]>(() => {
     const saved = localStorage.getItem('aslenix_expenses');
     return saved ? JSON.parse(saved) : initialExpenseData;
@@ -31,13 +36,40 @@ const Expenses = () => {
     localStorage.setItem('aslenix_expenses', JSON.stringify(data));
   };
 
+  const categories = useMemo(() => {
+    const set = new Set(expenseData.map(item => item.category));
+    return ['All', ...Array.from(set)];
+  }, [expenseData]);
+
+  const methods = useMemo(() => {
+    const set = new Set(expenseData.map(item => item.method));
+    return ['All', ...Array.from(set)];
+  }, [expenseData]);
+
+  const filteredExpenseData = useMemo(() => {
+    return expenseData.filter((item) => {
+      const q = searchTerm.toLowerCase().trim();
+      const matchesSearch = !q ||
+        item.vendor.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        item.receipt.toLowerCase().includes(q) ||
+        item.method.toLowerCase().includes(q) ||
+        item.id.toLowerCase().includes(q);
+
+      const matchesCat = categoryFilter === 'All' || item.category === categoryFilter;
+      const matchesMethod = methodFilter === 'All' || item.method === methodFilter;
+
+      return matchesSearch && matchesCat && matchesMethod;
+    });
+  }, [expenseData, searchTerm, categoryFilter, methodFilter]);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayBsDate(),
     description: '',
     category: 'Office Rent',
     amount: '',
@@ -45,7 +77,7 @@ const Expenses = () => {
   });
 
   const resetForm = () => {
-    setFormData({ date: new Date().toISOString().split('T')[0], description: '', category: 'Office Rent', amount: '', reference: '' });
+    setFormData({ date: getTodayBsDate(), description: '', category: 'Office Rent', amount: '', reference: '' });
     setEditingId(null);
   };
 
@@ -150,22 +182,66 @@ const Expenses = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         {/* Table Header/Controls */}
-        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
-          <div className="relative w-full md:w-96">
+        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-slate-50/50">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search expenses by vendor or category..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+              placeholder="Search expenses by vendor, category, or ref..." 
+              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors w-full md:w-auto justify-center">
-              <Filter size={16} />
-              Filters
-            </button>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Category Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <Filter size={14} className="text-slate-400" />
+              <span className="font-semibold text-slate-500">Category:</span>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                {categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Method Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <span className="font-semibold text-slate-500">Method:</span>
+              <select
+                value={methodFilter}
+                onChange={(e) => setMethodFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                {methods.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+
+            {(categoryFilter !== 'All' || methodFilter !== 'All' || searchTerm) && (
+              <button
+                onClick={() => {
+                  setCategoryFilter('All');
+                  setMethodFilter('All');
+                  setSearchTerm('');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors shadow-sm"
+                title="Clear all filters"
+              >
+                <RotateCcw size={13} />
+                Clear
+              </button>
+            )}
+
+            <div className="text-xs text-slate-400 font-medium pl-1">
+              Showing <span className="font-semibold text-slate-700">{filteredExpenseData.length}</span> of {expenseData.length}
+            </div>
           </div>
         </div>
 
@@ -174,7 +250,7 @@ const Expenses = () => {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 text-slate-500 font-medium">
               <tr>
-                <th className="px-6 py-4">Date / ID</th>
+                <th className="px-6 py-4">Date (BS मिति) / ID</th>
                 <th className="px-6 py-4">Vendor & Category</th>
                 <th className="px-6 py-4">Payment Info</th>
                 <th className="px-6 py-4">Amount</th>
@@ -183,11 +259,30 @@ const Expenses = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {expenseData.map((expense) => (
+              {filteredExpenseData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <p className="font-medium text-slate-700">No expense records match your filter criteria.</p>
+                      <button 
+                        onClick={() => {
+                          setCategoryFilter('All');
+                          setMethodFilter('All');
+                          setSearchTerm('');
+                        }}
+                        className="text-accent text-xs font-semibold hover:underline mt-1"
+                      >
+                        Reset filters to view all records
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredExpenseData.map((expense) => (
                 <tr key={expense.id} className="hover:bg-slate-50/80 transition-colors group">
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-primary">{expense.date}</div>
-                    <div className="text-slate-500 text-xs mt-0.5">{expense.id}</div>
+                    <div className="font-semibold text-primary">{formatNepaliDate(expense.date, 'full')} BS</div>
+                    <div className="text-slate-400 text-xs font-mono">{toBsDateString(expense.date)} • {expense.id}</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-medium">{expense.vendor}</div>
@@ -230,7 +325,8 @@ const Expenses = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+            )}
             </tbody>
           </table>
         </div>
@@ -265,13 +361,11 @@ const Expenses = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                  <input 
-                    type="date" 
-                    required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  <NepaliDatePicker 
+                    label="Date (मिति)" 
+                    value={formData.date} 
+                    onChange={(val) => setFormData({ ...formData, date: val })} 
+                    required 
                   />
                 </div>
                 <div>

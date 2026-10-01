@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Plus, Filter, Edit, Trash2, Shield } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Plus, Filter, Edit, Trash2, Shield, RotateCcw } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 
 export interface UserItem {
@@ -12,11 +12,11 @@ export interface UserItem {
 }
 
 const initialUsersData: UserItem[] = [
-  { id: 'USR-001', name: 'Super Admin', email: 'admin@aslenix.com', role: 'Super Admin', status: 'Active', lastLogin: 'Oct 01, 2026 10:15 AM' },
-  { id: 'USR-002', name: 'Bikash Thapa', email: 'bikash@aslenix.com', role: 'Accountant', status: 'Active', lastLogin: 'Sep 30, 2026 04:30 PM' },
-  { id: 'USR-003', name: 'Sarita Sharma', email: 'sarita@aslenix.com', role: 'Billing Staff', status: 'Active', lastLogin: 'Oct 01, 2026 09:00 AM' },
-  { id: 'USR-004', name: 'Ravi Kumar', email: 'ravi@aslenix.com', role: 'Admin', status: 'Inactive', lastLogin: 'Sep 15, 2026 11:20 AM' },
-  { id: 'USR-005', name: 'Guest User', email: 'guest@aslenix.com', role: 'Viewer', status: 'Active', lastLogin: 'Sep 28, 2026 02:15 PM' },
+  { id: 'USR-001', name: 'Super Admin', email: 'admin@aslenix.com', role: 'Super Admin', status: 'Active', lastLogin: '१५ असोज २०८३ (10:15 AM)' },
+  { id: 'USR-002', name: 'Bikash Thapa', email: 'bikash@aslenix.com', role: 'Accountant', status: 'Active', lastLogin: '१४ असोज २०८३ (04:30 PM)' },
+  { id: 'USR-003', name: 'Sarita Sharma', email: 'sarita@aslenix.com', role: 'Billing Staff', status: 'Active', lastLogin: '१५ असोज २०८३ (09:00 AM)' },
+  { id: 'USR-004', name: 'Ravi Kumar', email: 'ravi@aslenix.com', role: 'Admin', status: 'Inactive', lastLogin: '२९ भाद्र २०८३ (11:20 AM)' },
+  { id: 'USR-005', name: 'Guest User', email: 'guest@aslenix.com', role: 'Viewer', status: 'Active', lastLogin: '१२ असोज २०८३ (02:15 PM)' },
 ];
 
 const roleColors: Record<string, string> = {
@@ -29,15 +29,45 @@ const roleColors: Record<string, string> = {
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+
   const [usersData, setUsersData] = useState<UserItem[]>(() => {
     const saved = localStorage.getItem('aslenix_users');
-    return saved ? JSON.parse(saved) : initialUsersData;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.some((u: any) => u.lastLogin && (u.lastLogin.includes('2026') || u.lastLogin.includes('Oct') || u.lastLogin.includes('Sep')))) {
+          localStorage.setItem('aslenix_users', JSON.stringify(initialUsersData));
+          return initialUsersData;
+        }
+        return parsed;
+      } catch {
+        return initialUsersData;
+      }
+    }
+    return initialUsersData;
   });
 
   const saveUsersData = (data: UserItem[]) => {
     setUsersData(data);
     localStorage.setItem('aslenix_users', JSON.stringify(data));
   };
+
+  const filteredUsers = useMemo(() => {
+    return usersData.filter((user) => {
+      const q = searchTerm.toLowerCase().trim();
+      const matchesSearch = !q || 
+        user.name.toLowerCase().includes(q) || 
+        user.email.toLowerCase().includes(q) ||
+        user.id.toLowerCase().includes(q);
+
+      const matchesRole = roleFilter === 'All' || user.role === roleFilter;
+      const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
+
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [usersData, searchTerm, roleFilter, statusFilter]);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
@@ -122,22 +152,69 @@ const Users = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         {/* Table Header/Controls */}
-        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
-          <div className="relative w-full md:w-96">
+        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-slate-50/50">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search users by name or email..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+              placeholder="Search users by name, email, or ID..." 
+              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors w-full md:w-auto justify-center">
-              <Filter size={16} />
-              Role Filter
-            </button>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Role Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <Filter size={14} className="text-slate-400" />
+              <span className="font-semibold text-slate-500">Role:</span>
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                <option value="All">All Roles</option>
+                <option value="Super Admin">Super Admin</option>
+                <option value="Admin">Admin</option>
+                <option value="Accountant">Accountant</option>
+                <option value="Billing Staff">Billing Staff</option>
+                <option value="Viewer">Viewer</option>
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <span className="font-semibold text-slate-500">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                <option value="All">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            {(roleFilter !== 'All' || statusFilter !== 'All' || searchTerm) && (
+              <button
+                onClick={() => {
+                  setRoleFilter('All');
+                  setStatusFilter('All');
+                  setSearchTerm('');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors shadow-sm"
+                title="Clear all filters"
+              >
+                <RotateCcw size={13} />
+                Clear
+              </button>
+            )}
+
+            <div className="text-xs text-slate-400 font-medium pl-1">
+              Showing <span className="font-semibold text-slate-700">{filteredUsers.length}</span> of {usersData.length}
+            </div>
           </div>
         </div>
 
@@ -149,12 +226,31 @@ const Users = () => {
                 <th className="px-6 py-4">User Details</th>
                 <th className="px-6 py-4">Assigned Role</th>
                 <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Last Login</th>
+                <th className="px-6 py-4">Last Login (अन्तिम लगइन BS)</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {usersData.map((user) => (
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <p className="font-medium text-slate-700">No users match your filter criteria.</p>
+                      <button 
+                        onClick={() => {
+                          setRoleFilter('All');
+                          setStatusFilter('All');
+                          setSearchTerm('');
+                        }}
+                        className="text-accent text-xs font-semibold hover:underline mt-1"
+                      >
+                        Reset filters to view all users
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -210,7 +306,8 @@ const Users = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+            )}
             </tbody>
           </table>
         </div>

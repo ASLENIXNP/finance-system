@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, Plus, Filter, Package, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Search, Plus, Filter, Package, Edit, Trash2, Loader2, RotateCcw } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
 
@@ -23,6 +23,9 @@ const defaultProducts: Product[] = [
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('aslenix_products');
     return saved ? JSON.parse(saved) : defaultProducts;
@@ -33,6 +36,22 @@ const Products = () => {
     setProducts(data);
     localStorage.setItem('aslenix_products', JSON.stringify(data));
   };
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const q = searchTerm.toLowerCase().trim();
+      const matchesSearch = !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.item_code.toLowerCase().includes(q) ||
+        (p.description && p.description.toLowerCase().includes(q));
+
+      const matchesType = typeFilter === 'All' || p.type === typeFilter;
+      const matchesStatus = statusFilter === 'All' || 
+        (statusFilter === 'Active' ? p.is_active : !p.is_active);
+
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [products, searchTerm, typeFilter, statusFilter]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -204,22 +223,66 @@ const Products = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         {/* Table Header/Controls */}
-        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
-          <div className="relative w-full md:w-96">
+        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-slate-50/50">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search items by name or code..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+              placeholder="Search items by name, code, or description..." 
+              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors w-full md:w-auto justify-center">
-              <Filter size={16} />
-              Filters
-            </button>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Type Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <Filter size={14} className="text-slate-400" />
+              <span className="font-semibold text-slate-500">Type:</span>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                <option value="All">All Types</option>
+                <option value="Service">Service</option>
+                <option value="Product">Product</option>
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <span className="font-semibold text-slate-500">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                <option value="All">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            {(typeFilter !== 'All' || statusFilter !== 'All' || searchTerm) && (
+              <button
+                onClick={() => {
+                  setTypeFilter('All');
+                  setStatusFilter('All');
+                  setSearchTerm('');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors shadow-sm"
+                title="Clear all filters"
+              >
+                <RotateCcw size={13} />
+                Clear
+              </button>
+            )}
+
+            <div className="text-xs text-slate-400 font-medium pl-1">
+              Showing <span className="font-semibold text-slate-700">{filteredProducts.length}</span> of {products.length}
+            </div>
           </div>
         </div>
 
@@ -246,17 +309,26 @@ const Products = () => {
                     </div>
                   </td>
                 </tr>
-              ) : products.length === 0 ? (
+              ) : filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <p>No products or services found.</p>
-                      <button className="text-accent font-medium hover:underline text-sm mt-1">Add your first item</button>
+                      <p className="font-medium text-slate-700">No products or services match your filter criteria.</p>
+                      <button 
+                        onClick={() => {
+                          setTypeFilter('All');
+                          setStatusFilter('All');
+                          setSearchTerm('');
+                        }}
+                        className="text-accent text-xs font-semibold hover:underline mt-1"
+                      >
+                        Reset filters to view all items
+                      </button>
                     </div>
                   </td>
                 </tr>
               ) : (
-                products.map((item) => (
+                filteredProducts.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">

@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { Search, Plus, Filter, ArrowDownRight, Wallet, Edit, Trash2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Plus, Filter, ArrowDownRight, Wallet, Edit, Trash2, RotateCcw } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import { NepaliDatePicker } from '../components/NepaliDatePicker';
+import { formatNepaliDate, toBsDateString, getTodayBsDate } from '../lib/nepaliDate';
 
 export interface IncomeItem {
   id: string;
@@ -14,14 +16,18 @@ export interface IncomeItem {
 }
 
 const initialIncomeData: IncomeItem[] = [
-  { id: 'INC-001', date: 'Oct 01, 2026', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', category: 'Web Development', amount: 45000, method: 'Bank Transfer', status: 'Completed' },
-  { id: 'INC-002', date: 'Sep 28, 2026', invoice: 'ASL-2083-0011', customer: 'Himalayan Coffee House', category: 'UI/UX Design', amount: 15500, method: 'eSewa', status: 'Completed' },
-  { id: 'INC-003', date: 'Sep 25, 2026', invoice: 'ASL-2083-0009', customer: 'Retail Solutions', category: 'Software Development', amount: 85000, method: 'Cheque', status: 'Pending' },
-  { id: 'INC-004', date: 'Sep 20, 2026', invoice: 'Manual Entry', customer: 'Freelance Client', category: 'Consulting', amount: 12000, method: 'Cash', status: 'Completed' },
+  { id: 'INC-001', date: '2083-06-15', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', category: 'Web Development', amount: 45000, method: 'Bank Transfer', status: 'Completed' },
+  { id: 'INC-002', date: '2083-06-12', invoice: 'ASL-2083-0011', customer: 'Himalayan Coffee House', category: 'UI/UX Design', amount: 15500, method: 'eSewa', status: 'Completed' },
+  { id: 'INC-003', date: '2083-06-09', invoice: 'ASL-2083-0009', customer: 'Retail Solutions', category: 'Software Development', amount: 85000, method: 'Cheque', status: 'Pending' },
+  { id: 'INC-004', date: '2083-06-04', invoice: 'Manual Entry', customer: 'Freelance Client', category: 'Consulting', amount: 12000, method: 'Cash', status: 'Completed' },
 ];
 
 const Income = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [methodFilter, setMethodFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+
   const [incomeData, setIncomeData] = useState<IncomeItem[]>(() => {
     const saved = localStorage.getItem('aslenix_income');
     return saved ? JSON.parse(saved) : initialIncomeData;
@@ -32,20 +38,48 @@ const Income = () => {
     localStorage.setItem('aslenix_income', JSON.stringify(data));
   };
 
+  const categories = useMemo(() => {
+    const set = new Set(incomeData.map(item => item.category));
+    return ['All', ...Array.from(set)];
+  }, [incomeData]);
+
+  const methods = useMemo(() => {
+    const set = new Set(incomeData.map(item => item.method));
+    return ['All', ...Array.from(set)];
+  }, [incomeData]);
+
+  const filteredIncomeData = useMemo(() => {
+    return incomeData.filter((item) => {
+      const q = searchTerm.toLowerCase().trim();
+      const matchesSearch = !q ||
+        item.customer.toLowerCase().includes(q) ||
+        item.invoice.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        item.method.toLowerCase().includes(q) ||
+        item.id.toLowerCase().includes(q);
+
+      const matchesCat = categoryFilter === 'All' || item.category === categoryFilter;
+      const matchesMethod = methodFilter === 'All' || item.method === methodFilter;
+      const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
+
+      return matchesSearch && matchesCat && matchesMethod && matchesStatus;
+    });
+  }, [incomeData, searchTerm, categoryFilter, methodFilter, statusFilter]);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayBsDate(),
     source: 'Software Development',
     amount: '',
     reference: ''
   });
 
   const resetForm = () => {
-    setFormData({ date: new Date().toISOString().split('T')[0], source: 'Software Development', amount: '', reference: '' });
+    setFormData({ date: getTodayBsDate(), source: 'Software Development', amount: '', reference: '' });
     setEditingId(null);
   };
 
@@ -148,22 +182,81 @@ const Income = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         {/* Table Header/Controls */}
-        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
-          <div className="relative w-full md:w-96">
+        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-slate-50/50">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search income records..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+              placeholder="Search by customer, invoice, category, or ref..." 
+              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors w-full md:w-auto justify-center">
-              <Filter size={16} />
-              Filters
-            </button>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Category Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <Filter size={14} className="text-slate-400" />
+              <span className="font-semibold text-slate-500">Category:</span>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                {categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Method Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <span className="font-semibold text-slate-500">Method:</span>
+              <select
+                value={methodFilter}
+                onChange={(e) => setMethodFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                {methods.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <span className="font-semibold text-slate-500">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                <option value="All">All Status</option>
+                <option value="Completed">Completed</option>
+                <option value="Pending">Pending</option>
+              </select>
+            </div>
+
+            {(categoryFilter !== 'All' || methodFilter !== 'All' || statusFilter !== 'All' || searchTerm) && (
+              <button
+                onClick={() => {
+                  setCategoryFilter('All');
+                  setMethodFilter('All');
+                  setStatusFilter('All');
+                  setSearchTerm('');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors shadow-sm"
+                title="Clear all filters"
+              >
+                <RotateCcw size={13} />
+                Clear
+              </button>
+            )}
+
+            <div className="text-xs text-slate-400 font-medium pl-1">
+              Showing <span className="font-semibold text-slate-700">{filteredIncomeData.length}</span> of {incomeData.length}
+            </div>
           </div>
         </div>
 
@@ -172,7 +265,7 @@ const Income = () => {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 text-slate-500 font-medium">
               <tr>
-                <th className="px-6 py-4">Date / Ref</th>
+                <th className="px-6 py-4">Date (BS मिति) / Ref</th>
                 <th className="px-6 py-4">Customer & Category</th>
                 <th className="px-6 py-4">Payment Method</th>
                 <th className="px-6 py-4">Amount</th>
@@ -181,11 +274,31 @@ const Income = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {incomeData.map((income) => (
+              {filteredIncomeData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <p className="font-medium text-slate-700">No income records match your filter criteria.</p>
+                      <button 
+                        onClick={() => {
+                          setCategoryFilter('All');
+                          setMethodFilter('All');
+                          setStatusFilter('All');
+                          setSearchTerm('');
+                        }}
+                        className="text-accent text-xs font-semibold hover:underline mt-1"
+                      >
+                        Reset filters to view all records
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredIncomeData.map((income) => (
                 <tr key={income.id} className="hover:bg-slate-50/80 transition-colors group">
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-primary">{income.date}</div>
-                    <div className="text-slate-500 text-xs mt-0.5">{income.invoice}</div>
+                    <div className="font-semibold text-primary">{formatNepaliDate(income.date, 'full')} BS</div>
+                    <div className="text-slate-400 text-xs font-mono">{toBsDateString(income.date)} • {income.invoice}</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-medium">{income.customer}</div>
@@ -232,7 +345,8 @@ const Income = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+            )}
             </tbody>
           </table>
         </div>
@@ -267,13 +381,11 @@ const Income = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                  <input 
-                    type="date" 
-                    required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  <NepaliDatePicker 
+                    label="Date (मिति)" 
+                    value={formData.date} 
+                    onChange={(val) => setFormData({ ...formData, date: val })} 
+                    required 
                   />
                 </div>
                 <div>

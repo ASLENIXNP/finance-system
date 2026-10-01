@@ -20,13 +20,14 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 6mm 10mm;
+    margin: 0mm !important;
   }
 
   /* Disable animations and transitions in print */
   *, *::before, *::after {
     animation: none !important;
     transition: none !important;
+    transform: none !important;
   }
 
   /* Completely remove non-printable chrome from the document layout */
@@ -46,20 +47,20 @@
     display: none !important;
   }
 
-  /* Reset HTML and Body */
+  /* Reset HTML and Body to strictly 1 page without extra page breaks */
   html,
   body {
     width: 100% !important;
     min-width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
+    height: 100% !important;
+    max-height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
     color: #0f172a !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
   /* Flatten all app layout containers so there is zero offset or padding */
@@ -122,21 +123,27 @@
     visibility: visible;
   }
 
-  /* Printable invoice - strictly single page */
+  /* Printable invoice - strictly single page pinned to top-left of page 1 */
   #printable-invoice {
     display: block !important;
-    position: static !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important;
-    max-height: 280mm !important;
+    height: 100% !important;
+    max-height: 297mm !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 8mm 12mm !important;
     box-sizing: border-box !important;
     background: white !important;
     box-shadow: none !important;
     border: none !important;
     overflow: hidden !important;
+    z-index: 9999999 !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
     page-break-inside: avoid !important;
@@ -164,10 +171,15 @@
     outline: none !important;
   }
 
+  #printable-invoice input::placeholder,
+  #printable-invoice textarea::placeholder {
+    color: transparent !important;
+  }
+
   /* Compact 1-Page Layout rules for Invoice */
   #printable-invoice .print-header {
-    padding: 0 0 2.5mm !important;
-    margin: 0 0 2.5mm !important;
+    padding: 0 0 2mm !important;
+    margin: 0 0 2mm !important;
     border-bottom: 2px solid #0f172a !important;
   }
 
@@ -180,23 +192,19 @@
   }
 
   #printable-invoice .print-header img {
-    height: 48px !important;
+    height: 42px !important;
     width: auto !important;
     object-fit: contain !important;
   }
 
   #printable-invoice .print-billing {
+    display: grid !important;
+    grid-template-columns: 1.8fr 1.2fr !important;
+    gap: 12px !important;
     padding: 0 0 2.5mm !important;
     margin: 0 0 2.5mm !important;
     background: transparent !important;
-    border-bottom: 1px solid #cbd5e1 !important;
-  }
-
-  #printable-invoice .print-billing > div {
-    display: grid !important;
-    grid-template-columns: 1.25fr 0.75fr !important;
-    gap: 16px !important;
-    width: 100% !important;
+    border-bottom: 1px solid #e2e8f0 !important;
   }
 
   #printable-invoice .print-items {
@@ -213,29 +221,29 @@
   }
 
   #printable-invoice .print-items th {
-    padding: 3px 4px !important;
+    padding: 4px 6px !important;
     font-size: 10px !important;
     font-weight: 700 !important;
+    border-top: 1px solid #cbd5e1 !important;
     border-bottom: 1.5px solid #0f172a !important;
+    background-color: #f8fafc !important;
   }
 
   #printable-invoice .print-items td {
-    padding: 3px 4px !important;
+    padding: 4px 6px !important;
     font-size: 11px !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
     word-break: break-word;
   }
 
   #printable-invoice .print-summary {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: flex-start !important;
+    display: grid !important;
+    grid-template-columns: 1.4fr 1fr !important;
     gap: 16px !important;
-    padding: 2.5mm 0 1.5mm !important;
+    padding: 2.5mm 0 2mm !important;
     margin: 0 0 2.5mm !important;
     background: transparent !important;
-    border-top: 1px solid #cbd5e1 !important;
+    border-top: 1px solid #e2e8f0 !important;
   }
 
   #printable-invoice .print-signatures {
@@ -244,32 +252,40 @@
     justify-content: space-between !important;
     align-items: flex-end !important;
     margin-top: 3mm !important;
-    padding: 0 !important;
+    padding-top: 2mm !important;
+    border-top: 1px solid #e2e8f0 !important;
   }
 
   #printable-invoice .print-footer {
     margin-top: 2mm !important;
-    padding-top: 2mm !important;
+    padding-top: 1.5mm !important;
     padding-bottom: 0 !important;
-    border-top: 1px solid #cbd5e1 !important;
-    font-size: 10px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    font-size: 9.5px !important;
     text-align: center !important;
   }
 
-  /* Printable payslip styling */
+  /* Printable payslip styling - strictly single page pinned to top-left of page 1 */
   #printable-payslip {
     display: block !important;
-    position: static !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: auto !important;
+    height: 100% !important;
+    max-height: 297mm !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 8mm 12mm !important;
     box-sizing: border-box !important;
     background: white !important;
     box-shadow: none !important;
     border: none !important;
-    overflow: visible !important;
+    overflow: hidden !important;
+    z-index: 9999999 !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
     page-break-inside: avoid !important;

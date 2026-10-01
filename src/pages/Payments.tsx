@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { Search, Filter, CheckCircle2, AlertCircle, Edit, Trash2, Plus } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Filter, CheckCircle2, AlertCircle, Edit, Trash2, Plus, RotateCcw } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import { NepaliDatePicker } from '../components/NepaliDatePicker';
+import { formatNepaliDate, toBsDateString, getTodayBsDate } from '../lib/nepaliDate';
 
 export interface PaymentItem {
   id: string;
@@ -14,14 +16,17 @@ export interface PaymentItem {
 }
 
 const initialPaymentsData: PaymentItem[] = [
-  { id: 'PAY-001', date: 'Oct 05, 2026', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', amount: 45000, method: 'Bank Transfer', ref: 'NABIL123456789', status: 'Verified' },
-  { id: 'PAY-002', date: 'Oct 04, 2026', invoice: 'ASL-2083-0014', customer: 'Everest Trading', amount: 15500, method: 'eSewa', ref: 'ESEWA987654', status: 'Verified' },
-  { id: 'PAY-003', date: 'Oct 02, 2026', invoice: 'ASL-2083-0010', customer: 'Himalayan Coffee House', amount: 50000, method: 'Cheque', ref: 'CHQ-445566', status: 'Pending Clearance' },
-  { id: 'PAY-004', date: 'Sep 29, 2026', invoice: 'ASL-2083-0008', customer: 'Individual Client', amount: 12000, method: 'Cash', ref: 'CASH-REC-11', status: 'Verified' },
+  { id: 'PAY-001', date: '2083-06-19', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', amount: 45000, method: 'Bank Transfer', ref: 'NABIL123456789', status: 'Verified' },
+  { id: 'PAY-002', date: '2083-06-18', invoice: 'ASL-2083-0014', customer: 'Everest Trading', amount: 15500, method: 'eSewa', ref: 'ESEWA987654', status: 'Verified' },
+  { id: 'PAY-003', date: '2083-06-16', invoice: 'ASL-2083-0010', customer: 'Himalayan Coffee House', amount: 50000, method: 'Cheque', ref: 'CHQ-445566', status: 'Pending Clearance' },
+  { id: 'PAY-004', date: '2083-06-13', invoice: 'ASL-2083-0008', customer: 'Individual Client', amount: 12000, method: 'Cash', ref: 'CASH-REC-11', status: 'Verified' },
 ];
 
 const Payments = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [methodFilter, setMethodFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+
   const [paymentsData, setPaymentsData] = useState<PaymentItem[]>(() => {
     const saved = localStorage.getItem('aslenix_payments');
     return saved ? JSON.parse(saved) : initialPaymentsData;
@@ -32,13 +37,35 @@ const Payments = () => {
     localStorage.setItem('aslenix_payments', JSON.stringify(data));
   };
 
+  const methods = useMemo(() => {
+    const set = new Set(paymentsData.map(item => item.method));
+    return ['All', ...Array.from(set)];
+  }, [paymentsData]);
+
+  const filteredPaymentsData = useMemo(() => {
+    return paymentsData.filter((item) => {
+      const q = searchTerm.toLowerCase().trim();
+      const matchesSearch = !q ||
+        item.customer.toLowerCase().includes(q) ||
+        item.invoice.toLowerCase().includes(q) ||
+        item.ref.toLowerCase().includes(q) ||
+        item.method.toLowerCase().includes(q) ||
+        item.id.toLowerCase().includes(q);
+
+      const matchesMethod = methodFilter === 'All' || item.method === methodFilter;
+      const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
+
+      return matchesSearch && matchesMethod && matchesStatus;
+    });
+  }, [paymentsData, searchTerm, methodFilter, statusFilter]);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayBsDate(),
     to: '',
     amount: '',
     method: 'Bank Transfer',
@@ -46,7 +73,7 @@ const Payments = () => {
   });
 
   const resetForm = () => {
-    setFormData({ date: new Date().toISOString().split('T')[0], to: '', amount: '', method: 'Bank Transfer', status: 'Cleared' });
+    setFormData({ date: getTodayBsDate(), to: '', amount: '', method: 'Bank Transfer', status: 'Cleared' });
     setEditingId(null);
   };
 
@@ -122,22 +149,66 @@ const Payments = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         {/* Table Header/Controls */}
-        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
-          <div className="relative w-full md:w-96">
+        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-slate-50/50">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search payments by invoice or reference..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+              placeholder="Search payments by invoice, customer, or reference..." 
+              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors w-full md:w-auto justify-center">
-              <Filter size={16} />
-              Filters
-            </button>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Method Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <Filter size={14} className="text-slate-400" />
+              <span className="font-semibold text-slate-500">Method:</span>
+              <select
+                value={methodFilter}
+                onChange={(e) => setMethodFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                {methods.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <span className="font-semibold text-slate-500">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                <option value="All">All Status</option>
+                <option value="Verified">Verified</option>
+                <option value="Pending Clearance">Pending Clearance</option>
+              </select>
+            </div>
+
+            {(methodFilter !== 'All' || statusFilter !== 'All' || searchTerm) && (
+              <button
+                onClick={() => {
+                  setMethodFilter('All');
+                  setStatusFilter('All');
+                  setSearchTerm('');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors shadow-sm"
+                title="Clear all filters"
+              >
+                <RotateCcw size={13} />
+                Clear
+              </button>
+            )}
+
+            <div className="text-xs text-slate-400 font-medium pl-1">
+              Showing <span className="font-semibold text-slate-700">{filteredPaymentsData.length}</span> of {paymentsData.length}
+            </div>
           </div>
         </div>
 
@@ -146,7 +217,7 @@ const Payments = () => {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 text-slate-500 font-medium">
               <tr>
-                <th className="px-6 py-4">Receipt ID / Date</th>
+                <th className="px-6 py-4">Receipt ID / Date (BS मिति)</th>
                 <th className="px-6 py-4">Customer & Invoice</th>
                 <th className="px-6 py-4">Method & Ref</th>
                 <th className="px-6 py-4 font-bold text-right">Amount</th>
@@ -155,11 +226,31 @@ const Payments = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {paymentsData.map((payment) => (
+              {filteredPaymentsData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <p className="font-medium text-slate-700">No payments match your filter criteria.</p>
+                      <button 
+                        onClick={() => {
+                          setMethodFilter('All');
+                          setStatusFilter('All');
+                          setSearchTerm('');
+                        }}
+                        className="text-accent text-xs font-semibold hover:underline mt-1"
+                      >
+                        Reset filters to view all payments
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredPaymentsData.map((payment) => (
                 <tr key={payment.id} className="hover:bg-slate-50/80 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="font-semibold text-primary">{payment.id}</div>
-                    <div className="text-slate-500 text-xs mt-0.5">{payment.date}</div>
+                    <div className="text-slate-500 text-xs mt-0.5">{formatNepaliDate(payment.date, 'full')} BS</div>
+                    <div className="text-slate-400 text-[10px] font-mono">{toBsDateString(payment.date)}</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-semibold text-primary">{payment.customer}</div>
@@ -211,7 +302,8 @@ const Payments = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+            )}
             </tbody>
           </table>
         </div>
@@ -246,13 +338,11 @@ const Payments = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                  <input 
-                    type="date" 
-                    required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  <NepaliDatePicker 
+                    label="Date (मिति)" 
+                    value={formData.date} 
+                    onChange={(val) => setFormData({ ...formData, date: val })} 
+                    required 
                   />
                 </div>
                 <div>

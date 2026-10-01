@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Filter, Download, Loader2, Edit, Trash2, FileText } from 'lucide-react';
+import { Search, Plus, Filter, Download, Loader2, Edit, Trash2, FileText, RotateCcw } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
 
@@ -25,6 +25,9 @@ const defaultCustomers: Customer[] = [
 const Customers = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+
   const [customers, setCustomers] = useState<Customer[]>(() => {
     const saved = localStorage.getItem('aslenix_customers');
     return saved ? JSON.parse(saved) : defaultCustomers;
@@ -35,6 +38,25 @@ const Customers = () => {
     setCustomers(data);
     localStorage.setItem('aslenix_customers', JSON.stringify(data));
   };
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter((c) => {
+      const q = searchTerm.toLowerCase().trim();
+      const matchesSearch = !q ||
+        c.name.toLowerCase().includes(q) ||
+        (c.company_name && c.company_name.toLowerCase().includes(q)) ||
+        (c.pan_number && c.pan_number.toLowerCase().includes(q)) ||
+        c.customer_id.toLowerCase().includes(q) ||
+        (c.email && c.email.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.includes(q));
+
+      const matchesType = typeFilter === 'All' || c.type === typeFilter;
+      const matchesStatus = statusFilter === 'All' || 
+        (statusFilter === 'Active' ? c.is_active : !c.is_active);
+
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [customers, searchTerm, typeFilter, statusFilter]);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -221,22 +243,69 @@ const Customers = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         {/* Table Header/Controls */}
-        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
-          <div className="relative w-full md:w-96">
+        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-slate-50/50">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
               placeholder="Search customers by name, company, or PAN..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors w-full md:w-auto justify-center">
-              <Filter size={16} />
-              Filters
-            </button>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Type Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <Filter size={14} className="text-slate-400" />
+              <span className="font-semibold text-slate-500">Type:</span>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                <option value="All">All Types</option>
+                <option value="Company">Company</option>
+                <option value="Individual">Individual</option>
+                <option value="Organization">Organization</option>
+                <option value="Government">Government</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <span className="font-semibold text-slate-500">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+              >
+                <option value="All">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            {(typeFilter !== 'All' || statusFilter !== 'All' || searchTerm) && (
+              <button
+                onClick={() => {
+                  setTypeFilter('All');
+                  setStatusFilter('All');
+                  setSearchTerm('');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors shadow-sm"
+                title="Clear all filters"
+              >
+                <RotateCcw size={13} />
+                Clear
+              </button>
+            )}
+
+            <div className="text-xs text-slate-400 font-medium pl-1">
+              Showing <span className="font-semibold text-slate-700">{filteredCustomers.length}</span> of {customers.length}
+            </div>
           </div>
         </div>
 
@@ -263,17 +332,26 @@ const Customers = () => {
                     </div>
                   </td>
                 </tr>
-              ) : customers.length === 0 ? (
+              ) : filteredCustomers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <p>No customers found.</p>
-                      <button className="text-accent font-medium hover:underline text-sm mt-1">Add your first customer</button>
+                      <p className="font-medium text-slate-700">No customers match your filter criteria.</p>
+                      <button 
+                        onClick={() => {
+                          setTypeFilter('All');
+                          setStatusFilter('All');
+                          setSearchTerm('');
+                        }}
+                        className="text-accent text-xs font-semibold hover:underline mt-1"
+                      >
+                        Reset filters to view all customers
+                      </button>
                     </div>
                   </td>
                 </tr>
               ) : (
-                customers.map((customer) => (
+                filteredCustomers.map((customer) => (
                   <tr key={customer.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="font-semibold text-primary">{customer.company_name || customer.name}</div>

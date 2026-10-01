@@ -21,6 +21,8 @@ import {
   Receipt
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import { NepaliDatePicker } from '../components/NepaliDatePicker';
+import { formatNepaliDate, getTodayBsDate } from '../lib/nepaliDate';
 
 export interface Employee {
   id: string;
@@ -156,7 +158,7 @@ const initialEmployees: Employee[] = [
     bank_name: 'Nabil Bank',
     bank_account_no: '01901017500123',
     bank_branch: 'Putalisadak',
-    joining_date: '2025-01-15',
+    joining_date: '2081-10-01',
     is_active: true,
   },
   {
@@ -172,7 +174,7 @@ const initialEmployees: Employee[] = [
     bank_name: 'Global IME Bank',
     bank_account_no: '04501010098765',
     bank_branch: 'New Baneshwor',
-    joining_date: '2025-02-01',
+    joining_date: '2081-11-15',
     is_active: true,
   },
   {
@@ -188,7 +190,7 @@ const initialEmployees: Employee[] = [
     bank_name: 'NIC Asia Bank',
     bank_account_no: '12405060708090',
     bank_branch: 'Thamel',
-    joining_date: '2025-04-10',
+    joining_date: '2082-01-01',
     is_active: true,
   },
   {
@@ -204,7 +206,7 @@ const initialEmployees: Employee[] = [
     bank_name: 'Sanima Bank',
     bank_account_no: '08901234567890',
     bank_branch: 'Lalitpur',
-    joining_date: '2025-06-01',
+    joining_date: '2082-03-01',
     is_active: true,
   },
   {
@@ -220,7 +222,7 @@ const initialEmployees: Employee[] = [
     bank_name: 'Everest Bank',
     bank_account_no: '00109988776655',
     bank_branch: 'Lazimpat',
-    joining_date: '2025-08-15',
+    joining_date: '2082-05-15',
     is_active: true,
   }
 ];
@@ -228,15 +230,15 @@ const initialEmployees: Employee[] = [
 // Initial demo records calculated using the exact salary and 1% TDS rules
 const initialPayrollRecords: PayrollRecord[] = [
   {
-    id: 'PAY-2026-10-001',
-    payroll_ref: 'PAY-2026-10-001',
+    id: 'PAY-2083-06-001',
+    payroll_ref: 'PAY-2083-06-001',
     employee_id: 'EMP-001',
     employee_code: 'EMP-001',
     employee_name: 'Aarav Sharma',
     designation: 'Senior Full Stack Engineer',
     department: 'Technology',
-    month: 'October',
-    year: 2026,
+    month: 'Ashwin',
+    year: 2083,
     total_working_days: 26,
     present_days: 24,
     half_days: 2,
@@ -253,21 +255,21 @@ const initialPayrollRecords: PayrollRecord[] = [
     tds_amount: 731.15,
     net_salary: 72384.23,
     payment_status: 'Paid',
-    payment_date: '2026-10-01',
+    payment_date: '2083-06-15',
     payment_method: 'Bank Transfer',
     reference_no: 'NBL-TXN-98442',
     notes: '24 present, 2 half days = 25 effective days. 1% TDS applied.'
   },
   {
-    id: 'PAY-2026-10-002',
-    payroll_ref: 'PAY-2026-10-002',
+    id: 'PAY-2083-06-002',
+    payroll_ref: 'PAY-2083-06-002',
     employee_id: 'EMP-002',
     employee_code: 'EMP-002',
     employee_name: 'Pooja Shrestha',
     designation: 'Lead Accountant',
     department: 'Finance',
-    month: 'October',
-    year: 2026,
+    month: 'Ashwin',
+    year: 2083,
     total_working_days: 26,
     present_days: 25,
     half_days: 1,
@@ -290,15 +292,15 @@ const initialPayrollRecords: PayrollRecord[] = [
     notes: 'Approved by management. 1% TDS applied.'
   },
   {
-    id: 'PAY-2026-10-003',
-    payroll_ref: 'PAY-2026-10-003',
+    id: 'PAY-2083-06-003',
+    payroll_ref: 'PAY-2083-06-003',
     employee_id: 'EMP-003',
     employee_code: 'EMP-003',
     employee_name: 'Rohan Adhikari',
     designation: 'UI/UX & Frontend Designer',
     department: 'Creative & Tech',
-    month: 'October',
-    year: 2026,
+    month: 'Ashwin',
+    year: 2083,
     total_working_days: 26,
     present_days: 23,
     half_days: 2,
@@ -318,15 +320,15 @@ const initialPayrollRecords: PayrollRecord[] = [
     notes: 'Advance salary deduction Rs. 2,000. 1% TDS applied.'
   },
   {
-    id: 'PAY-2026-10-004',
-    payroll_ref: 'PAY-2026-10-004',
+    id: 'PAY-2083-06-004',
+    payroll_ref: 'PAY-2083-06-004',
     employee_id: 'EMP-004',
     employee_code: 'EMP-004',
     employee_name: 'Sneha Karki',
     designation: 'Business Development Officer',
     department: 'Marketing',
-    month: 'October',
-    year: 2026,
+    month: 'Ashwin',
+    year: 2083,
     total_working_days: 26,
     present_days: 26,
     half_days: 0,
@@ -343,7 +345,7 @@ const initialPayrollRecords: PayrollRecord[] = [
     tds_amount: 410.00,
     net_salary: 40590.00,
     payment_status: 'Paid',
-    payment_date: '2026-10-01',
+    payment_date: '2083-06-15',
     payment_method: 'Bank Transfer',
     reference_no: 'SNM-TXN-55120',
     notes: '100% full attendance + marketing commission. 1% TDS applied.'
@@ -351,9 +353,8 @@ const initialPayrollRecords: PayrollRecord[] = [
 ];
 
 const monthsList = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-  'Baisakh', 'Jestha', 'Ashadh', 'Shrawan', 'Bhadra', 'Ashwin', 'Kartik', 'Mangsir', 'Poush', 'Magh', 'Falgun', 'Chaitra'
+  'Baishakh', 'Jestha', 'Ashadh', 'Shrawan', 'Bhadra', 'Ashwin',
+  'Kartik', 'Mangsir', 'Poush', 'Magh', 'Falgun', 'Chaitra'
 ];
 
 const formatNPR = (amount: number) => {
@@ -443,8 +444,8 @@ const Payroll = () => {
   });
 
   // Filters & Period
-  const [selectedMonth, setSelectedMonth] = useState('October');
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedMonth, setSelectedMonth] = useState('Ashwin');
+  const [selectedYear, setSelectedYear] = useState(2083);
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -460,7 +461,7 @@ const Payroll = () => {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [payingRecord, setPayingRecord] = useState<PayrollRecord | null>(null);
   const [paymentFormData, setPaymentFormData] = useState({
-    payment_date: new Date().toISOString().split('T')[0],
+    payment_date: getTodayBsDate(),
     payment_method: 'Bank Transfer',
     reference_no: '',
     record_in_expenses: true,
@@ -475,8 +476,8 @@ const Payroll = () => {
   // Form states for Salary Calculation Modal
   const [salaryFormData, setSalaryFormData] = useState({
     employee_id: '',
-    month: selectedMonth,
-    year: selectedYear,
+    month: 'Ashwin',
+    year: 2083,
     total_working_days: defaultWorkingDays,
     present_days: defaultWorkingDays,
     half_days: 0,
@@ -500,7 +501,7 @@ const Payroll = () => {
     bank_name: 'Nabil Bank',
     bank_account_no: '',
     bank_branch: '',
-    joining_date: new Date().toISOString().split('T')[0],
+    joining_date: getTodayBsDate(),
     is_active: true,
     notes: ''
   });
@@ -969,9 +970,11 @@ const Payroll = () => {
               onChange={(e) => setSelectedYear(Number(e.target.value))}
               className="bg-transparent text-sm font-semibold text-slate-800 outline-none cursor-pointer border-l border-slate-200 pl-2"
             >
-              <option value={2026}>2026 (2082/83)</option>
-              <option value={2025}>2025 (2081/82)</option>
-              <option value={2027}>2027 (2083/84)</option>
+              <option value={2084}>2084 BS</option>
+              <option value={2083}>2083 BS</option>
+              <option value={2082}>2082 BS</option>
+              <option value={2081}>2081 BS</option>
+              <option value={2080}>2080 BS</option>
             </select>
           </div>
 
@@ -1817,7 +1820,7 @@ const Payroll = () => {
                   type="text"
                   value={salaryFormData.notes}
                   onChange={(e) => setSalaryFormData({ ...salaryFormData, notes: e.target.value })}
-                  placeholder="e.g. October payroll with festival bonus"
+                  placeholder="e.g. Ashwin payroll with Dashain festival bonus (असोज तलब)"
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                 />
               </div>
@@ -2007,6 +2010,15 @@ const Payroll = () => {
                 </div>
               </div>
 
+              <div>
+                <NepaliDatePicker 
+                  label="Joining Date (नियुक्ति मिति)"
+                  value={employeeFormData.joining_date || getTodayBsDate()}
+                  onChange={(val) => setEmployeeFormData({ ...employeeFormData, joining_date: val })}
+                  required
+                />
+              </div>
+
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
@@ -2059,12 +2071,11 @@ const Payroll = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Payment Date</label>
-                <input
-                  type="date"
+                <NepaliDatePicker 
+                  label="Payment Date (भुक्तानी मिति)"
                   value={paymentFormData.payment_date}
-                  onChange={(e) => setPaymentFormData({ ...paymentFormData, payment_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                  onChange={(val) => setPaymentFormData({ ...paymentFormData, payment_date: val })}
+                  required
                 />
               </div>
 
@@ -2137,7 +2148,7 @@ const Payroll = () => {
             <div className="no-print flex justify-between items-center px-6 py-3.5 bg-slate-800 text-white">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <FileText size={18} />
-                <span>Salary Slip Preview — {activePayslip.employee_name} ({activePayslip.month} {activePayslip.year})</span>
+                <span>Salary Slip Preview — {activePayslip.employee_name} ({activePayslip.month} {activePayslip.year} BS)</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -2172,7 +2183,7 @@ const Payroll = () => {
                       Official Payslip
                     </span>
                     <p className="text-xs font-mono text-slate-500 mt-2">Ref: {activePayslip.payroll_ref}</p>
-                    <p className="text-xs font-semibold text-slate-800 mt-1">Pay Period: {activePayslip.month} {activePayslip.year}</p>
+                    <p className="text-xs font-semibold text-slate-800 mt-1">Pay Period: {activePayslip.month} {activePayslip.year} BS</p>
                   </div>
                 </div>
               </div>
@@ -2205,7 +2216,7 @@ const Payroll = () => {
                 </div>
                 <div>
                   <span className="text-slate-400 uppercase font-semibold text-[10px]">Payment Date</span>
-                  <p className="font-semibold text-slate-900 mt-0.5">{activePayslip.payment_date || 'Pending'}</p>
+                  <p className="font-semibold text-slate-900 mt-0.5">{activePayslip.payment_date ? formatNepaliDate(activePayslip.payment_date, 'full') : 'Pending'}</p>
                 </div>
                 <div>
                   <span className="text-slate-400 uppercase font-semibold text-[10px]">Txn Reference</span>

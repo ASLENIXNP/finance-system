@@ -11,9 +11,11 @@ import {
   Settings,
   LogOut,
   Building2,
-  Banknote
+  Banknote,
+  Calendar
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { formatNepaliDate, getCurrentFiscalYear } from '../lib/nepaliDate';
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -124,9 +126,14 @@ const Layout = () => {
         {/* Top Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-0 print:hidden">
           <h2 className="text-xl font-semibold text-primary">Overview</h2>
-          <div className="flex items-center gap-4">
-             <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-               Fiscal Year: 2082/83
+          <div className="flex items-center gap-3">
+             <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-slate-200">
+               <Calendar size={14} className="text-accent" />
+               <span>{formatNepaliDate(new Date(), 'withDay')} BS</span>
+               <span className="text-slate-400 font-normal">({formatNepaliDate(new Date(), 'devanagari')})</span>
+             </span>
+             <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-full border border-slate-200">
+               Fiscal Year: {getCurrentFiscalYear()}
              </span>
           </div>
         </header>

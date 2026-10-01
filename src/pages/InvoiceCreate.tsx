@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Plus, Trash2, Save, Printer } from 'lucide-react';
+import { Plus, Trash2, Printer } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { NepaliDatePicker } from '../components/NepaliDatePicker';
+import { formatNepaliDate, toBsDateString, getTodayBsDate } from '../lib/nepaliDate';
 
 interface Customer {
   id: string;
@@ -15,17 +17,23 @@ interface Customer {
   is_active: boolean;
 }
 
-const formatDate = (date: Date) =>
-  new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+interface InvoiceItem {
+  id: number;
+  name: string;
+  desc: string;
+  qty: number;
+  unit: string;
+  rate: number;
+  discount: number;
+  tax: number;
+}
 
-const addDays = (date: Date, days: number) => {
-  const nextDate = new Date(date);
-  nextDate.setDate(nextDate.getDate() + days);
-  return nextDate;
+const formatCurrency = (amount: number): string => {
+  return `Rs. ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 const generateInvoiceNumber = (customerId?: string) => {
-  const currentYear = new Date().getFullYear();
+  const currentYear = 2083;
   const serial = Math.floor(1000 + Math.random() * 9000);
   const customerTag = customerId ? customerId.replace(/[^0-9]/g, '').slice(-3).padStart(3, '0') : '001';
   return `ASL-${String(currentYear).slice(-2)}-${customerTag}-${serial}`;
@@ -39,19 +47,33 @@ const InvoiceCreate = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState(customerIdFromUrl || '');
   const [invoiceNumber, setInvoiceNumber] = useState(() => generateInvoiceNumber(customerIdFromUrl || undefined));
-  const [invoiceDate, setInvoiceDate] = useState(() => new Date());
-  const [dueDate, setDueDate] = useState(() => addDays(new Date(), 15));
-  const [customerInfo, setCustomerInfo] = useState({
-    name: 'Customer / Company Name',
-    address: 'Customer address',
-    pan: '',
-    phone: '',
-    email: '',
-    customerRef: '',
+  const [invoiceDate, setInvoiceDate] = useState(() => getTodayBsDate());
+  const [dueDate, setDueDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 15);
+    return toBsDateString(d);
   });
 
-  const [items, setItems] = useState([
-    { id: 1, name: 'Website Development', desc: 'Corporate website with CMS', qty: 1, unit: 'Project', rate: 150000, discount: 0, tax: 13 }
+  const [customerInfo, setCustomerInfo] = useState({
+    name: 'Tech Innovations Pvt. Ltd.',
+    address: 'Putalisadak, Kathmandu, Nepal',
+    pan: '609123456',
+    phone: '+977 1-4412345',
+    email: 'accounts@techinnovations.com.np',
+    customerRef: 'CUST-1001',
+  });
+
+  const [items, setItems] = useState<InvoiceItem[]>([
+    {
+      id: 1,
+      name: 'Website Development',
+      desc: 'Corporate website design and development with CMS',
+      qty: 1,
+      unit: 'Project',
+      rate: 150000,
+      discount: 0,
+      tax: 13,
+    },
   ]);
 
   useEffect(() => {
@@ -61,26 +83,23 @@ const InvoiceCreate = () => {
         .select('*')
         .order('company_name', { ascending: true });
 
-      if (error) {
+      if (error || !data || data.length === 0) {
         return;
       }
 
-      const customerList = data || [];
-      setCustomers(customerList);
+      setCustomers(data);
 
       const nextCustomerId = customerIdFromUrl
-        ? customerList.find((customer) => customer.id === customerIdFromUrl)?.id
-        : customerList[0]?.id ?? '';
+        ? data.find((c) => c.id === customerIdFromUrl)?.id
+        : data[0]?.id ?? '';
 
       setSelectedCustomerId((current) => {
-        if (customerIdFromUrl && customerList.some((customer) => customer.id === customerIdFromUrl)) {
+        if (customerIdFromUrl && data.some((c) => c.id === customerIdFromUrl)) {
           return customerIdFromUrl;
         }
-
-        if (current && customerList.some((customer) => customer.id === current)) {
+        if (current && data.some((c) => c.id === current)) {
           return current;
         }
-
         return nextCustomerId;
       });
     };
@@ -89,327 +108,504 @@ const InvoiceCreate = () => {
   }, [customerIdFromUrl]);
 
   useEffect(() => {
-    const activeCustomer = customers.find((customer) => customer.id === selectedCustomerId);
-
-    if (!activeCustomer) {
-      return;
-    }
+    const activeCustomer = customers.find((c) => c.id === selectedCustomerId);
+    if (!activeCustomer) return;
 
     setCustomerInfo({
       name: activeCustomer.company_name || activeCustomer.name || 'Customer / Company Name',
-      address: activeCustomer.company_name ? `${activeCustomer.company_name}, Kathmandu, Nepal` : activeCustomer.name,
+      address: activeCustomer.company_name
+        ? `${activeCustomer.company_name}, Kathmandu, Nepal`
+        : activeCustomer.name,
       pan: activeCustomer.pan_number || 'N/A',
       phone: activeCustomer.phone || 'N/A',
       email: activeCustomer.email || 'N/A',
-      customerRef: activeCustomer.customer_id || 'CUST-0000',
+      customerRef: activeCustomer.customer_id || 'CUST-1001',
     });
 
-    const nextInvoiceDate = new Date();
+    const nextInvoiceDate = getTodayBsDate();
     setInvoiceDate(nextInvoiceDate);
-    setDueDate(addDays(nextInvoiceDate, 15));
+    const d = new Date();
+    d.setDate(d.getDate() + 15);
+    setDueDate(toBsDateString(d));
     setInvoiceNumber(generateInvoiceNumber(activeCustomer.customer_id));
   }, [customers, selectedCustomerId]);
 
-  const subtotal = items.reduce((acc, item) => acc + (item.qty * item.rate), 0);
+  const subtotal = items.reduce((acc, item) => acc + item.qty * item.rate, 0);
   const totalDiscount = items.reduce((acc, item) => acc + item.discount, 0);
   const taxableAmount = subtotal - totalDiscount;
   const totalTax = items.reduce((acc, item) => {
-    const itemSub = (item.qty * item.rate) - item.discount;
-    return acc + (itemSub * (item.tax / 100));
+    const itemSub = item.qty * item.rate - item.discount;
+    return acc + itemSub * (item.tax / 100);
   }, 0);
   const grandTotal = taxableAmount + totalTax;
 
   const addItem = () => {
-    setItems([...items, {
-      id: Date.now(),
-      name: '',
-      desc: '',
-      qty: 1,
-      unit: 'Pcs',
-      rate: 0,
-      discount: 0,
-      tax: 13
-    }]);
+    setItems([
+      ...items,
+      {
+        id: Date.now(),
+        name: '',
+        desc: '',
+        qty: 1,
+        unit: 'Pcs',
+        rate: 0,
+        discount: 0,
+        tax: 13,
+      },
+    ]);
   };
 
   const removeItem = (id: number) => {
-    setItems(items.filter(item => item.id !== id));
+    if (items.length <= 1) return;
+    setItems(items.filter((item) => item.id !== id));
+  };
+
+  const updateItem = (id: number, field: keyof InvoiceItem, value: any) => {
+    setItems(
+      items.map((item) => {
+        if (item.id === id) {
+          return { ...item, [field]: value };
+        }
+        return item;
+      })
+    );
+  };
+
+  const handlePrint = () => {
+    // Reset window and scroll containers so print canvas starts at 0,0 with zero offset
+    window.scrollTo(0, 0);
+    document.querySelectorAll('.overflow-y-auto').forEach((el) => {
+      (el as HTMLElement).scrollTop = 0;
+    });
+    window.print();
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 print:p-0 print:m-0 print:pb-0 print:overflow-visible">
-      <div className="flex justify-between items-center mb-6 no-print">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 print:p-0 print:m-0 print:pb-0 print:overflow-visible print:transform-none">
+      {/* Top Action Bar (hidden when printing) */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 no-print">
         <div>
-          <h2 className="text-2xl font-bold text-primary">Create Invoice</h2>
-          <p className="text-slate-500 text-sm mt-1">Generate a new professional invoice for your customers.</p>
+          <h2 className="text-2xl font-bold text-primary">Invoice Generator</h2>
+          <p className="text-slate-500 text-sm mt-0.5">
+            Create, customize, and print client invoices with exact tax & payment breakdowns.
+          </p>
         </div>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm">
-            <Save size={18} />
-            Save Draft
-          </button>
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm"
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl font-medium hover:bg-accent-hover transition-colors shadow-sm shadow-accent/20 cursor-pointer"
           >
             <Printer size={18} />
-            Print Invoice
+            <span>Print / Save PDF</span>
           </button>
         </div>
       </div>
 
-      <div className="mb-6 no-print">
-        <label className="block text-sm font-medium text-slate-700 mb-2">Select customer</label>
-        <select
-          value={selectedCustomerId}
-          onChange={(event) => setSelectedCustomerId(event.target.value)}
-          className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-accent"
-        >
-          {customers.length === 0 ? (
-            <option value="">No customers available</option>
-          ) : (
-            customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.company_name || customer.name} ({customer.customer_id})
-              </option>
-            ))
-          )}
-        </select>
+      {/* Invoice Meta Controls Bar (Customer & Nepali Date Selectors) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 no-print bg-white p-5 rounded-2xl border border-slate-100 shadow-sm items-end">
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+            Select Customer
+          </label>
+          <select
+            value={selectedCustomerId}
+            onChange={(event) => setSelectedCustomerId(event.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-accent focus:ring-2 focus:ring-accent/10"
+          >
+            {customers.length === 0 ? (
+              <option value="">Tech Innovations Pvt. Ltd. (CUST-1001)</option>
+            ) : (
+              customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.company_name || c.name} ({c.customer_id})
+                </option>
+              ))
+            )}
+          </select>
+        </div>
+        <div>
+          <NepaliDatePicker
+            label="Invoice Date (बिल मिति)"
+            value={invoiceDate}
+            onChange={setInvoiceDate}
+            required
+          />
+        </div>
+        <div>
+          <NepaliDatePicker
+            label="Due Date (भुक्तानी म्याद)"
+            value={dueDate}
+            onChange={setDueDate}
+            required
+          />
+        </div>
       </div>
 
-      <div id="printable-invoice" className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:shadow-none print:border-none print:rounded-none print:p-0 print:m-0 print:w-full">
-        <div className="print-header p-8 md:p-12 border-b border-slate-100 print:border-b-2 print:border-slate-800 print:p-0 print:pb-2">
-          <div className="flex justify-between items-start flex-row gap-6 print:gap-4 w-full">
-            <div className="flex items-center gap-4">
-              <img src="/logo.png" alt="Aslenix Logo" className="h-16 w-auto object-contain print:h-12" />
-              <div>
-                <h1 className="text-xl md:text-2xl font-black tracking-tight text-primary uppercase print:text-black">
-                  ASLENIX TECH AND SOLUTION
-                </h1>
-                <p className="text-slate-500 font-medium text-xs print:text-slate-700">Budhanagar, Kathmandu, Nepal</p>
-                <div className="text-xs text-slate-500 mt-1 flex flex-wrap gap-x-3 print:text-slate-600">
-                  <span><span className="font-medium">PAN:</span> 123456789 (Placeholder)</span>
-                  <span><span className="font-medium">Phone:</span> +977 1-4000000</span>
-                  <span><span className="font-medium">Email:</span> contact@aslenix.com</span>
+      {/* Printable Corporate A4 Invoice Canvas */}
+      <div
+        id="printable-invoice"
+        className="max-w-[840px] mx-auto bg-white rounded-2xl shadow-lg border border-slate-200/80 overflow-hidden print:shadow-none print:border-none print:rounded-none print:m-0 print:w-full print:max-w-full"
+      >
+        <div className="p-8 sm:p-12 print:p-0 text-slate-800">
+          {/* 1. HEADER */}
+          <div className="print-header pb-6 border-b border-slate-200 print:border-slate-800 mb-6 print:pb-2 print:mb-2">
+            <div className="flex justify-between items-start gap-6">
+              {/* Left: Aslenix Logo & Company Information */}
+              <div className="flex items-start gap-4">
+                <img
+                  src="/logo.png"
+                  alt="Aslenix Logo"
+                  className="h-14 sm:h-16 w-auto object-contain print:h-10"
+                />
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 uppercase">
+                    ASLENIX TECH AND SOLUTION
+                  </h1>
+                  <p className="text-slate-500 text-xs font-normal mt-1 leading-snug">
+                    Budhanagar, Kathmandu, Nepal
+                  </p>
+                  <p className="text-slate-500 text-xs font-normal mt-0.5 leading-snug">
+                    <span className="font-semibold text-slate-700">PAN:</span> 123456789
+                    <span className="mx-2 text-slate-300">•</span>
+                    <span className="font-semibold text-slate-700">Phone:</span> +977 1-4000000
+                    <span className="mx-2 text-slate-300">•</span>
+                    <span className="font-semibold text-slate-700">Email:</span> contact@aslenix.com
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: INVOICE Heading & Key Metadata */}
+              <div className="text-right">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-wider uppercase mb-2 print:mb-1 print:text-2xl">
+                  INVOICE
+                </h2>
+                <div className="inline-grid grid-cols-[auto_auto] gap-x-3 gap-y-1 text-xs text-right">
+                  <span className="font-medium text-slate-500">Invoice No:</span>
+                  <span className="font-bold text-slate-900 font-mono">{invoiceNumber}</span>
+
+                  <span className="font-medium text-slate-500">Date:</span>
+                  <span className="font-semibold text-slate-900">{formatNepaliDate(invoiceDate, 'full')}</span>
+
+                  <span className="font-medium text-slate-500">Due Date:</span>
+                  <span className="font-semibold text-slate-900">{formatNepaliDate(dueDate, 'full')}</span>
                 </div>
               </div>
             </div>
-            <div className="text-right">
-              <h2 className="text-3xl font-black text-slate-200 uppercase tracking-widest print:text-slate-400 mb-2 print:mb-1">INVOICE</h2>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-right">
-                <div className="font-semibold text-slate-500">Invoice No:</div>
-                <div className="font-bold text-primary print:text-black">{invoiceNumber}</div>
-
-                <div className="font-semibold text-slate-500">Date:</div>
-                <div className="font-medium text-primary">{formatDate(invoiceDate)}</div>
-
-                <div className="font-semibold text-slate-500">Due Date:</div>
-                <div className="font-medium text-primary">{formatDate(dueDate)}</div>
-              </div>
-            </div>
           </div>
-        </div>
 
-        <div className="print-billing p-8 md:p-12 border-b border-slate-100 bg-slate-50/50 print:bg-transparent print:p-0 print:py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-12 print:gap-8">
-            <div>
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Billed To</h3>
-              <div className="space-y-4 print:space-y-2">
-                <div className="flex items-center justify-between gap-3">
+          {/* 2. BILL TO SECTION & 3. PAYMENT STATUS CARD */}
+          <div className="print-billing grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 print:gap-3 print:mb-2">
+            {/* Bill To Info (2 Cols) */}
+            <div className="md:col-span-2 space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                BILLED TO
+              </span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Customer / Company Name"
+                  className="font-bold text-lg text-slate-900 bg-transparent border-none p-0 focus:ring-0 w-full outline-none"
+                  value={customerInfo.name}
+                  onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
+                />
+                <span className="shrink-0 bg-slate-100 text-slate-600 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-slate-200">
+                  {customerInfo.customerRef}
+                </span>
+              </div>
+              <textarea
+                placeholder="Customer Address"
+                className={`w-full text-xs text-slate-600 bg-transparent border-none p-0 focus:ring-0 resize-none h-10 outline-none leading-relaxed print:h-auto print:min-h-0 ${!customerInfo.address ? 'print:hidden' : ''}`}
+                value={customerInfo.address}
+                onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs pt-1 border-t border-slate-100">
+                <div className="flex gap-2">
+                  <span className="text-slate-400 font-medium w-20">PAN/VAT:</span>
                   <input
                     type="text"
-                    placeholder="Customer / Company Name"
-                    className="w-full text-xl font-bold text-primary bg-transparent border-none p-0 focus:ring-0 placeholder-slate-300 print:text-black"
-                    value={customerInfo.name}
-                    onChange={(event) => setCustomerInfo((current) => ({ ...current, name: event.target.value }))}
+                    value={customerInfo.pan}
+                    onChange={(e) => setCustomerInfo({ ...customerInfo, pan: e.target.value })}
+                    className="font-semibold text-slate-800 bg-transparent border-none p-0 focus:ring-0 outline-none font-mono"
                   />
-                  <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-600">
-                    {customerInfo.customerRef}
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-slate-400 font-medium w-16">Phone:</span>
+                  <input
+                    type="text"
+                    value={customerInfo.phone}
+                    onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+                    className="text-slate-800 bg-transparent border-none p-0 focus:ring-0 outline-none"
+                  />
+                </div>
+                <div className="flex gap-2 sm:col-span-2">
+                  <span className="text-slate-400 font-medium w-20">Email:</span>
+                  <input
+                    type="text"
+                    value={customerInfo.email}
+                    onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+                    className="text-slate-800 bg-transparent border-none p-0 focus:ring-0 outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Status Card (1 Col) */}
+            <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between print:p-2.5 print:rounded-lg">
+              <div>
+                <div className="flex justify-between items-center mb-3 print:mb-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Payment Status
+                  </span>
+                  <span className="px-2.5 py-0.5 bg-rose-50 text-rose-700 text-[11px] font-bold rounded-full border border-rose-200 uppercase tracking-wider">
+                    UNPAID
                   </span>
                 </div>
-                <textarea
-                  placeholder="Customer Address"
-                  className="w-full text-slate-600 bg-transparent border-none p-0 focus:ring-0 resize-none h-16 print:h-auto"
-                  value={customerInfo.address}
-                  onChange={(event) => setCustomerInfo((current) => ({ ...current, address: event.target.value }))}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">PAN/VAT No.</label>
-                    <input
-                      type="text"
-                      className="w-full text-sm text-primary bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-1 focus:ring-accent outline-none print:border-none print:p-0 print:bg-transparent"
-                      value={customerInfo.pan}
-                      onChange={(event) => setCustomerInfo((current) => ({ ...current, pan: event.target.value }))}
-                    />
+                <div className="space-y-1.5 text-xs print:space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Total Amount:</span>
+                    <span className="font-semibold text-slate-800">{formatCurrency(grandTotal)}</span>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">Phone</label>
-                    <input
-                      type="text"
-                      className="w-full text-sm text-primary bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-1 focus:ring-accent outline-none print:border-none print:p-0 print:bg-transparent"
-                      value={customerInfo.phone}
-                      onChange={(event) => setCustomerInfo((current) => ({ ...current, phone: event.target.value }))}
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">Email</label>
-                    <input
-                      type="email"
-                      className="w-full text-sm text-primary bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-1 focus:ring-accent outline-none print:border-none print:p-0 print:bg-transparent"
-                      value={customerInfo.email}
-                      onChange={(event) => setCustomerInfo((current) => ({ ...current, email: event.target.value }))}
-                    />
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Amount Paid:</span>
+                    <span className="font-semibold text-slate-800">{formatCurrency(0)}</span>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 print:shadow-none print:p-3 print:rounded-lg">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 print:mb-2 print:text-xs">Payment Status</h3>
-              <div className="flex items-center gap-3 mb-6 print:mb-2">
-                <span className="px-3 py-1 bg-red-50 text-red-600 rounded-full text-sm font-bold border border-red-100 uppercase tracking-wider print:border-red-600 print:text-xs print:py-0.5">Unpaid</span>
-              </div>
-              <div className="space-y-2 text-sm print:space-y-1 print:text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Total Amount:</span>
-                  <span className="font-bold text-primary">रु. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Amount Paid:</span>
-                  <span className="font-bold text-primary">रु. 0.00</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-slate-100 print:pt-1">
-                  <span className="text-slate-700 font-bold">Balance Due:</span>
-                  <span className="font-bold text-red-600 text-base print:text-sm">रु. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
+              <div className="pt-2.5 mt-2.5 border-t border-slate-200/80 flex justify-between items-baseline print:pt-1.5 print:mt-1.5">
+                <span className="text-xs font-bold text-slate-900">Balance Due:</span>
+                <span className="text-base font-extrabold text-rose-700 font-mono">
+                  {formatCurrency(grandTotal)}
+                </span>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="print-items p-8 md:p-12 overflow-x-auto print:p-0 print:py-1 print:overflow-visible">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b-2 border-slate-200 print:border-black text-sm uppercase tracking-wider text-slate-400 font-bold">
-                <th className="pb-4 w-10 text-center print:pb-1.5 print:text-black print:text-[10px]">S.N.</th>
-                <th className="pb-4 w-auto print:pb-1.5 print:text-black print:text-[10px]">Item Details</th>
-                <th className="pb-4 text-center w-16 print:pb-1.5 print:text-black print:text-[10px]">Qty</th>
-                <th className="pb-4 text-center w-16 print:pb-1.5 print:text-black print:text-[10px]">Unit</th>
-                <th className="pb-4 text-right w-24 print:pb-1.5 print:text-black whitespace-nowrap print:text-[10px]">Rate (Rs)</th>
-                <th className="pb-4 text-right w-20 print:pb-1.5 print:text-black whitespace-nowrap print:text-[10px]">Disc (Rs)</th>
-                <th className="pb-4 text-right w-16 print:pb-1.5 print:text-black whitespace-nowrap print:text-[10px]">Tax (%)</th>
-                <th className="pb-4 text-right w-28 print:pb-1.5 print:text-black whitespace-nowrap print:text-[10px]">Amount (Rs)</th>
-                <th className="pb-4 w-12 print:hidden"></th>
-              </tr>
-            </thead>
-            <tbody className="text-slate-700 text-sm align-top print:text-xs">
-              {items.map((item, index) => (
-                <tr key={item.id} className="border-b border-slate-100 group">
-                  <td className="py-4 text-center font-medium text-slate-400 print:py-1.5">{index + 1}</td>
-                  <td className="py-4 pr-4 print:py-1.5">
-                    <input type="text" className="w-full font-bold text-primary bg-transparent outline-none print:p-0" defaultValue={item.name} placeholder="Item Name" />
-                    <textarea className="w-full text-slate-500 text-xs mt-1 bg-transparent outline-none resize-none h-10 print:h-auto print:p-0 print:text-[10px]" defaultValue={item.desc} placeholder="Item Description" />
-                  </td>
-                  <td className="py-4 px-2 print:py-1.5">
-                    <input type="number" className="w-full text-center bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:border-none print:bg-transparent print:p-0" defaultValue={item.qty} />
-                  </td>
-                  <td className="py-4 px-2 print:py-1.5">
-                    <input type="text" className="w-full text-center bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:border-none print:bg-transparent print:p-0" defaultValue={item.unit} />
-                  </td>
-                  <td className="py-4 px-2 print:py-1.5">
-                    <input type="number" className="w-full text-right bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:border-none print:bg-transparent print:p-0" defaultValue={item.rate} />
-                  </td>
-                  <td className="py-4 px-2 print:py-1.5">
-                    <input type="number" className="w-full text-right bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:border-none print:bg-transparent print:p-0" defaultValue={item.discount} />
-                  </td>
-                  <td className="py-4 px-2 print:py-1.5">
-                    <select className="w-full text-right bg-white border border-slate-200 rounded p-1 outline-none focus:border-accent print:appearance-none print:border-none print:bg-transparent print:p-0" defaultValue="13">
-                      <option value="0">0%</option>
-                      <option value="13">13% (VAT)</option>
-                    </select>
-                  </td>
-                  <td className="py-4 text-right font-bold text-primary print:py-1.5">
-                    {((item.qty * item.rate) - item.discount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </td>
-                  <td className="py-4 text-center print:hidden">
-                    <button onClick={() => removeItem(item.id)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
+          {/* 4. ITEMS TABLE */}
+          <div className="print-items mb-6 overflow-x-auto print:overflow-visible print:mb-2">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-y border-slate-200 bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-600 font-bold">
+                  <th className="py-2.5 px-3 text-center w-10">S.N.</th>
+                  <th className="py-2.5 px-3">Item Details</th>
+                  <th className="py-2.5 px-2 text-center w-14">Qty</th>
+                  <th className="py-2.5 px-2 text-center w-16">Unit</th>
+                  <th className="py-2.5 px-3 text-right w-24 whitespace-nowrap">Rate (Rs)</th>
+                  <th className="py-2.5 px-3 text-right w-20 whitespace-nowrap">Disc (Rs)</th>
+                  <th className="py-2.5 px-2 text-center w-16 whitespace-nowrap">Tax (%)</th>
+                  <th className="py-2.5 px-3 text-right w-28 whitespace-nowrap">Amount (Rs)</th>
+                  <th className="py-2.5 px-1 w-8 print:hidden"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700 text-xs">
+                {items.map((item, index) => {
+                  const lineAmount = item.qty * item.rate - item.discount;
+                  return (
+                    <tr key={item.id} className="group hover:bg-slate-50/40">
+                      <td className="py-3 px-3 text-center text-slate-400 font-medium align-top">
+                        {index + 1}
+                      </td>
+                      <td className="py-3 px-3 align-top">
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(e) => updateItem(item.id, 'name', e.target.value)}
+                          placeholder="Item name / Service"
+                          className="w-full font-semibold text-slate-900 bg-transparent outline-none p-0 text-xs"
+                        />
+                        <textarea
+                          value={item.desc}
+                          onChange={(e) => updateItem(item.id, 'desc', e.target.value)}
+                          placeholder="Item description or deliverables"
+                          className={`w-full text-slate-500 text-[11px] mt-0.5 bg-transparent outline-none p-0 resize-none h-6 print:h-auto leading-normal ${!item.desc ? 'print:hidden' : ''}`}
+                        />
+                      </td>
+                      <td className="py-3 px-2 text-center align-top">
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.qty}
+                          onChange={(e) => updateItem(item.id, 'qty', Number(e.target.value))}
+                          className="w-full text-center bg-transparent border border-slate-200 rounded px-1 py-0.5 outline-none focus:border-accent text-xs print:border-none print:p-0"
+                        />
+                      </td>
+                      <td className="py-3 px-2 text-center align-top">
+                        <input
+                          type="text"
+                          value={item.unit}
+                          onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
+                          className="w-full text-center bg-transparent border border-slate-200 rounded px-1 py-0.5 outline-none focus:border-accent text-xs text-slate-600 print:border-none print:p-0"
+                        />
+                      </td>
+                      <td className="py-3 px-3 text-right align-top">
+                        <input
+                          type="number"
+                          min="0"
+                          value={item.rate}
+                          onChange={(e) => updateItem(item.id, 'rate', Number(e.target.value))}
+                          className="w-full text-right bg-transparent border border-slate-200 rounded px-1 py-0.5 outline-none focus:border-accent text-xs font-mono print:border-none print:p-0"
+                        />
+                      </td>
+                      <td className="py-3 px-3 text-right align-top">
+                        <input
+                          type="number"
+                          min="0"
+                          value={item.discount}
+                          onChange={(e) => updateItem(item.id, 'discount', Number(e.target.value))}
+                          className="w-full text-right bg-transparent border border-slate-200 rounded px-1 py-0.5 outline-none focus:border-accent text-xs font-mono text-slate-600 print:border-none print:p-0"
+                        />
+                      </td>
+                      <td className="py-3 px-2 text-center align-top">
+                        <select
+                          value={item.tax}
+                          onChange={(e) => updateItem(item.id, 'tax', Number(e.target.value))}
+                          className="bg-transparent border border-slate-200 rounded px-1 py-0.5 outline-none focus:border-accent text-xs text-slate-700 print:border-none print:p-0 print:appearance-none text-center"
+                        >
+                          <option value="13">13%</option>
+                          <option value="0">0%</option>
+                        </select>
+                      </td>
+                      <td className="py-3 px-3 text-right font-bold text-slate-900 font-mono text-xs align-top">
+                        {lineAmount.toLocaleString('en-IN', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </td>
+                      <td className="py-3 px-1 text-center align-top print:hidden">
+                        {items.length > 1 && (
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="p-1 text-slate-300 hover:text-red-600 transition-colors cursor-pointer"
+                            title="Delete row"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
-          <div className="mt-4 print:hidden">
-            <button onClick={addItem} className="flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover px-4 py-2 bg-accent/5 rounded-lg transition-colors">
-              <Plus size={16} /> Add Item
-            </button>
+            {/* Add Item Row Button (non-print only) */}
+            <div className="mt-3 no-print">
+              <button
+                onClick={addItem}
+                className="flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-accent-hover px-3 py-1.5 bg-accent/5 hover:bg-accent/10 rounded-lg transition-colors cursor-pointer"
+              >
+                <Plus size={14} />
+                <span>Add Item</span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className="print-summary p-8 md:p-12 flex flex-col md:flex-row print:flex-row justify-between items-start gap-12 print:gap-8 bg-slate-50/30 print:bg-transparent border-t border-slate-100 print:border-black print:p-0 print:py-2">
-          <div className="w-full md:w-1/2 print:w-1/2 space-y-6 print:space-y-2">
-            <div>
-              <h4 className="text-sm font-bold text-slate-700 mb-2 print:mb-1 print:text-xs">Bank Details</h4>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 text-sm print:border-none print:p-0 print:bg-transparent print:text-xs">
-                <p><span className="font-semibold text-slate-500 w-28 inline-block">Bank Name:</span> <span className="font-medium text-primary">Global IME Bank</span></p>
-                <p><span className="font-semibold text-slate-500 w-28 inline-block">Account Name:</span> <span className="font-medium text-primary">Aslenix Tech and Solution</span></p>
-                <p><span className="font-semibold text-slate-500 w-28 inline-block">Account No:</span> <span className="font-medium text-primary">01234567890123</span></p>
-                <p><span className="font-semibold text-slate-500 w-28 inline-block">Branch:</span> <span className="font-medium text-primary">Baneshwor Branch</span></p>
+          {/* 5. TOTALS SECTION, 6. BANK DETAILS, & 7. TERMS */}
+          <div className="print-summary grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-slate-200 mb-8 print:gap-4 print:pt-2 print:mb-2">
+            {/* Left: Bank Details & Terms */}
+            <div className="space-y-4 print:space-y-2">
+              {/* 6. Bank Details */}
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 print:mb-1">
+                  BANK DETAILS
+                </span>
+                <div className="bg-slate-50/60 p-3.5 rounded-lg border border-slate-200/80 text-xs space-y-1 print:p-2 print:space-y-0.5">
+                  <div className="grid grid-cols-[100px_1fr]">
+                    <span className="text-slate-500 font-normal">Bank Name:</span>
+                    <span className="font-semibold text-slate-800">Global IME Bank</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr]">
+                    <span className="text-slate-500 font-normal">Account Name:</span>
+                    <span className="font-semibold text-slate-800">Aslenix Tech and Solution</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr]">
+                    <span className="text-slate-500 font-normal">Account No:</span>
+                    <span className="font-mono font-semibold text-slate-900">01234567890123</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr]">
+                    <span className="text-slate-500 font-normal">Branch:</span>
+                    <span className="font-semibold text-slate-800">Baneshwor Branch</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 7. Terms & Conditions */}
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                  TERMS & CONDITIONS
+                </span>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Payment is required within 15 days of invoice date. All payments can be made via bank
+                  transfer to the account listed above.
+                </p>
               </div>
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-700 mb-2 print:mb-1 print:text-xs">Terms & Conditions</h4>
-              <textarea
-                className="w-full text-xs text-slate-500 bg-transparent outline-none resize-none h-24 print:h-12 print:text-[10px]"
-                defaultValue={"1. Payment is required within 15 days of invoice date.\n2. Late payments may be subject to a 2% monthly fee.\n3. All disputes are subject to Kathmandu jurisdiction."}
-              />
-            </div>
-          </div>
 
-          <div className="w-full md:w-80 print:w-72 space-y-3 print:space-y-1">
-            <div className="flex justify-between text-sm print:text-xs">
-              <span className="font-semibold text-slate-500">Subtotal:</span>
-              <span className="font-medium text-primary">रु. {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-            </div>
-            {totalDiscount > 0 && (
-              <div className="flex justify-between text-sm print:text-xs">
-                <span className="font-semibold text-slate-500">Discount:</span>
-                <span className="font-medium text-emerald-600">- रु. {totalDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            {/* Right: 5. Totals Section */}
+            <div className="flex flex-col justify-start items-end">
+              <div className="w-full max-w-[280px] space-y-2 text-xs print:space-y-1">
+                <div className="flex justify-between text-slate-600">
+                  <span className="font-medium">Subtotal:</span>
+                  <span className="font-semibold text-slate-900 font-mono">
+                    {formatCurrency(subtotal)}
+                  </span>
+                </div>
+
+                {totalDiscount > 0 && (
+                  <div className="flex justify-between text-slate-600">
+                    <span className="font-medium">Discount:</span>
+                    <span className="font-semibold text-emerald-600 font-mono">
+                      -{formatCurrency(totalDiscount)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-slate-600">
+                  <span className="font-medium">Taxable Amount:</span>
+                  <span className="font-semibold text-slate-900 font-mono">
+                    {formatCurrency(taxableAmount)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-slate-600">
+                  <span className="font-medium">VAT (13%):</span>
+                  <span className="font-semibold text-slate-900 font-mono">
+                    {formatCurrency(totalTax)}
+                  </span>
+                </div>
+
+                <div className="border-t-2 border-slate-900 pt-2.5 mt-2 flex justify-between items-baseline print:pt-1.5 print:mt-1">
+                  <span className="text-sm font-bold text-slate-900 uppercase tracking-tight">
+                    Grand Total:
+                  </span>
+                  <span className="text-lg font-black text-slate-900 font-mono">
+                    {formatCurrency(grandTotal)}
+                  </span>
+                </div>
               </div>
-            )}
-            <div className="flex justify-between text-sm pb-3 border-b border-slate-200 print:pb-1 print:text-xs">
-              <span className="font-semibold text-slate-500">Taxable Amount:</span>
-              <span className="font-medium text-primary">रु. {taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between text-sm print:text-xs">
-              <span className="font-semibold text-slate-500">VAT (13%):</span>
-              <span className="font-medium text-primary">रु. {totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between items-center pt-4 border-t-2 border-slate-800 print:border-black mt-2 print:mt-1 print:pt-1">
-              <span className="font-bold text-lg text-primary print:text-sm">Grand Total:</span>
-              <span className="font-black text-2xl text-accent print:text-black print:text-base">रु. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
-        </div>
 
-        <div className="print-signatures p-8 md:p-12 pt-0 mt-8 md:mt-16 print:mt-3 flex justify-between items-end print:p-0 print:pt-2">
-          <div className="text-center w-48 print:w-36">
-            <div className="border-b border-slate-300 h-10 mb-2 print:h-6 print:mb-1"></div>
-            <p className="text-sm font-bold text-primary print:text-xs">Authorized Signature</p>
-            <p className="text-xs text-slate-500 print:text-[10px]">For Aslenix Tech and Solution</p>
-          </div>
-          <div className="text-center w-48 print:w-36">
-            <div className="border-b border-slate-300 h-10 mb-2 print:h-6 print:mb-1"></div>
-            <p className="text-sm font-bold text-primary print:text-xs">Customer Signature</p>
-            <p className="text-xs text-slate-500 print:text-[10px]">Received in good condition</p>
-          </div>
-        </div>
+          {/* 8. SIGNATURE AREA */}
+          <div className="print-signatures pt-6 border-t border-slate-200 flex justify-between items-end mb-6 print:pt-2.5 print:mb-1.5">
+            <div className="text-left w-52">
+              <div className="border-t border-slate-400 w-44 mb-1.5"></div>
+              <p className="text-xs font-bold text-slate-900">Authorized Signature</p>
+              <p className="text-[10px] text-slate-500">For Aslenix Tech and Solution</p>
+            </div>
 
-        <div className="print-footer bg-slate-800 text-slate-400 text-center py-4 text-xs mt-8 print:bg-transparent print:text-black print:border-t print:border-slate-300 print:mt-2 print:py-1 print:text-[10px]">
-          Thank you for your business!
+            <div className="text-right w-52">
+              <div className="border-t border-slate-400 w-44 ml-auto mb-1.5"></div>
+              <p className="text-xs font-bold text-slate-900">Customer Signature</p>
+              <p className="text-[10px] text-slate-500">Received in good condition</p>
+            </div>
+          </div>
+
+          {/* 9. FOOTER */}
+          <div className="print-footer pt-3 border-t border-slate-100 text-center print:pt-1">
+            <p className="text-xs text-slate-400 font-medium tracking-wide">
+              Thank you for your business!
+            </p>
+          </div>
         </div>
       </div>
     </div>
