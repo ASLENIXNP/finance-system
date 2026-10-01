@@ -21,6 +21,9 @@ const Products = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -242,7 +245,10 @@ const Products = () => {
                       
                       <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
                         <button 
-                          onClick={() => alert(`Edit item: ${item.name}`)}
+                          onClick={() => {
+                            setAlertMessage(`Edit feature for ${item.name} is coming soon!`);
+                            setAlertModalOpen(true);
+                          }}
                           className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
                         >
                           <Edit size={16} />
@@ -372,6 +378,17 @@ const Products = () => {
         title="Delete Item"
         message="Are you sure you want to delete this item? This action cannot be undone."
         confirmText="Delete Item"
+        isDanger={true}
+      />
+
+      <ConfirmModal 
+        isOpen={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        onConfirm={() => {}}
+        title="Coming Soon"
+        message={alertMessage}
+        confirmText="Got it"
+        hideCancel={true}
       />
     </div>
   );

@@ -23,6 +23,9 @@ const Customers = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -243,7 +246,10 @@ const Customers = () => {
                       
                       <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
                         <button 
-                          onClick={() => alert(`Edit customer ${customer.company_name || customer.name}`)}
+                          onClick={() => {
+                            setAlertMessage(`Edit feature for ${customer.company_name || customer.name} is coming soon!`);
+                            setAlertModalOpen(true);
+                          }}
                           className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
                         >
                           <Edit size={16} />
@@ -379,6 +385,17 @@ const Customers = () => {
         title="Delete Customer"
         message="Are you sure you want to delete this customer? This action cannot be undone and may affect existing invoices."
         confirmText="Delete Customer"
+        isDanger={true}
+      />
+
+      <ConfirmModal 
+        isOpen={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        onConfirm={() => {}}
+        title="Coming Soon"
+        message={alertMessage}
+        confirmText="Got it"
+        hideCancel={true}
       />
     </div>
   );
