@@ -18,12 +18,10 @@ const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
-  
-  const [alertModalOpen, setAlertModalOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -31,6 +29,11 @@ const Products = () => {
     default_rate: 0,
     tax_rate: 13,
   });
+
+  const resetForm = () => {
+    setFormData({ name: '', type: 'Service', default_rate: 0, tax_rate: 13 });
+    setEditingId(null);
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -58,23 +61,37 @@ const Products = () => {
     setIsSubmitting(true);
     
     try {
-      const prefix = formData.type === 'Product' ? 'PRD' : 'SRV';
-      const newCode = `${prefix}-${Math.floor(100 + Math.random() * 900)}`;
+      if (editingId) {
+        const { error } = await supabase
+          .from('products')
+          .update({
+            name: formData.name,
+            type: formData.type,
+            default_rate: formData.default_rate,
+            tax_rate: formData.tax_rate,
+          })
+          .eq('id', editingId);
+          
+        if (error) throw error;
+      } else {
+        const prefix = formData.type === 'Product' ? 'PRD' : 'SRV';
+        const newCode = `${prefix}-${Math.floor(100 + Math.random() * 900)}`;
+        
+        const { error } = await supabase.from('products').insert([
+          {
+            item_code: newCode,
+            ...formData
+          }
+        ]);
+  
+        if (error) throw error;
+      }
       
-      const { error } = await supabase.from('products').insert([
-        {
-          item_code: newCode,
-          ...formData
-        }
-      ]);
-
-      if (error) throw error;
-      
-      setFormData({ name: '', type: 'Service', default_rate: 0, tax_rate: 13 });
-      setIsAddModalOpen(false);
+      resetForm();
+      setIsModalOpen(false);
       fetchProducts();
     } catch (error: any) {
-      alert(error.message || 'Error adding item');
+      alert(error.message || 'Error saving item');
     } finally {
       setIsSubmitting(false);
     }
@@ -97,6 +114,17 @@ const Products = () => {
       console.error('Error updating status:', error);
       alert('Failed to update product status.');
     }
+  };
+
+  const handleEditClick = (product: Product) => {
+    setEditingId(product.id);
+    setFormData({
+      name: product.name,
+      type: product.type,
+      default_rate: product.default_rate,
+      tax_rate: product.tax_rate,
+    });
+    setIsModalOpen(true);
   };
 
   const handleDeleteClick = (productId: string) => {
@@ -132,7 +160,7 @@ const Products = () => {
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <button 
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => { resetForm(); setIsModalOpen(true); }}
             className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none"
           >
             <Plus size={18} />
@@ -245,10 +273,7 @@ const Products = () => {
                       
                       <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
                         <button 
-                          onClick={() => {
-                            setAlertMessage(`Edit feature for ${item.name} is coming soon!`);
-                            setAlertModalOpen(true);
-                          }}
+                          onClick={() => handleEditClick(item)}
                           className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
                         >
                           <Edit size={16} />
@@ -269,21 +294,23 @@ const Products = () => {
         </div>
       </div>
 
-      {/* Add Product Modal */}
-      {isAddModalOpen && (
+      {/* Add / Edit Product Modal */}
+      {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-primary">Add New Item</h3>
+              <h3 className="text-xl font-bold text-primary">
+                {editingId ? 'Edit Item' : 'Add New Item'}
+              </h3>
               <button 
-                onClick={() => setIsAddModalOpen(false)}
+                onClick={() => { setIsModalOpen(false); resetForm(); }}
                 className="text-slate-400 hover:text-slate-600 transition-colors"
               >
                 ✕
               </button>
             </div>
             
-            <form onSubmit={handleAddProduct} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Item Name *</label>
                 <input 
@@ -352,7 +379,7 @@ const Products = () => {
               <div className="pt-6 mt-6 border-t border-slate-100 flex justify-end gap-3">
                 <button 
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={() => { setIsModalOpen(false); resetForm(); }}
                   className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors"
                 >
                   Cancel
@@ -363,7 +390,7 @@ const Products = () => {
                   className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover font-medium transition-colors disabled:opacity-70 flex items-center gap-2"
                 >
                   {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-                  {isSubmitting ? 'Saving...' : 'Save Item'}
+                  {isSubmitting ? 'Saving...' : (editingId ? 'Save Changes' : 'Save Item')}
                 </button>
               </div>
             </form>
@@ -379,16 +406,6 @@ const Products = () => {
         message="Are you sure you want to delete this item? This action cannot be undone."
         confirmText="Delete Item"
         isDanger={true}
-      />
-
-      <ConfirmModal 
-        isOpen={alertModalOpen}
-        onClose={() => setAlertModalOpen(false)}
-        onConfirm={() => {}}
-        title="Coming Soon"
-        message={alertMessage}
-        confirmText="Got it"
-        hideCancel={true}
       />
     </div>
   );
