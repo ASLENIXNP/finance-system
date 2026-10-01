@@ -24,8 +24,19 @@ const Users = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   
-  const [alertModalOpen, setAlertModalOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'Viewer',
+    status: 'Active'
+  });
+
+  const resetForm = () => {
+    setFormData({ name: '', email: '', role: 'Viewer', status: 'Active' });
+    setEditingId(null);
+  };
 
   const handleDeleteClick = (id: string) => {
     setUserToDelete(id);
@@ -35,8 +46,40 @@ const Users = () => {
   const confirmDelete = () => {
     if (userToDelete) {
       setUsersData(usersData.filter(item => item.id !== userToDelete));
+      setDeleteModalOpen(false);
       setUserToDelete(null);
     }
+  };
+
+  const handleEditClick = (user: any) => {
+    setEditingId(user.id);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingId) {
+      setUsersData(usersData.map(item => 
+        item.id === editingId 
+          ? { ...item, ...formData } 
+          : item
+      ));
+    } else {
+      const newUser = {
+        id: `USR-00${usersData.length + 1}`,
+        lastLogin: 'Never',
+        ...formData
+      };
+      setUsersData([newUser, ...usersData]);
+    }
+    setIsModalOpen(false);
+    resetForm();
   };
 
   return (
@@ -47,7 +90,10 @@ const Users = () => {
           <p className="text-slate-500 text-sm mt-1">Manage system access, staff accounts, and role permissions.</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none">
+          <button 
+            onClick={() => { resetForm(); setIsModalOpen(true); }}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none"
+          >
             <Plus size={18} />
             Invite User
           </button>
@@ -130,10 +176,7 @@ const Users = () => {
                     
                     <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
                       <button 
-                        onClick={() => {
-                          setAlertMessage(`Edit feature for ${user.name} is coming soon!`);
-                          setAlertModalOpen(true);
-                        }}
+                        onClick={() => handleEditClick(user)}
                         className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
                       >
                         <Edit size={16} />
@@ -163,15 +206,95 @@ const Users = () => {
         isDanger={true}
       />
 
-      <ConfirmModal 
-        isOpen={alertModalOpen}
-        onClose={() => setAlertModalOpen(false)}
-        onConfirm={() => {}}
-        title="Coming Soon"
-        message={alertMessage}
-        confirmText="Got it"
-        hideCancel={true}
-      />
+      {/* Add / Edit User Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100">
+              <h2 className="text-xl font-bold text-slate-800">
+                {editingId ? 'Edit User' : 'Invite User'}
+              </h2>
+              <button 
+                onClick={() => { setIsModalOpen(false); resetForm(); }}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                  <input 
+                    type="text" 
+                    required
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                  <input 
+                    type="email" 
+                    required
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                  <select
+                    required
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  >
+                    <option value="Super Admin">Super Admin</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Accountant">Accountant</option>
+                    <option value="Billing Staff">Billing Staff</option>
+                    <option value="Viewer">Viewer</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                  <select
+                    required
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="pt-6 mt-6 border-t border-slate-100 flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => { setIsModalOpen(false); resetForm(); }}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover font-medium transition-colors shadow-sm"
+                >
+                  {editingId ? 'Save Changes' : 'Send Invite'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

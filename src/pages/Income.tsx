@@ -15,8 +15,19 @@ const Income = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
   
-  const [alertModalOpen, setAlertModalOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    source: 'Software Development',
+    amount: '',
+    reference: ''
+  });
+
+  const resetForm = () => {
+    setFormData({ date: new Date().toISOString().split('T')[0], source: 'Software Development', amount: '', reference: '' });
+    setEditingId(null);
+  };
 
   const handleDeleteClick = (id: string) => {
     setIncomeToDelete(id);
@@ -26,8 +37,41 @@ const Income = () => {
   const confirmDelete = () => {
     if (incomeToDelete) {
       setIncomeData(incomeData.filter(item => item.id !== incomeToDelete));
+      setDeleteModalOpen(false);
       setIncomeToDelete(null);
     }
+  };
+
+  const handleEditClick = (income: any) => {
+    setEditingId(income.id);
+    setFormData({
+      date: income.date,
+      source: income.source,
+      amount: income.amount.toString(),
+      reference: income.reference || ''
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingId) {
+      setIncomeData(incomeData.map(item => 
+        item.id === editingId 
+          ? { ...item, ...formData, amount: Number(formData.amount) } 
+          : item
+      ));
+    } else {
+      const newIncome = {
+        id: `INC-00${incomeData.length + 1}`,
+        status: 'Completed',
+        ...formData,
+        amount: Number(formData.amount)
+      };
+      setIncomeData([newIncome, ...incomeData]);
+    }
+    setIsModalOpen(false);
+    resetForm();
   };
 
   return (
@@ -38,7 +82,10 @@ const Income = () => {
           <p className="text-slate-500 text-sm mt-1">Track all revenue, invoice payments, and other income sources.</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none">
+          <button 
+            onClick={() => { resetForm(); setIsModalOpen(true); }}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none"
+          >
             <Plus size={18} />
             Record Income
           </button>
@@ -139,10 +186,7 @@ const Income = () => {
                     
                     <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
                       <button 
-                        onClick={() => {
-                          setAlertMessage(`Edit feature for ${income.id} is coming soon!`);
-                          setAlertModalOpen(true);
-                        }}
+                        onClick={() => handleEditClick(income)}
                         className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
                       >
                         <Edit size={16} />
@@ -172,15 +216,93 @@ const Income = () => {
         isDanger={true}
       />
 
-      <ConfirmModal 
-        isOpen={alertModalOpen}
-        onClose={() => setAlertModalOpen(false)}
-        onConfirm={() => {}}
-        title="Coming Soon"
-        message={alertMessage}
-        confirmText="Got it"
-        hideCancel={true}
-      />
+      {/* Add / Edit Income Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100">
+              <h2 className="text-xl font-bold text-slate-800">
+                {editingId ? 'Edit Income' : 'Record Income'}
+              </h2>
+              <button 
+                onClick={() => { setIsModalOpen(false); resetForm(); }}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                  <input 
+                    type="date" 
+                    required
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.date}
+                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Amount (रु.)</label>
+                  <input 
+                    type="number" 
+                    required
+                    min="0"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Source / Category</label>
+                <select
+                  required
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                  value={formData.source}
+                  onChange={(e) => setFormData({...formData, source: e.target.value})}
+                >
+                  <option value="Software Development">Software Development</option>
+                  <option value="Web Design">Web Design</option>
+                  <option value="Consulting">Consulting</option>
+                  <option value="Maintenance Retainer">Maintenance Retainer</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Reference (Optional)</label>
+                <input 
+                  type="text" 
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                  value={formData.reference}
+                  onChange={(e) => setFormData({...formData, reference: e.target.value})}
+                  placeholder="e.g. INV-2023-001"
+                />
+              </div>
+              
+              <div className="pt-6 mt-6 border-t border-slate-100 flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => { setIsModalOpen(false); resetForm(); }}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover font-medium transition-colors shadow-sm"
+                >
+                  {editingId ? 'Save Changes' : 'Save Income'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

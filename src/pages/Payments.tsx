@@ -15,8 +15,20 @@ const Payments = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
   
-  const [alertModalOpen, setAlertModalOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    to: '',
+    amount: '',
+    method: 'Bank Transfer',
+    status: 'Cleared'
+  });
+
+  const resetForm = () => {
+    setFormData({ date: new Date().toISOString().split('T')[0], to: '', amount: '', method: 'Bank Transfer', status: 'Cleared' });
+    setEditingId(null);
+  };
 
   const handleDeleteClick = (id: string) => {
     setPaymentToDelete(id);
@@ -26,8 +38,41 @@ const Payments = () => {
   const confirmDelete = () => {
     if (paymentToDelete) {
       setPaymentsData(paymentsData.filter(item => item.id !== paymentToDelete));
+      setDeleteModalOpen(false);
       setPaymentToDelete(null);
     }
+  };
+
+  const handleEditClick = (payment: any) => {
+    setEditingId(payment.id);
+    setFormData({
+      date: payment.date,
+      to: payment.to,
+      amount: payment.amount.toString(),
+      method: payment.method,
+      status: payment.status
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingId) {
+      setPaymentsData(paymentsData.map(item => 
+        item.id === editingId 
+          ? { ...item, ...formData, amount: Number(formData.amount) } 
+          : item
+      ));
+    } else {
+      const newPayment = {
+        id: `PAY-00${paymentsData.length + 1}`,
+        ...formData,
+        amount: Number(formData.amount)
+      };
+      setPaymentsData([newPayment, ...paymentsData]);
+    }
+    setIsModalOpen(false);
+    resetForm();
   };
 
   return (
@@ -36,6 +81,15 @@ const Payments = () => {
         <div>
           <h2 className="text-2xl font-bold text-primary">Payment Tracking</h2>
           <p className="text-slate-500 text-sm mt-1">Monitor all invoice payments, receipts, and bank clearances.</p>
+        </div>
+        <div className="flex gap-3 w-full md:w-auto">
+          <button 
+            onClick={() => { resetForm(); setIsModalOpen(true); }}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none"
+          >
+            <Plus size={18} />
+            Record Payment
+          </button>
         </div>
       </div>
 
@@ -116,10 +170,7 @@ const Payments = () => {
                     
                     <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
                       <button 
-                        onClick={() => {
-                          setAlertMessage(`Edit feature for ${payment.id} is coming soon!`);
-                          setAlertModalOpen(true);
-                        }}
+                        onClick={() => handleEditClick(payment)}
                         className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
                       >
                         <Edit size={16} />
@@ -149,15 +200,108 @@ const Payments = () => {
         isDanger={true}
       />
 
-      <ConfirmModal 
-        isOpen={alertModalOpen}
-        onClose={() => setAlertModalOpen(false)}
-        onConfirm={() => {}}
-        title="Coming Soon"
-        message={alertMessage}
-        confirmText="Got it"
-        hideCancel={true}
-      />
+      {/* Add / Edit Payment Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100">
+              <h2 className="text-xl font-bold text-slate-800">
+                {editingId ? 'Edit Payment' : 'Record Payment'}
+              </h2>
+              <button 
+                onClick={() => { setIsModalOpen(false); resetForm(); }}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                  <input 
+                    type="date" 
+                    required
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.date}
+                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Amount (रु.)</label>
+                  <input 
+                    type="number" 
+                    required
+                    min="0"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">To (Recipient / Invoice)</label>
+                <input 
+                  type="text" 
+                  required
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                  value={formData.to}
+                  onChange={(e) => setFormData({...formData, to: e.target.value})}
+                  placeholder="e.g. INV-2023-001 or Client Name"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Payment Method</label>
+                  <select
+                    required
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.method}
+                    onChange={(e) => setFormData({...formData, method: e.target.value})}
+                  >
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Check">Check</option>
+                    <option value="Credit Card">Credit Card</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                  <select
+                    required
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  >
+                    <option value="Cleared">Cleared</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Failed">Failed</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="pt-6 mt-6 border-t border-slate-100 flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => { setIsModalOpen(false); resetForm(); }}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover font-medium transition-colors shadow-sm"
+                >
+                  {editingId ? 'Save Changes' : 'Record Payment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

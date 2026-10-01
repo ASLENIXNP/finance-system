@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Save, Printer, FileText } from 'lucide-react';
+import { Plus, Trash2, Save, Printer } from 'lucide-react';
 
 const InvoiceCreate = () => {
   const [items, setItems] = useState([
@@ -34,7 +34,7 @@ const InvoiceCreate = () => {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-      <div className="flex justify-between items-center mb-6 print:hidden">
+      <div className="flex justify-between items-center mb-6 no-print">
         <div>
           <h2 className="text-2xl font-bold text-primary">Create Invoice</h2>
           <p className="text-slate-500 text-sm mt-1">Generate a new professional invoice for your customers.</p>
@@ -54,7 +54,7 @@ const InvoiceCreate = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:shadow-none print:border-none print:rounded-none">
+      <div id="printable-invoice" className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:shadow-none print:border-none print:rounded-none">
         {/* Print Header - Only visible when printing or in normal view to show structure */}
         <div className="p-8 md:p-12 border-b border-slate-100 print:border-b-2 print:border-slate-800">
           <div className="flex justify-between items-start flex-col md:flex-row gap-8">
