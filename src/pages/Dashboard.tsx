@@ -1,21 +1,21 @@
-import { ArrowUpRight, ArrowDownRight, DollarSign, FileText, CreditCard, Activity } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Banknote, FileText, CreditCard, Activity } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const data = [
-  { name: 'Jan', income: 4000, expense: 2400 },
-  { name: 'Feb', income: 3000, expense: 1398 },
-  { name: 'Mar', income: 2000, expense: 9800 },
-  { name: 'Apr', income: 2780, expense: 3908 },
-  { name: 'May', income: 1890, expense: 4800 },
-  { name: 'Jun', income: 2390, expense: 3800 },
-  { name: 'Jul', income: 3490, expense: 4300 },
+  { name: 'Jan', income: 0, expense: 0 },
+  { name: 'Feb', income: 0, expense: 0 },
+  { name: 'Mar', income: 0, expense: 0 },
+  { name: 'Apr', income: 0, expense: 0 },
+  { name: 'May', income: 0, expense: 0 },
+  { name: 'Jun', income: 0, expense: 0 },
+  { name: 'Jul', income: 0, expense: 0 },
 ];
 
 const categoryData = [
-  { name: 'Web Dev', value: 4000 },
-  { name: 'Mobile App', value: 3000 },
-  { name: 'UI/UX', value: 2000 },
-  { name: 'Hosting', value: 2780 },
+  { name: 'Web Dev', value: 0 },
+  { name: 'Mobile App', value: 0 },
+  { name: 'UI/UX', value: 0 },
+  { name: 'Hosting', value: 0 },
 ];
 
 const StatCard = ({ title, value, change, isPositive, icon }: any) => (
@@ -54,30 +54,30 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Total Income" 
-          value="Rs. 1,250,000" 
-          change="+12.5%" 
+          value="रु. 0" 
+          change="0.0%" 
           isPositive={true} 
-          icon={<DollarSign size={24} />} 
+          icon={<Banknote size={24} />} 
         />
         <StatCard 
           title="Total Expenditure" 
-          value="Rs. 450,000" 
-          change="-2.4%" 
-          isPositive={true} 
+          value="रु. 0" 
+          change="0.0%" 
+          isPositive={false} 
           icon={<CreditCard size={24} />} 
         />
         <StatCard 
           title="Net Profit" 
-          value="Rs. 800,000" 
-          change="+18.2%" 
+          value="रु. 0" 
+          change="0.0%" 
           isPositive={true} 
           icon={<Activity size={24} />} 
         />
         <StatCard 
           title="Total Outstanding" 
-          value="Rs. 120,000" 
-          change="+5.1%" 
-          isPositive={false} 
+          value="रु. 0" 
+          change="0.0%" 
+          isPositive={true} 
           icon={<FileText size={24} />} 
         />
       </div>
@@ -101,10 +101,10 @@ const Dashboard = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dx={-10} tickFormatter={(value) => `Rs.${value/1000}k`} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dx={-10} tickFormatter={(value) => `रु.${value/1000}k`} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value) => [`Rs. ${value}`, undefined]}
+                  formatter={(value) => [`रु. ${value}`, undefined]}
                 />
                 <Area type="monotone" dataKey="income" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
                 <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" />
@@ -124,7 +124,7 @@ const Dashboard = () => {
                 <Tooltip 
                   cursor={{fill: '#f8fafc'}}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value) => [`Rs. ${value}`, 'Revenue']}
+                  formatter={(value) => [`रु. ${value}`, 'Revenue']}
                 />
                 <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -151,31 +151,11 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
-                <td className="px-4 py-4 font-medium text-primary group-hover:text-accent transition-colors">ASL-2083-0012</td>
-                <td className="px-4 py-4">Tech Innovations Pvt. Ltd.</td>
-                <td className="px-4 py-4">Oct 01, 2026</td>
-                <td className="px-4 py-4 font-medium text-primary">Rs. 45,000</td>
-                <td className="px-4 py-4">
-                  <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full text-xs font-semibold border border-emerald-100">Paid</span>
-                </td>
-              </tr>
-              <tr className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
-                <td className="px-4 py-4 font-medium text-primary group-hover:text-accent transition-colors">ASL-2083-0011</td>
-                <td className="px-4 py-4">Himalayan Coffee House</td>
-                <td className="px-4 py-4">Sep 28, 2026</td>
-                <td className="px-4 py-4 font-medium text-primary">Rs. 15,500</td>
-                <td className="px-4 py-4">
-                  <span className="bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full text-xs font-semibold border border-amber-100">Partially Paid</span>
-                </td>
-              </tr>
-              <tr className="hover:bg-slate-50/50 transition-colors group">
-                <td className="px-4 py-4 font-medium text-primary group-hover:text-accent transition-colors">ASL-2083-0010</td>
-                <td className="px-4 py-4">Everest Trading Company</td>
-                <td className="px-4 py-4">Sep 25, 2026</td>
-                <td className="px-4 py-4 font-medium text-primary">Rs. 120,000</td>
-                <td className="px-4 py-4">
-                  <span className="bg-red-50 text-red-600 px-2.5 py-1 rounded-full text-xs font-semibold border border-red-100">Unpaid</span>
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <p>No recent invoices found.</p>
+                  </div>
                 </td>
               </tr>
             </tbody>

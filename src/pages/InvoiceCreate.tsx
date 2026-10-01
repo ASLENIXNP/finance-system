@@ -126,15 +126,15 @@ const InvoiceCreate = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Total Amount:</span>
-                  <span className="font-bold text-primary">Rs. 1,69,500.00</span>
+                  <span className="font-bold text-primary">रु. 1,69,500.00</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Amount Paid:</span>
-                  <span className="font-bold text-primary">Rs. 0.00</span>
+                  <span className="font-bold text-primary">रु. 0.00</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-slate-100">
                   <span className="text-slate-700 font-bold">Balance Due:</span>
-                  <span className="font-bold text-red-600 text-base">Rs. 1,69,500.00</span>
+                  <span className="font-bold text-red-600 text-base">रु. 1,69,500.00</span>
                 </div>
               </div>
             </div>
@@ -225,25 +225,25 @@ const InvoiceCreate = () => {
           <div className="w-full md:w-80 space-y-3">
             <div className="flex justify-between text-sm">
               <span className="font-semibold text-slate-500">Subtotal:</span>
-              <span className="font-medium text-primary">Rs. {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span className="font-medium text-primary">रु. {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             {totalDiscount > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="font-semibold text-slate-500">Discount:</span>
-                <span className="font-medium text-emerald-600">- Rs. {totalDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <span className="font-medium text-emerald-600">- रु. {totalDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             )}
             <div className="flex justify-between text-sm pb-3 border-b border-slate-200">
               <span className="font-semibold text-slate-500">Taxable Amount:</span>
-              <span className="font-medium text-primary">Rs. {taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span className="font-medium text-primary">रु. {taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="font-semibold text-slate-500">VAT (13%):</span>
-              <span className="font-medium text-primary">Rs. {totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span className="font-medium text-primary">रु. {totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between items-center pt-4 border-t-2 border-slate-800 print:border-black mt-2">
               <span className="font-bold text-lg text-primary">Grand Total:</span>
-              <span className="font-black text-2xl text-accent print:text-black">Rs. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span className="font-black text-2xl text-accent print:text-black">रु. {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>

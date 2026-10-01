@@ -38,17 +38,13 @@ const Login = () => {
         <div className="absolute top-1/2 right-0 w-80 h-80 rounded-full bg-emerald-500/5 blur-3xl"></div>
       </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
-        <div className="flex justify-center mb-6">
-          <img src="/logo.png" alt="Aslenix Logo" className="h-24 w-auto object-contain drop-shadow-xl" />
-        </div>
-        <p className="mt-2 text-center text-sm font-medium text-slate-500 tracking-wider uppercase">
-          Billing & Finance System
-        </p>
-      </div>
-
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
         <div className="bg-white py-10 px-4 shadow-2xl shadow-slate-200/50 sm:rounded-3xl sm:px-10 border border-slate-100">
+          
+          <div className="flex justify-center mb-8">
+            <img src="/logo.png" alt="Aslenix Logo" className="h-32 w-auto object-contain drop-shadow-sm" />
+          </div>
+
           <form className="space-y-6" onSubmit={handleLogin}>
             {error && (
               <div className="p-3 bg-red-50 text-red-600 text-sm font-medium rounded-xl border border-red-100 flex items-center gap-2">

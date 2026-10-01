@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Search, Plus, Filter, ArrowDownRight, Wallet } from 'lucide-react';
+import { Search, Plus, Filter, ArrowDownRight, Wallet, Edit, Trash2 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
-const incomeData = [
+const initialIncomeData = [
   { id: 'INC-001', date: 'Oct 01, 2026', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', category: 'Web Development', amount: 45000, method: 'Bank Transfer', status: 'Completed' },
   { id: 'INC-002', date: 'Sep 28, 2026', invoice: 'ASL-2083-0011', customer: 'Himalayan Coffee House', category: 'UI/UX Design', amount: 15500, method: 'eSewa', status: 'Completed' },
   { id: 'INC-003', date: 'Sep 25, 2026', invoice: 'ASL-2083-0009', customer: 'Retail Solutions', category: 'Software Development', amount: 85000, method: 'Cheque', status: 'Pending' },
@@ -10,6 +11,24 @@ const incomeData = [
 
 const Income = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [incomeData, setIncomeData] = useState(initialIncomeData);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
+  
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const handleDeleteClick = (id: string) => {
+    setIncomeToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (incomeToDelete) {
+      setIncomeData(incomeData.filter(item => item.id !== incomeToDelete));
+      setIncomeToDelete(null);
+    }
+  };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -34,7 +53,7 @@ const Income = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Total Income (This Month)</p>
-            <h3 className="text-2xl font-bold text-primary">Rs. 1,45,000</h3>
+            <h3 className="text-2xl font-bold text-primary">रु. 1,45,000</h3>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
@@ -43,7 +62,7 @@ const Income = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Pending Payments</p>
-            <h3 className="text-2xl font-bold text-primary">Rs. 85,000</h3>
+            <h3 className="text-2xl font-bold text-primary">रु. 85,000</h3>
           </div>
         </div>
       </div>
@@ -79,11 +98,12 @@ const Income = () => {
                 <th className="px-6 py-4">Payment Method</th>
                 <th className="px-6 py-4">Amount</th>
                 <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {incomeData.map((income) => (
-                <tr key={income.id} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={income.id} className="hover:bg-slate-50/80 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="font-semibold text-primary">{income.date}</div>
                     <div className="text-slate-500 text-xs mt-0.5">{income.invoice}</div>
@@ -98,7 +118,7 @@ const Income = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 font-bold text-emerald-600">
-                    + Rs. {income.amount.toLocaleString('en-IN')}
+                    + रु. {income.amount.toLocaleString('en-IN')}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
@@ -109,12 +129,58 @@ const Income = () => {
                       {income.status}
                     </span>
                   </td>
+                  <td className="px-6 py-4 text-right relative overflow-hidden">
+                    <div className="flex items-center justify-end transition-transform duration-300 group-hover:-translate-x-20 text-slate-400">
+                      <span className="text-xs mr-2 opacity-0 group-hover:opacity-100 transition-opacity">Actions</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                    </div>
+                    
+                    <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
+                      <button 
+                        onClick={() => {
+                          setAlertMessage(`Edit feature for ${income.id} is coming soon!`);
+                          setAlertModalOpen(true);
+                        }}
+                        className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteClick(income.id)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors shadow-sm"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      <ConfirmModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Income"
+        message="Are you sure you want to delete this income record? This action cannot be undone."
+        confirmText="Delete Income"
+        isDanger={true}
+      />
+
+      <ConfirmModal 
+        isOpen={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        onConfirm={() => {}}
+        title="Coming Soon"
+        message={alertMessage}
+        confirmText="Got it"
+        hideCancel={true}
+      />
     </div>
   );
 };

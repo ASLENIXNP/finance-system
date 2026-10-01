@@ -17,7 +17,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        
+
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="customers" element={<Customers />} />
@@ -29,7 +29,7 @@ function App() {
           <Route path="settings" element={<CompanySettings />} />
           <Route path="users" element={<Users />} />
         </Route>
-        
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

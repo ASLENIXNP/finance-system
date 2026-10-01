@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Search, Plus, Filter, CreditCard, ArrowUpRight } from 'lucide-react';
+import { Search, Plus, Filter, CreditCard, ArrowUpRight, Edit, Trash2 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
-const expenseData = [
+const initialExpenseData = [
   { id: 'EXP-001', date: 'Oct 02, 2026', vendor: 'Vianet Communications', category: 'Office / Internet', amount: 3500, method: 'eSewa', receipt: 'REC-1029' },
   { id: 'EXP-002', date: 'Oct 01, 2026', vendor: 'Digital Ocean', category: 'Technology / Cloud Services', amount: 6500, method: 'Credit Card', receipt: 'INV-DO-992' },
   { id: 'EXP-003', date: 'Sep 28, 2026', vendor: 'Kathmandu Properties', category: 'Office / Rent', amount: 45000, method: 'Bank Transfer', receipt: 'RENT-Sep' },
@@ -10,6 +11,24 @@ const expenseData = [
 
 const Expenses = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [expenseData, setExpenseData] = useState(initialExpenseData);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
+  
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const handleDeleteClick = (id: string) => {
+    setExpenseToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (expenseToDelete) {
+      setExpenseData(expenseData.filter(item => item.id !== expenseToDelete));
+      setExpenseToDelete(null);
+    }
+  };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -34,7 +53,7 @@ const Expenses = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Total Expenses (This Month)</p>
-            <h3 className="text-2xl font-bold text-primary">Rs. 70,000</h3>
+            <h3 className="text-2xl font-bold text-primary">रु. 70,000</h3>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
@@ -44,7 +63,7 @@ const Expenses = () => {
           <div>
             <p className="text-sm font-medium text-slate-500">Highest Category</p>
             <h3 className="text-lg font-bold text-primary">Office Rent</h3>
-            <p className="text-xs text-slate-400">Rs. 45,000</p>
+            <p className="text-xs text-slate-400">रु. 45,000</p>
           </div>
         </div>
       </div>
@@ -80,11 +99,12 @@ const Expenses = () => {
                 <th className="px-6 py-4">Payment Info</th>
                 <th className="px-6 py-4">Amount</th>
                 <th className="px-6 py-4">Receipt</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {expenseData.map((expense) => (
-                <tr key={expense.id} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={expense.id} className="hover:bg-slate-50/80 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="font-semibold text-primary">{expense.date}</div>
                     <div className="text-slate-500 text-xs mt-0.5">{expense.id}</div>
@@ -99,12 +119,38 @@ const Expenses = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 font-bold text-red-600">
-                    - Rs. {expense.amount.toLocaleString('en-IN')}
+                    - रु. {expense.amount.toLocaleString('en-IN')}
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-accent hover:underline cursor-pointer font-medium text-xs">
                       {expense.receipt}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-right relative overflow-hidden">
+                    <div className="flex items-center justify-end transition-transform duration-300 group-hover:-translate-x-20 text-slate-400">
+                      <span className="text-xs mr-2 opacity-0 group-hover:opacity-100 transition-opacity">Actions</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                    </div>
+                    
+                    <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
+                      <button 
+                        onClick={() => {
+                          setAlertMessage(`Edit feature for ${expense.id} is coming soon!`);
+                          setAlertModalOpen(true);
+                        }}
+                        className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteClick(expense.id)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors shadow-sm"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -112,6 +158,26 @@ const Expenses = () => {
           </table>
         </div>
       </div>
+
+      <ConfirmModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Expense"
+        message="Are you sure you want to delete this expense record? This action cannot be undone."
+        confirmText="Delete Expense"
+        isDanger={true}
+      />
+
+      <ConfirmModal 
+        isOpen={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        onConfirm={() => {}}
+        title="Coming Soon"
+        message={alertMessage}
+        confirmText="Got it"
+        hideCancel={true}
+      />
     </div>
   );
 };

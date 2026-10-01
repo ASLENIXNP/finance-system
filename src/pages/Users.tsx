@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Search, Plus, Filter, UserCog, MoreVertical, Edit, Trash2, Shield } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
-const usersData = [
+const initialUsersData = [
   { id: 'USR-001', name: 'Super Admin', email: 'admin@aslenix.com', role: 'Super Admin', status: 'Active', lastLogin: 'Oct 01, 2026 10:15 AM' },
   { id: 'USR-002', name: 'Bikash Thapa', email: 'bikash@aslenix.com', role: 'Accountant', status: 'Active', lastLogin: 'Sep 30, 2026 04:30 PM' },
   { id: 'USR-003', name: 'Sarita Sharma', email: 'sarita@aslenix.com', role: 'Billing Staff', status: 'Active', lastLogin: 'Oct 01, 2026 09:00 AM' },
@@ -19,6 +20,24 @@ const roleColors: Record<string, string> = {
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [usersData, setUsersData] = useState(initialUsersData);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const handleDeleteClick = (id: string) => {
+    setUserToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      setUsersData(usersData.filter(item => item.id !== userToDelete));
+      setUserToDelete(null);
+    }
+  };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -101,12 +120,28 @@ const Users = () => {
                   <td className="px-6 py-4 text-slate-500 text-xs">
                     {user.lastLogin}
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 text-slate-400 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors">
+                  <td className="px-6 py-4 text-right relative overflow-hidden">
+                    <div className="flex items-center justify-end transition-transform duration-300 group-hover:-translate-x-20 text-slate-400">
+                      <span className="text-xs mr-2 opacity-0 group-hover:opacity-100 transition-opacity">Actions</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                    </div>
+                    
+                    <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
+                      <button 
+                        onClick={() => {
+                          setAlertMessage(`Edit feature for ${user.name} is coming soon!`);
+                          setAlertModalOpen(true);
+                        }}
+                        className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
+                      >
                         <Edit size={16} />
                       </button>
-                      <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleDeleteClick(user.id)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors shadow-sm"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -117,6 +152,26 @@ const Users = () => {
           </table>
         </div>
       </div>
+
+      <ConfirmModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Remove User"
+        message="Are you sure you want to remove this user? This will revoke their access to the system."
+        confirmText="Remove User"
+        isDanger={true}
+      />
+
+      <ConfirmModal 
+        isOpen={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        onConfirm={() => {}}
+        title="Coming Soon"
+        message={alertMessage}
+        confirmText="Got it"
+        hideCancel={true}
+      />
     </div>
   );
 };

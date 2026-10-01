@@ -1,15 +1,126 @@
-import { useState } from 'react';
-import { Search, Plus, MoreVertical, Filter, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Plus, MoreVertical, Filter, Download, Loader2, Edit, Trash2 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
+import { supabase } from '../lib/supabase';
 
-const customersData = [
-  { id: 'CUST-001', name: 'Ramesh Sharma', company: 'Tech Innovations Pvt. Ltd.', pan: '304123456', phone: '+977 9801234567', type: 'Company', status: 'Active', totalBilled: 450000 },
-  { id: 'CUST-002', name: 'Sita Gurung', company: 'Himalayan Coffee House', pan: '604987654', phone: '+977 9841234567', type: 'Organization', status: 'Active', totalBilled: 125000 },
-  { id: 'CUST-003', name: 'Hari Bahadur', company: 'Everest Trading', pan: '301234567', phone: '+977 9851123456', type: 'Company', status: 'Inactive', totalBilled: 850000 },
-  { id: 'CUST-004', name: 'Anita Thapa', company: 'Individual', pan: 'N/A', phone: '+977 9849876543', type: 'Individual', status: 'Active', totalBilled: 45000 },
-];
+interface Customer {
+  id: string;
+  customer_id: string;
+  name: string;
+  company_name: string;
+  pan_number: string;
+  phone: string;
+  email: string;
+  type: string;
+  is_active: boolean;
+}
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    company_name: '',
+    pan_number: '',
+    phone: '',
+    email: '',
+    type: 'Company',
+  });
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setCustomers(data || []);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const newId = `CUST-${Math.floor(1000 + Math.random() * 9000)}`;
+      
+      const { error } = await supabase.from('customers').insert([
+        {
+          customer_id: newId,
+          ...formData
+        }
+      ]);
+
+      if (error) throw error;
+      
+      setFormData({ name: '', company_name: '', pan_number: '', phone: '', email: '', type: 'Company' });
+      setIsAddModalOpen(false);
+      fetchCustomers();
+    } catch (error: any) {
+      alert(error.message || 'Error adding customer');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleCustomerStatus = async (customerId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .update({ is_active: !currentStatus })
+        .eq('id', customerId);
+        
+      if (error) throw error;
+      
+      setCustomers(customers.map(c => 
+        c.id === customerId ? { ...c, is_active: !currentStatus } : c
+      ));
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      alert('Failed to update customer status.');
+    }
+  };
+
+  const handleDeleteClick = (customerId: string) => {
+    setCustomerToDelete(customerId);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!customerToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', customerToDelete);
+        
+      if (error) throw error;
+      setCustomers(customers.filter(c => c.id !== customerToDelete));
+    } catch (error: any) {
+      console.error('Error deleting customer:', error);
+      alert('Failed to delete customer. They might be linked to existing invoices.');
+    } finally {
+      setCustomerToDelete(null);
+    }
+  };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -23,7 +134,10 @@ const Customers = () => {
             <Download size={18} />
             Export
           </button>
-          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none">
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none"
+          >
             <Plus size={18} />
             Add Customer
           </button>
@@ -65,41 +179,86 @@ const Customers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {customersData.map((customer) => (
-                <tr key={customer.id} className="hover:bg-slate-50/80 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="font-semibold text-primary">{customer.company !== 'Individual' ? customer.company : customer.name}</div>
-                    <div className="text-slate-500 text-xs mt-0.5">{customer.id} {customer.company !== 'Individual' ? `• ${customer.name}` : ''}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>{customer.phone}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium mb-1">
-                      {customer.type}
-                    </span>
-                    <div className="text-xs text-slate-500">PAN: {customer.pan}</div>
-                  </td>
-                  <td className="px-6 py-4 font-medium text-primary">
-                    Rs. {customer.totalBilled.toLocaleString('en-IN')}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                      customer.status === 'Active' 
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                        : 'bg-slate-50 text-slate-600 border-slate-200'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${customer.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
-                      {customer.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors">
-                      <MoreVertical size={18} />
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Loader2 className="animate-spin text-accent" size={24} />
+                      <p>Loading customers...</p>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : customers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <p>No customers found.</p>
+                      <button className="text-accent font-medium hover:underline text-sm mt-1">Add your first customer</button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                customers.map((customer) => (
+                  <tr key={customer.id} className="hover:bg-slate-50/80 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-primary">{customer.company_name || customer.name}</div>
+                      <div className="text-slate-500 text-xs mt-0.5">{customer.customer_id} {customer.company_name ? `• ${customer.name}` : ''}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>{customer.phone || 'N/A'}</div>
+                      <div className="text-slate-500 text-xs mt-0.5">{customer.email || 'N/A'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium mb-1">
+                        {customer.type}
+                      </span>
+                      <div className="text-xs text-slate-500">PAN: {customer.pan_number || 'N/A'}</div>
+                    </td>
+                    <td className="px-6 py-4 font-medium text-primary">
+                      रु. 0.00 {/* To be calculated from invoices */}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button 
+                        onClick={() => handleToggleCustomerStatus(customer.id, customer.is_active)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
+                          customer.is_active ? 'bg-emerald-500' : 'bg-slate-300'
+                        }`}
+                      >
+                        <span className="sr-only">Toggle status</span>
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            customer.is_active ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 text-right relative overflow-hidden">
+                      <div className="flex items-center justify-end transition-transform duration-300 group-hover:-translate-x-20 text-slate-400">
+                        {/* A visual cue that you can slide or hover */}
+                        <span className="text-xs mr-2 opacity-0 group-hover:opacity-100 transition-opacity">Actions</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
+                      </div>
+                      
+                      <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
+                        <button 
+                          onClick={() => alert(`Edit customer ${customer.company_name || customer.name}`)}
+                          className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteClick(customer.id)}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors shadow-sm"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -114,6 +273,113 @@ const Customers = () => {
           </div>
         </div>
       </div>
+
+      {/* Add Customer Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-primary">Add New Customer</h3>
+              <button 
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddCustomer} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Customer Type</label>
+                  <select 
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.type}
+                    onChange={(e) => setFormData({...formData, type: e.target.value})}
+                  >
+                    <option value="Company">Company</option>
+                    <option value="Individual">Individual</option>
+                    <option value="Organization">Organization</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Primary Contact Name *</label>
+                  <input 
+                    type="text" 
+                    required
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.company_name}
+                    onChange={(e) => setFormData({...formData, company_name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">PAN Number</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.pan_number}
+                    onChange={(e) => setFormData({...formData, pan_number: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                  <input 
+                    type="email" 
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-slate-100 flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover font-medium transition-colors disabled:opacity-70 flex items-center gap-2"
+                >
+                  {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+                  {isSubmitting ? 'Saving...' : 'Save Customer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Customer"
+        message="Are you sure you want to delete this customer? This action cannot be undone and may affect existing invoices."
+        confirmText="Delete Customer"
+      />
     </div>
   );
 };
