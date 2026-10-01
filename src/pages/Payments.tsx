@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, CheckCircle2, AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { Search, Filter, CheckCircle2, AlertCircle, Edit, Trash2, Plus } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 
 const initialPaymentsData = [
@@ -47,7 +47,7 @@ const Payments = () => {
     setEditingId(payment.id);
     setFormData({
       date: payment.date,
-      to: payment.to,
+      to: payment.customer || payment.to || '',
       amount: payment.amount.toString(),
       method: payment.method,
       status: payment.status
@@ -60,14 +60,19 @@ const Payments = () => {
     if (editingId) {
       setPaymentsData(paymentsData.map(item => 
         item.id === editingId 
-          ? { ...item, ...formData, amount: Number(formData.amount) } 
+          ? { ...item, ...formData, customer: formData.to, amount: Number(formData.amount) } 
           : item
       ));
     } else {
       const newPayment = {
         id: `PAY-00${paymentsData.length + 1}`,
-        ...formData,
-        amount: Number(formData.amount)
+        date: formData.date,
+        invoice: formData.to,
+        customer: formData.to,
+        amount: Number(formData.amount),
+        method: formData.method,
+        ref: 'NEW-REF',
+        status: formData.status
       };
       setPaymentsData([newPayment, ...paymentsData]);
     }
