@@ -18,7 +18,16 @@ import {
   Check, 
   UserPlus, 
   Percent,
-  Receipt
+  Receipt,
+  User,
+  Mail,
+  Phone,
+  Landmark,
+  ShieldCheck,
+  Sparkles,
+  X,
+  Briefcase,
+  Hash
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
@@ -980,7 +989,7 @@ const Payroll = () => {
 
           <button
             onClick={() => handleOpenSalaryModal()}
-            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm shadow-accent/20 cursor-pointer"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.98] cursor-pointer border border-blue-500/20"
           >
             <Plus size={18} />
             <span>Add / Calculate Salary</span>
@@ -1430,9 +1439,9 @@ const Payroll = () => {
             </div>
             <button
               onClick={() => handleOpenEmployeeModal()}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-slate-800 hover:to-slate-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/30 active:scale-[0.98] cursor-pointer border border-slate-700/60"
             >
-              <UserPlus size={16} />
+              <UserPlus size={17} className="text-blue-400" />
               <span>Add New Employee</span>
             </button>
           </div>
@@ -1545,27 +1554,34 @@ const Payroll = () => {
 
       {/* MODAL 1: ADD / EDIT SALARY CALCULATION */}
       {isSalaryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-accent/10 text-accent rounded-xl">
-                  <Banknote size={20} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col ring-1 ring-slate-900/5">
+            <div className="flex justify-between items-center px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-blue-50/40">
+              <div className="flex items-center gap-3.5">
+                <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-blue-700 text-white shadow-lg shadow-indigo-500/25 ring-4 ring-blue-50 shrink-0">
+                  <Banknote size={22} className="drop-shadow-sm" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-primary">
-                    {editingPayrollId ? 'Edit Attendance & Calculate Salary' : 'Calculate Employee Salary'}
-                  </h3>
-                  <p className="text-xs text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold tracking-tight text-slate-900">
+                      {editingPayrollId ? 'Edit Attendance & Calculate Salary' : 'Calculate Employee Salary'}
+                    </h3>
+                    <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 rounded-full border border-blue-200/60">
+                      Monthly Payroll
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Calculates attendance salary, allowances, other deductions, and 1% TDS.
                   </p>
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={() => setIsSalaryModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-colors"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 cursor-pointer"
+                title="Close"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
@@ -1824,116 +1840,178 @@ const Payroll = () => {
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                 />
               </div>
+            </form>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+            {/* Action Buttons Footer */}
+            <div className="px-7 py-4 bg-slate-50/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-between gap-3">
+              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <CheckCircle2 size={16} className="text-emerald-600" />
+                <span>Statutory 1% TDS & Working Day Calculation Verified</span>
+              </div>
+              <div className="flex items-center gap-3 ml-auto">
                 <button
                   type="button"
                   onClick={() => setIsSalaryModalOpen(false)}
-                  className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 font-medium rounded-xl text-sm transition-colors cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 hover:border-slate-300 font-semibold text-sm transition-all duration-150 shadow-sm active:scale-[0.98] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-accent text-white font-medium rounded-xl text-sm hover:bg-accent-hover transition-colors shadow-sm shadow-accent/20 cursor-pointer"
+                  onClick={handleSaveSalaryRecord}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-sm shadow-md hover:shadow-xl hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-200 flex items-center gap-2 group cursor-pointer border border-blue-500/30"
                 >
-                  {editingPayrollId ? 'Update Salary Record' : 'Save & Calculate Salary'}
+                  <Banknote size={16} className="text-blue-200 group-hover:scale-110 transition-transform" />
+                  <span>{editingPayrollId ? 'Update Salary Record' : 'Save & Calculate Salary'}</span>
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
 
       {/* MODAL 2: ADD / EDIT EMPLOYEE PROFILE & FIXED SALARY */}
       {isEmployeeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                  <UserPlus size={20} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col ring-1 ring-slate-900/5">
+            {/* Executive Header */}
+            <div className="flex justify-between items-center px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-indigo-50/40">
+              <div className="flex items-center gap-3.5">
+                <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-500/25 ring-4 ring-indigo-50 shrink-0">
+                  <UserPlus size={22} className="drop-shadow-sm" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-primary">
-                    {editingEmployeeId ? 'Edit Employee & Fixed Salary' : 'Add New Employee'}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Fix the employee's baseline monthly salary and banking details.
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold tracking-tight text-slate-900">
+                      {editingEmployeeId ? 'Edit Employee Profile' : 'Add New Employee'}
+                    </h3>
+                    <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200/60">
+                      Staff Directory
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Configure staff details, baseline monthly fixed salary, and bank deposit info.
                   </p>
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={() => setIsEmployeeModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-colors"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 cursor-pointer"
+                title="Close"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEmployee} className="p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Employee Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={employeeFormData.name || ''}
-                    onChange={(e) => setEmployeeFormData({ ...employeeFormData, name: e.target.value })}
-                    placeholder="e.g. Bipin Shrestha"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Employee ID / Code *</label>
-                  <input
-                    type="text"
-                    required
-                    value={employeeFormData.employee_code || ''}
-                    onChange={(e) => setEmployeeFormData({ ...employeeFormData, employee_code: e.target.value })}
-                    placeholder="e.g. EMP-006"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Designation / Role *</label>
-                  <input
-                    type="text"
-                    required
-                    value={employeeFormData.designation || ''}
-                    onChange={(e) => setEmployeeFormData({ ...employeeFormData, designation: e.target.value })}
-                    placeholder="e.g. Frontend Developer"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Department *</label>
-                  <input
-                    type="text"
-                    required
-                    value={employeeFormData.department || ''}
-                    onChange={(e) => setEmployeeFormData({ ...employeeFormData, department: e.target.value })}
-                    placeholder="e.g. Technology, Finance, Marketing"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                  />
-                </div>
-              </div>
-
-              {/* Highlighted Fixed Salary Field */}
-              <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200">
-                <label className="block text-xs font-bold text-emerald-900 mb-1">
-                  Fixed Monthly Salary (रु.) *
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-emerald-700 text-sm">
-                    रु.
+            <form onSubmit={handleSaveEmployee} className="p-7 overflow-y-auto space-y-6 custom-scrollbar flex-1 bg-white">
+              {/* Section 1: Personal & Role Details */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+                  <User size={15} className="text-indigo-600" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Personal & Role Information
                   </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Employee Full Name <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <User size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={employeeFormData.name || ''}
+                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, name: e.target.value })}
+                        placeholder="e.g. Bipin Shrestha"
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Employee ID / Code <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Hash size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={employeeFormData.employee_code || ''}
+                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, employee_code: e.target.value })}
+                        placeholder="e.g. EMP-006"
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-mono font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Designation / Role <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Briefcase size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={employeeFormData.designation || ''}
+                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, designation: e.target.value })}
+                        placeholder="e.g. Frontend Developer"
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Department <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Building2 size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={employeeFormData.department || ''}
+                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, department: e.target.value })}
+                        placeholder="e.g. Technology, Finance, Marketing"
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Highlighted Fixed Monthly Salary Card with Quick Presets */}
+              <div className="relative overflow-hidden rounded-2xl border border-emerald-300/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/40 p-5 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-emerald-950 uppercase tracking-wide">
+                    <Sparkles size={15} className="text-emerald-600" />
+                    <span>Fixed Monthly Base Salary (रु.)</span>
+                    <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2.5 py-0.5 rounded-full w-fit">
+                    Accountant Benchmark
+                  </span>
+                </div>
+
+                <div className="relative mb-3">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span className="text-lg font-black text-emerald-700">रु.</span>
+                  </div>
                   <input
                     type="number"
                     min="0"
@@ -1941,75 +2019,133 @@ const Payroll = () => {
                     required
                     value={employeeFormData.fixed_salary || ''}
                     onChange={(e) => setEmployeeFormData({ ...employeeFormData, fixed_salary: Number(e.target.value) })}
-                    placeholder="e.g. 50000"
-                    className="w-full pl-9 pr-4 py-2.5 bg-white border border-emerald-300 rounded-xl text-lg font-bold text-emerald-900 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                  />
-                </div>
-                <p className="text-[11px] text-emerald-700 mt-1.5">
-                  Base salary fixed by the accountant. Daily salary rate is calculated as: 
-                  <span className="font-semibold"> Fixed Salary ÷ Total Working Days</span>.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    value={employeeFormData.email || ''}
-                    onChange={(e) => setEmployeeFormData({ ...employeeFormData, email: e.target.value })}
-                    placeholder="employee@aslenix.com"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    placeholder="40000"
+                    className="w-full pl-12 pr-4 py-3 bg-white border-2 border-emerald-400/80 rounded-xl text-xl font-bold font-mono text-emerald-950 shadow-inner outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 transition-all"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Phone Number</label>
-                  <input
-                    type="text"
-                    value={employeeFormData.phone || ''}
-                    onChange={(e) => setEmployeeFormData({ ...employeeFormData, phone: e.target.value })}
-                    placeholder="98XXXXXXXX"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                  />
+                {/* Quick Salary Preset Buttons */}
+                <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">Quick Presets:</span>
+                  {[25000, 35000, 40000, 50000, 75000, 100000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setEmployeeFormData({ ...employeeFormData, fixed_salary: amt })}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer ${
+                        employeeFormData.fixed_salary === amt
+                          ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
+                          : 'bg-white hover:bg-emerald-100/60 text-slate-700 border border-slate-200 hover:border-emerald-300'
+                      }`}
+                    >
+                      रु. {(amt / 1000)}k
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px] text-emerald-800/80 bg-white/70 px-3 py-1.5 rounded-lg border border-emerald-100">
+                  <span className="font-semibold text-emerald-900">Per-Day Salary Rate:</span>
+                  <span>
+                    रु. {employeeFormData.fixed_salary ? (Number(employeeFormData.fixed_salary) / 26).toFixed(2) : '0.00'} / day (based on standard 26 working days)
+                  </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Bank Name</label>
-                  <input
-                    type="text"
-                    value={employeeFormData.bank_name || ''}
-                    onChange={(e) => setEmployeeFormData({ ...employeeFormData, bank_name: e.target.value })}
-                    placeholder="e.g. Nabil Bank"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                  />
+              {/* Section 3: Contact & Direct Banking */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+                  <Landmark size={15} className="text-indigo-600" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Contact, Banking & Statutory PAN
+                  </span>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Bank Account No.</label>
-                  <input
-                    type="text"
-                    value={employeeFormData.bank_account_no || ''}
-                    onChange={(e) => setEmployeeFormData({ ...employeeFormData, bank_account_no: e.target.value })}
-                    placeholder="0190101XXXXXXXX"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-mono"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Email Address</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Mail size={16} />
+                      </div>
+                      <input
+                        type="email"
+                        value={employeeFormData.email || ''}
+                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, email: e.target.value })}
+                        placeholder="employee@aslenix.com"
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Phone Number</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Phone size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        value={employeeFormData.phone || ''}
+                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, phone: e.target.value })}
+                        placeholder="98XXXXXXXX"
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all font-mono"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">PAN Number</label>
-                  <input
-                    type="text"
-                    value={employeeFormData.pan_number || ''}
-                    onChange={(e) => setEmployeeFormData({ ...employeeFormData, pan_number: e.target.value })}
-                    placeholder="60XXXXXXXX"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-mono"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bank Name</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Landmark size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        value={employeeFormData.bank_name || ''}
+                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, bank_name: e.target.value })}
+                        placeholder="e.g. Nabil Bank"
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bank Account No.</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <CreditCard size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        value={employeeFormData.bank_account_no || ''}
+                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, bank_account_no: e.target.value })}
+                        placeholder="0190101XXXXXXXX"
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-mono font-medium text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">PAN Number</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <FileText size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        value={employeeFormData.pan_number || ''}
+                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, pan_number: e.target.value })}
+                        placeholder="60XXXXXXXX"
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-mono font-medium text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              {/* Section 4: Official Appointment Date in Nepali BS */}
               <div>
                 <NepaliDatePicker 
                   label="Joining Date (नियुक्ति मिति)"
@@ -2018,55 +2154,70 @@ const Payroll = () => {
                   required
                 />
               </div>
+            </form>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+            {/* Footer with Classy, Executive Buttons */}
+            <div className="px-7 py-4 bg-slate-50/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-between gap-3">
+              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <ShieldCheck size={16} className="text-emerald-600" />
+                <span>Encrypted Staff Profile</span>
+              </div>
+
+              <div className="flex items-center gap-3 ml-auto">
                 <button
                   type="button"
                   onClick={() => setIsEmployeeModalOpen(false)}
-                  className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 font-medium rounded-xl text-sm transition-colors cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 hover:border-slate-300 font-semibold text-sm transition-all duration-150 shadow-sm active:scale-[0.98] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="px-6 py-2.5 bg-primary text-white font-medium rounded-xl text-sm hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
+                  type="button"
+                  onClick={handleSaveEmployee}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-slate-800 hover:to-slate-700 text-white font-semibold text-sm shadow-md hover:shadow-xl hover:shadow-slate-900/20 active:scale-[0.98] transition-all duration-200 flex items-center gap-2.5 border border-slate-700/60 group cursor-pointer"
                 >
-                  {editingEmployeeId ? 'Save Changes' : 'Create Employee Profile'}
+                  <UserCheck size={16} className="text-blue-400 group-hover:scale-110 transition-transform" />
+                  <span>{editingEmployeeId ? 'Save Profile Changes' : 'Create Employee Profile'}</span>
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
 
       {/* MODAL 3: DISBURSE / PAY SALARY */}
       {isPayModalOpen && payingRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5 text-emerald-600">
-                <div className="p-2 bg-emerald-50 rounded-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 ring-1 ring-slate-900/5">
+            <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-emerald-50/80 via-white to-teal-50/30">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-4 ring-emerald-50 shrink-0">
                   <CreditCard size={20} />
                 </div>
-                <h3 className="text-lg font-bold text-primary">Disburse Salary</h3>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Disburse Salary</h3>
+                  <p className="text-xs text-slate-500">Record salary disbursement and payment reference</p>
+                </div>
               </div>
               <button 
+                type="button"
                 onClick={() => setIsPayModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-colors"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 cursor-pointer"
+                title="Close"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p className="text-xs text-slate-500 uppercase font-semibold">Paying To</p>
+            <div className="p-6 space-y-4 bg-white">
+              <div className="bg-gradient-to-br from-slate-50 to-emerald-50/30 p-4 rounded-2xl border border-slate-200/80">
+                <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">Paying To</p>
                 <p className="text-base font-bold text-slate-900">{payingRecord.employee_name}</p>
                 <p className="text-xs text-slate-500">{payingRecord.designation} • {payingRecord.department}</p>
                 
-                <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between items-center">
-                  <span className="text-xs text-slate-500">Net Payable (After 1% TDS):</span>
-                  <span className="text-xl font-extrabold text-emerald-700">{formatNPR(payingRecord.net_salary)}</span>
+                <div className="mt-3 pt-3 border-t border-slate-200/80 flex justify-between items-center">
+                  <span className="text-xs text-slate-600 font-medium">Net Payable (After 1% TDS):</span>
+                  <span className="text-xl font-extrabold text-emerald-700 font-mono">{formatNPR(payingRecord.net_salary)}</span>
                 </div>
               </div>
 
@@ -2080,11 +2231,11 @@ const Payroll = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Payment Method</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Payment Method</label>
                 <select
                   value={paymentFormData.payment_method}
                   onChange={(e) => setPaymentFormData({ ...paymentFormData, payment_method: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                 >
                   <option value="Bank Transfer">Bank Transfer (Nabil / Global / NIC)</option>
                   <option value="Cash">Cash</option>
@@ -2096,45 +2247,46 @@ const Payroll = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Transaction Ref / Cheque No.</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Transaction Ref / Cheque No.</label>
                 <input
                   type="text"
                   value={paymentFormData.reference_no}
                   onChange={(e) => setPaymentFormData({ ...paymentFormData, reference_no: e.target.value })}
                   placeholder="e.g. TXN-88219"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-mono"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex items-center gap-2 pt-1">
                 <input
                   type="checkbox"
                   id="record_expense"
                   checked={paymentFormData.record_in_expenses}
                   onChange={(e) => setPaymentFormData({ ...paymentFormData, record_in_expenses: e.target.checked })}
-                  className="w-4 h-4 text-accent rounded border-slate-300 focus:ring-accent cursor-pointer"
+                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
                 />
                 <label htmlFor="record_expense" className="text-xs text-slate-600 cursor-pointer select-none">
-                  Automatically log this in Company Expenditure under <span className="font-semibold">"Payroll & Salaries"</span>
+                  Automatically log this in Company Expenditure under <span className="font-semibold text-slate-800">"Payroll & Salaries"</span>
                 </label>
               </div>
+            </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsPayModalOpen(false)}
-                  className="px-5 py-2 text-slate-600 hover:bg-slate-100 font-medium rounded-xl text-sm transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmPayment}
-                  className="px-6 py-2 bg-emerald-600 text-white font-medium rounded-xl text-sm hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-600/20 cursor-pointer"
-                >
-                  Confirm & Mark Paid
-                </button>
-              </div>
+            <div className="px-6 py-4 bg-slate-50/90 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsPayModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 hover:border-slate-300 font-semibold text-sm transition-all duration-150 shadow-sm active:scale-[0.98] cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmPayment}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-semibold text-sm shadow-md hover:shadow-xl hover:shadow-emerald-600/25 active:scale-[0.98] transition-all duration-200 flex items-center gap-2 cursor-pointer border border-emerald-500/30"
+              >
+                <CheckCircle2 size={16} className="text-emerald-200" />
+                <span>Confirm & Mark Paid</span>
+              </button>
             </div>
           </div>
         </div>
