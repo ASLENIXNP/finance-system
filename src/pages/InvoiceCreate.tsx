@@ -58,10 +58,8 @@ const InvoiceCreate = () => {
         {/* Print Header - Only visible when printing or in normal view to show structure */}
         <div className="p-8 md:p-12 border-b border-slate-100 print:border-b-2 print:border-slate-800">
           <div className="flex justify-between items-start flex-col md:flex-row gap-8">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center text-white print:bg-slate-800 print:rounded-none">
-                <FileText size={32} />
-              </div>
+            <div className="flex items-center gap-6">
+              <img src="/logo.png" alt="Aslenix Logo" className="h-20 w-auto object-contain" />
               <div>
                 <h1 className="text-2xl md:text-3xl font-black tracking-tight text-primary uppercase print:text-black">
                   ASLENIX TECH AND SOLUTION

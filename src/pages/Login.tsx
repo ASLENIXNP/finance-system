@@ -1,17 +1,33 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Lock, Mail, ArrowRight } from 'lucide-react';
+import { FileText, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Supabase Auth logic will go here
-    // For now, simple redirect
-    navigate('/');
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      if (data.user) navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during login');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -24,13 +40,8 @@ const Login = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center text-white shadow-xl shadow-accent/20">
-            <FileText size={32} />
-          </div>
+          <img src="/logo.png" alt="Aslenix Logo" className="h-24 w-auto object-contain drop-shadow-xl" />
         </div>
-        <h2 className="text-center text-3xl font-black tracking-tight text-primary uppercase">
-          ASLENIX
-        </h2>
         <p className="mt-2 text-center text-sm font-medium text-slate-500 tracking-wider uppercase">
           Billing & Finance System
         </p>
@@ -39,6 +50,13 @@ const Login = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
         <div className="bg-white py-10 px-4 shadow-2xl shadow-slate-200/50 sm:rounded-3xl sm:px-10 border border-slate-100">
           <form className="space-y-6" onSubmit={handleLogin}>
+            {error && (
+              <div className="p-3 bg-red-50 text-red-600 text-sm font-medium rounded-xl border border-red-100 flex items-center gap-2">
+                <AlertCircle size={16} />
+                {error}
+              </div>
+            )}
+            
             <div>
               <label className="block text-sm font-medium text-slate-700">Email address</label>
               <div className="mt-2 relative">
@@ -81,10 +99,11 @@ const Login = () => {
             <div>
               <button 
                 type="submit" 
-                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all hover:shadow-lg hover:shadow-accent/30"
+                disabled={loading}
+                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all hover:shadow-lg hover:shadow-accent/30 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Sign in to Dashboard
-                <ArrowRight size={18} />
+                {loading ? 'Authenticating...' : 'Sign in to Dashboard'}
+                {!loading && <ArrowRight size={18} />}
               </button>
             </div>
           </form>

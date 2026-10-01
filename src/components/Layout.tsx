@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -11,12 +12,36 @@ import {
   LogOut,
   Building2
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const Layout = () => {
   const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  const handleLogout = () => {
-    // Supabase logout will go here
+  useEffect(() => {
+    // Get current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUserEmail(session.user.email || null);
+      } else {
+        navigate('/login');
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUserEmail(session.user.email || null);
+      } else {
+        navigate('/login');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate('/login');
   };
 
@@ -37,13 +62,9 @@ const Layout = () => {
       {/* Sidebar */}
       <aside className="w-64 bg-sidebar border-r border-slate-200 flex flex-col shadow-sm z-10 relative">
         <div className="p-6 border-b border-slate-100">
-          <div className="flex items-center gap-2 text-accent font-bold text-xl tracking-tight">
-            <div className="bg-accent text-white p-2 rounded-lg">
-              <FileText size={20} />
-            </div>
-            ASLENIX
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="Aslenix Logo" className="h-10 w-auto object-contain drop-shadow-sm" />
           </div>
-          <p className="text-xs text-slate-500 mt-1 uppercase font-medium tracking-wider">Finance System</p>
         </div>
         
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
@@ -68,11 +89,11 @@ const Layout = () => {
         <div className="p-4 border-t border-slate-100">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold shadow-inner">
-              SA
+              {userEmail ? userEmail[0].toUpperCase() : 'U'}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-primary truncate">Super Admin</p>
-              <p className="text-xs text-slate-500 truncate">admin@aslenix.com</p>
+              <p className="text-sm font-semibold text-primary truncate">System User</p>
+              <p className="text-xs text-slate-500 truncate">{userEmail || 'Loading...'}</p>
             </div>
           </div>
           <button 

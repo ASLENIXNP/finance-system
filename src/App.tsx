@@ -10,6 +10,7 @@ import CompanySettings from './pages/CompanySettings';
 import Login from './pages/Login';
 import Products from './pages/Products';
 import Payments from './pages/Payments';
+import Users from './pages/Users';
 
 function App() {
   return (
@@ -26,7 +27,7 @@ function App() {
           <Route path="expenses" element={<Expenses />} />
           <Route path="payments" element={<Payments />} />
           <Route path="settings" element={<CompanySettings />} />
-          <Route path="users" element={<Placeholder title="User Management" />} />
+          <Route path="users" element={<Users />} />
         </Route>
         
         <Route path="*" element={<Navigate to="/" replace />} />
