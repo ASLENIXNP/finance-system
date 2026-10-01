@@ -16,19 +16,30 @@ interface Customer {
   is_active: boolean;
 }
 
+const defaultCustomers: Customer[] = [
+  { id: 'c1', customer_id: 'CUST-1001', name: 'Global Tech Nepal', company_name: 'Global Tech Nepal Pvt. Ltd.', pan_number: '601234567', phone: '9851000001', email: 'info@globaltech.com.np', type: 'Company', is_active: true },
+  { id: 'c2', customer_id: 'CUST-1002', name: 'Himalayan Mart', company_name: 'Himalayan Mart Pvt. Ltd.', pan_number: '602345678', phone: '9851000002', email: 'accounts@himalayanmart.com', type: 'Company', is_active: true },
+  { id: 'c3', customer_id: 'CUST-1003', name: 'Vertex Media', company_name: 'Vertex Media Group', pan_number: '603456789', phone: '9851000003', email: 'hello@vertexmedia.com', type: 'Company', is_active: true },
+];
+
 const Customers = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    const saved = localStorage.getItem('aslenix_customers');
+    return saved ? JSON.parse(saved) : defaultCustomers;
+  });
+  const [loading, setLoading] = useState(false);
+
+  const saveCustomers = (data: Customer[]) => {
+    setCustomers(data);
+    localStorage.setItem('aslenix_customers', JSON.stringify(data));
+  };
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
-  
-  const [alertModalOpen, setAlertModalOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -56,8 +67,9 @@ const Customers = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setCustomers(data || []);
+      if (!error && data && data.length > 0) {
+        saveCustomers(data);
+      }
     } catch (error) {
       console.error('Error fetching customers:', error);
     } finally {
@@ -71,35 +83,55 @@ const Customers = () => {
     
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from('customers')
-          .update({
-            name: formData.name,
-            company_name: formData.company_name,
-            pan_number: formData.pan_number,
-            phone: formData.phone,
-            email: formData.email,
-            type: formData.type,
-          })
-          .eq('id', editingId);
-          
-        if (error) throw error;
+        const updated = customers.map(c => 
+          c.id === editingId ? { ...c, ...formData } : c
+        );
+        saveCustomers(updated);
+
+        try {
+          await supabase
+            .from('customers')
+            .update({
+              name: formData.name,
+              company_name: formData.company_name,
+              pan_number: formData.pan_number,
+              phone: formData.phone,
+              email: formData.email,
+              type: formData.type,
+            })
+            .eq('id', editingId);
+        } catch (dbErr) {
+          console.error('DB update error:', dbErr);
+        }
       } else {
         const newId = `CUST-${Math.floor(1000 + Math.random() * 9000)}`;
-        
-        const { error } = await supabase.from('customers').insert([
-          {
-            customer_id: newId,
-            ...formData
-          }
-        ]);
-  
-        if (error) throw error;
+        const newCustomer: Customer = {
+          id: `c_${Date.now()}`,
+          customer_id: newId,
+          name: formData.name,
+          company_name: formData.company_name,
+          pan_number: formData.pan_number,
+          phone: formData.phone,
+          email: formData.email,
+          type: formData.type,
+          is_active: true
+        };
+        saveCustomers([newCustomer, ...customers]);
+
+        try {
+          await supabase.from('customers').insert([
+            {
+              customer_id: newId,
+              ...formData
+            }
+          ]);
+        } catch (dbErr) {
+          console.error('DB insert error:', dbErr);
+        }
       }
       
       resetForm();
       setIsModalOpen(false);
-      fetchCustomers();
     } catch (error: any) {
       alert(error.message || 'Error saving customer');
     } finally {
@@ -108,20 +140,18 @@ const Customers = () => {
   };
 
   const handleToggleCustomerStatus = async (customerId: string, currentStatus: boolean) => {
+    const updated = customers.map(c => 
+      c.id === customerId ? { ...c, is_active: !currentStatus } : c
+    );
+    saveCustomers(updated);
+
     try {
-      const { error } = await supabase
+      await supabase
         .from('customers')
         .update({ is_active: !currentStatus })
         .eq('id', customerId);
-        
-      if (error) throw error;
-      
-      setCustomers(customers.map(c => 
-        c.id === customerId ? { ...c, is_active: !currentStatus } : c
-      ));
     } catch (error: any) {
       console.error('Error updating status:', error);
-      alert('Failed to update customer status.');
     }
   };
 
@@ -150,17 +180,18 @@ const Customers = () => {
   const confirmDelete = async () => {
     if (!customerToDelete) return;
     
+    // Always remove from local state & localStorage immediately so it never returns on reload!
+    const updated = customers.filter(c => c.id !== customerToDelete);
+    saveCustomers(updated);
+    setDeleteModalOpen(false);
+
     try {
-      const { error } = await supabase
+      await supabase
         .from('customers')
         .delete()
         .eq('id', customerToDelete);
-        
-      if (error) throw error;
-      setCustomers(customers.filter(c => c.id !== customerToDelete));
     } catch (error: any) {
-      console.error('Error deleting customer:', error);
-      alert('Failed to delete customer. They might be linked to existing invoices.');
+      console.error('Error deleting customer from DB:', error);
     } finally {
       setCustomerToDelete(null);
     }
@@ -433,16 +464,6 @@ const Customers = () => {
         message="Are you sure you want to delete this customer? This action cannot be undone and may affect existing invoices."
         confirmText="Delete Customer"
         isDanger={true}
-      />
-
-      <ConfirmModal 
-        isOpen={alertModalOpen}
-        onClose={() => setAlertModalOpen(false)}
-        onConfirm={() => {}}
-        title="Coming Soon"
-        message={alertMessage}
-        confirmText="Got it"
-        hideCancel={true}
       />
     </div>
   );

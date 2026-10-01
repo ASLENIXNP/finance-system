@@ -2,7 +2,18 @@ import { useState } from 'react';
 import { Search, Filter, CheckCircle2, AlertCircle, Edit, Trash2, Plus } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 
-const initialPaymentsData = [
+export interface PaymentItem {
+  id: string;
+  date: string;
+  invoice: string;
+  customer: string;
+  amount: number;
+  method: string;
+  ref: string;
+  status: string;
+}
+
+const initialPaymentsData: PaymentItem[] = [
   { id: 'PAY-001', date: 'Oct 05, 2026', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', amount: 45000, method: 'Bank Transfer', ref: 'NABIL123456789', status: 'Verified' },
   { id: 'PAY-002', date: 'Oct 04, 2026', invoice: 'ASL-2083-0014', customer: 'Everest Trading', amount: 15500, method: 'eSewa', ref: 'ESEWA987654', status: 'Verified' },
   { id: 'PAY-003', date: 'Oct 02, 2026', invoice: 'ASL-2083-0010', customer: 'Himalayan Coffee House', amount: 50000, method: 'Cheque', ref: 'CHQ-445566', status: 'Pending Clearance' },
@@ -11,7 +22,16 @@ const initialPaymentsData = [
 
 const Payments = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [paymentsData, setPaymentsData] = useState(initialPaymentsData);
+  const [paymentsData, setPaymentsData] = useState<PaymentItem[]>(() => {
+    const saved = localStorage.getItem('aslenix_payments');
+    return saved ? JSON.parse(saved) : initialPaymentsData;
+  });
+
+  const savePaymentsData = (data: PaymentItem[]) => {
+    setPaymentsData(data);
+    localStorage.setItem('aslenix_payments', JSON.stringify(data));
+  };
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
   
@@ -37,7 +57,8 @@ const Payments = () => {
 
   const confirmDelete = () => {
     if (paymentToDelete) {
-      setPaymentsData(paymentsData.filter(item => item.id !== paymentToDelete));
+      const updated = paymentsData.filter(item => item.id !== paymentToDelete);
+      savePaymentsData(updated);
       setDeleteModalOpen(false);
       setPaymentToDelete(null);
     }
@@ -58,11 +79,12 @@ const Payments = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      setPaymentsData(paymentsData.map(item => 
+      const updated = paymentsData.map(item => 
         item.id === editingId 
           ? { ...item, ...formData, customer: formData.to, amount: Number(formData.amount) } 
           : item
-      ));
+      );
+      savePaymentsData(updated);
     } else {
       const newPayment = {
         id: `PAY-00${paymentsData.length + 1}`,
@@ -71,10 +93,10 @@ const Payments = () => {
         customer: formData.to,
         amount: Number(formData.amount),
         method: formData.method,
-        ref: 'NEW-REF',
+        ref: `TXN-${Date.now().toString().slice(-5)}`,
         status: formData.status
       };
-      setPaymentsData([newPayment, ...paymentsData]);
+      savePaymentsData([newPayment, ...paymentsData]);
     }
     setIsModalOpen(false);
     resetForm();

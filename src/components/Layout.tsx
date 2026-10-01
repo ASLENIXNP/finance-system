@@ -10,7 +10,8 @@ import {
   CreditCard,
   Settings,
   LogOut,
-  Building2
+  Building2,
+  Banknote
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -24,7 +25,12 @@ const Layout = () => {
       if (session?.user) {
         setUserEmail(session.user.email || null);
       } else {
-        navigate('/login');
+        const demo = localStorage.getItem('demo_user');
+        if (demo) {
+          setUserEmail(demo);
+        } else {
+          navigate('/login');
+        }
       }
     });
 
@@ -33,7 +39,12 @@ const Layout = () => {
       if (session?.user) {
         setUserEmail(session.user.email || null);
       } else {
-        navigate('/login');
+        const demo = localStorage.getItem('demo_user');
+        if (demo) {
+          setUserEmail(demo);
+        } else {
+          navigate('/login');
+        }
       }
     });
 
@@ -41,6 +52,7 @@ const Layout = () => {
   }, [navigate]);
 
   const handleLogout = async () => {
+    localStorage.removeItem('demo_user');
     await supabase.auth.signOut();
     navigate('/login');
   };
@@ -53,14 +65,15 @@ const Layout = () => {
     { name: 'Income', path: '/income', icon: <Wallet size={20} /> },
     { name: 'Expenditure', path: '/expenses', icon: <Receipt size={20} /> },
     { name: 'Payments', path: '/payments', icon: <CreditCard size={20} /> },
+    { name: 'Payroll & Salaries', path: '/payroll', icon: <Banknote size={20} /> },
     { name: 'Company Settings', path: '/settings', icon: <Building2 size={20} /> },
     { name: 'User Management', path: '/users', icon: <Settings size={20} /> },
   ];
 
   return (
-    <div className="flex h-screen bg-background font-sans overflow-hidden">
+    <div className="flex h-screen bg-background font-sans overflow-hidden print:h-auto print:block print:overflow-visible print:bg-white">
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar border-r border-slate-200 flex flex-col shadow-sm z-10 relative">
+      <aside className="w-64 bg-sidebar border-r border-slate-200 flex flex-col shadow-sm z-10 relative print:hidden">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Aslenix Logo" className="h-10 w-auto object-contain drop-shadow-sm" />
@@ -107,9 +120,9 @@ const Layout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden print:h-auto print:block print:overflow-visible print:w-full">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-0">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-0 print:hidden">
           <h2 className="text-xl font-semibold text-primary">Overview</h2>
           <div className="flex items-center gap-4">
              <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
@@ -119,8 +132,8 @@ const Layout = () => {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          <div className="max-w-7xl mx-auto pb-12">
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar print:p-0 print:overflow-visible print:h-auto print:block print:w-full">
+          <div className="max-w-7xl mx-auto pb-12 print:max-w-none print:m-0 print:p-0 print:w-full print:pb-0">
             <Outlet />
           </div>
         </div>

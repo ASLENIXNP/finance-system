@@ -2,7 +2,17 @@ import { useState } from 'react';
 import { Search, Plus, Filter, CreditCard, ArrowUpRight, Edit, Trash2 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 
-const initialExpenseData = [
+export interface ExpenseItem {
+  id: string;
+  date: string;
+  vendor: string;
+  category: string;
+  amount: number;
+  method: string;
+  receipt: string;
+}
+
+const initialExpenseData: ExpenseItem[] = [
   { id: 'EXP-001', date: 'Oct 02, 2026', vendor: 'Vianet Communications', category: 'Office / Internet', amount: 3500, method: 'eSewa', receipt: 'REC-1029' },
   { id: 'EXP-002', date: 'Oct 01, 2026', vendor: 'Digital Ocean', category: 'Technology / Cloud Services', amount: 6500, method: 'Credit Card', receipt: 'INV-DO-992' },
   { id: 'EXP-003', date: 'Sep 28, 2026', vendor: 'Kathmandu Properties', category: 'Office / Rent', amount: 45000, method: 'Bank Transfer', receipt: 'RENT-Sep' },
@@ -11,7 +21,16 @@ const initialExpenseData = [
 
 const Expenses = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [expenseData, setExpenseData] = useState(initialExpenseData);
+  const [expenseData, setExpenseData] = useState<ExpenseItem[]>(() => {
+    const saved = localStorage.getItem('aslenix_expenses');
+    return saved ? JSON.parse(saved) : initialExpenseData;
+  });
+
+  const saveExpenseData = (data: ExpenseItem[]) => {
+    setExpenseData(data);
+    localStorage.setItem('aslenix_expenses', JSON.stringify(data));
+  };
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
   
@@ -37,7 +56,8 @@ const Expenses = () => {
 
   const confirmDelete = () => {
     if (expenseToDelete) {
-      setExpenseData(expenseData.filter(item => item.id !== expenseToDelete));
+      const updated = expenseData.filter(item => item.id !== expenseToDelete);
+      saveExpenseData(updated);
       setDeleteModalOpen(false);
       setExpenseToDelete(null);
     }
@@ -47,10 +67,10 @@ const Expenses = () => {
     setEditingId(expense.id);
     setFormData({
       date: expense.date,
-      description: expense.description,
+      description: expense.vendor || expense.description || '',
       category: expense.category,
       amount: expense.amount.toString(),
-      reference: expense.reference || ''
+      reference: expense.receipt || expense.reference || ''
     });
     setIsModalOpen(true);
   };
@@ -58,19 +78,30 @@ const Expenses = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      setExpenseData(expenseData.map(item => 
+      const updated = expenseData.map(item => 
         item.id === editingId 
-          ? { ...item, ...formData, amount: Number(formData.amount) } 
+          ? { 
+              ...item, 
+              date: formData.date,
+              vendor: formData.description || item.vendor,
+              category: formData.category,
+              amount: Number(formData.amount),
+              receipt: formData.reference || item.receipt
+            } 
           : item
-      ));
+      );
+      saveExpenseData(updated);
     } else {
       const newExpense = {
         id: `EXP-00${expenseData.length + 1}`,
-        status: 'Completed',
-        ...formData,
-        amount: Number(formData.amount)
+        date: formData.date,
+        vendor: formData.description || 'General Vendor',
+        category: formData.category,
+        amount: Number(formData.amount),
+        method: 'Bank Transfer',
+        receipt: formData.reference || `REC-${Date.now().toString().slice(-4)}`
       };
-      setExpenseData([newExpense, ...expenseData]);
+      saveExpenseData([newExpense, ...expenseData]);
     }
     setIsModalOpen(false);
     resetForm();

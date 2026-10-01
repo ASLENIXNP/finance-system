@@ -1,8 +1,17 @@
 import { useState } from 'react';
-import { Search, Plus, Filter, UserCog, MoreVertical, Edit, Trash2, Shield } from 'lucide-react';
+import { Search, Plus, Filter, Edit, Trash2, Shield } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 
-const initialUsersData = [
+export interface UserItem {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  lastLogin: string;
+}
+
+const initialUsersData: UserItem[] = [
   { id: 'USR-001', name: 'Super Admin', email: 'admin@aslenix.com', role: 'Super Admin', status: 'Active', lastLogin: 'Oct 01, 2026 10:15 AM' },
   { id: 'USR-002', name: 'Bikash Thapa', email: 'bikash@aslenix.com', role: 'Accountant', status: 'Active', lastLogin: 'Sep 30, 2026 04:30 PM' },
   { id: 'USR-003', name: 'Sarita Sharma', email: 'sarita@aslenix.com', role: 'Billing Staff', status: 'Active', lastLogin: 'Oct 01, 2026 09:00 AM' },
@@ -20,7 +29,16 @@ const roleColors: Record<string, string> = {
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [usersData, setUsersData] = useState(initialUsersData);
+  const [usersData, setUsersData] = useState<UserItem[]>(() => {
+    const saved = localStorage.getItem('aslenix_users');
+    return saved ? JSON.parse(saved) : initialUsersData;
+  });
+
+  const saveUsersData = (data: UserItem[]) => {
+    setUsersData(data);
+    localStorage.setItem('aslenix_users', JSON.stringify(data));
+  };
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   
@@ -45,7 +63,8 @@ const Users = () => {
 
   const confirmDelete = () => {
     if (userToDelete) {
-      setUsersData(usersData.filter(item => item.id !== userToDelete));
+      const updated = usersData.filter(item => item.id !== userToDelete);
+      saveUsersData(updated);
       setDeleteModalOpen(false);
       setUserToDelete(null);
     }
@@ -65,18 +84,19 @@ const Users = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      setUsersData(usersData.map(item => 
+      const updated = usersData.map(item => 
         item.id === editingId 
           ? { ...item, ...formData } 
           : item
-      ));
+      );
+      saveUsersData(updated);
     } else {
       const newUser = {
         id: `USR-00${usersData.length + 1}`,
         lastLogin: 'Never',
         ...formData
       };
-      setUsersData([newUser, ...usersData]);
+      saveUsersData([newUser, ...usersData]);
     }
     setIsModalOpen(false);
     resetForm();

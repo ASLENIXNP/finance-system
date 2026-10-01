@@ -177,9 +177,9 @@ const InvoiceCreate = () => {
         </select>
       </div>
 
-      <div id="printable-invoice" className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:shadow-none print:border-none print:rounded-none">
-        <div className="print-header p-8 md:p-12 border-b border-slate-100 print:border-b-2 print:border-slate-800">
-          <div className="flex justify-between items-start flex-col md:flex-row gap-8">
+      <div id="printable-invoice" className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:shadow-none print:border-none print:rounded-none print:p-0 print:m-0 print:w-full">
+        <div className="print-header p-8 md:p-12 border-b border-slate-100 print:border-b-2 print:border-slate-800 print:p-0 print:pb-4">
+          <div className="flex justify-between items-start flex-col md:flex-row print:flex-row gap-8 print:gap-4">
             <div className="flex items-center gap-6">
               <img src="/logo.png" alt="Aslenix Logo" className="h-20 w-auto object-contain" />
               <div>
@@ -195,9 +195,9 @@ const InvoiceCreate = () => {
                 </div>
               </div>
             </div>
-            <div className="md:text-right w-full md:w-auto">
-              <h2 className="text-4xl font-black text-slate-200 uppercase tracking-widest print:text-slate-400 mb-6">INVOICE</h2>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-left md:text-right">
+            <div className="md:text-right print:text-right w-full md:w-auto print:w-auto">
+              <h2 className="text-4xl font-black text-slate-200 uppercase tracking-widest print:text-slate-400 mb-6 print:mb-3">INVOICE</h2>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-left md:text-right print:text-right">
                 <div className="font-semibold text-slate-500">Invoice No:</div>
                 <div className="font-bold text-primary print:text-black">{invoiceNumber}</div>
 
@@ -211,8 +211,8 @@ const InvoiceCreate = () => {
           </div>
         </div>
 
-        <div className="print-billing p-8 md:p-12 border-b border-slate-100 bg-slate-50/50 print:bg-transparent">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="print-billing p-8 md:p-12 border-b border-slate-100 bg-slate-50/50 print:bg-transparent print:p-0 print:py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-12 print:gap-8">
             <div>
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Billed To</h3>
               <div className="space-y-4 print:space-y-2">
@@ -289,18 +289,18 @@ const InvoiceCreate = () => {
           </div>
         </div>
 
-        <div className="print-items p-8 md:p-12 overflow-x-auto">
+        <div className="print-items p-8 md:p-12 overflow-x-auto print:p-0 print:py-3 print:overflow-visible">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b-2 border-slate-200 print:border-black text-sm uppercase tracking-wider text-slate-400 font-bold">
-                <th className="pb-4 w-12 text-center">S.N.</th>
-                <th className="pb-4 w-1/3">Item Details</th>
-                <th className="pb-4 text-center">Qty</th>
-                <th className="pb-4 text-center">Unit</th>
-                <th className="pb-4 text-right">Rate (Rs)</th>
-                <th className="pb-4 text-right">Disc (Rs)</th>
-                <th className="pb-4 text-right">Tax (%)</th>
-                <th className="pb-4 text-right">Amount (Rs)</th>
+                <th className="pb-4 w-10 text-center print:pb-2 print:text-black">S.N.</th>
+                <th className="pb-4 w-auto print:pb-2 print:text-black">Item Details</th>
+                <th className="pb-4 text-center w-16 print:pb-2 print:text-black">Qty</th>
+                <th className="pb-4 text-center w-16 print:pb-2 print:text-black">Unit</th>
+                <th className="pb-4 text-right w-24 print:pb-2 print:text-black whitespace-nowrap">Rate (Rs)</th>
+                <th className="pb-4 text-right w-20 print:pb-2 print:text-black whitespace-nowrap">Disc (Rs)</th>
+                <th className="pb-4 text-right w-16 print:pb-2 print:text-black whitespace-nowrap">Tax (%)</th>
+                <th className="pb-4 text-right w-28 print:pb-2 print:text-black whitespace-nowrap">Amount (Rs)</th>
                 <th className="pb-4 w-12 print:hidden"></th>
               </tr>
             </thead>
@@ -350,8 +350,8 @@ const InvoiceCreate = () => {
           </div>
         </div>
 
-        <div className="print-summary p-8 md:p-12 flex flex-col md:flex-row justify-between items-start gap-12 bg-slate-50/30 print:bg-transparent border-t border-slate-100 print:border-black">
-          <div className="w-full md:w-1/2 space-y-6">
+        <div className="print-summary p-8 md:p-12 flex flex-col md:flex-row print:flex-row justify-between items-start gap-12 print:gap-8 bg-slate-50/30 print:bg-transparent border-t border-slate-100 print:border-black print:p-0 print:py-4">
+          <div className="w-full md:w-1/2 print:w-1/2 space-y-6 print:space-y-3">
             <div>
               <h4 className="text-sm font-bold text-slate-700 mb-2">Bank Details</h4>
               <div className="bg-white p-4 rounded-xl border border-slate-200 text-sm print:border-none print:p-0 print:bg-transparent">
@@ -370,7 +370,7 @@ const InvoiceCreate = () => {
             </div>
           </div>
 
-          <div className="w-full md:w-80 space-y-3">
+          <div className="w-full md:w-80 print:w-72 space-y-3 print:space-y-1.5">
             <div className="flex justify-between text-sm">
               <span className="font-semibold text-slate-500">Subtotal:</span>
               <span className="font-medium text-primary">रु. {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
@@ -396,7 +396,7 @@ const InvoiceCreate = () => {
           </div>
         </div>
 
-        <div className="print-signatures p-8 md:p-12 pt-0 mt-8 md:mt-16 flex justify-between items-end">
+        <div className="print-signatures p-8 md:p-12 pt-0 mt-8 md:mt-16 print:mt-6 flex justify-between items-end print:p-0 print:pt-4">
           <div className="text-center w-48">
             <div className="border-b border-slate-300 h-10 mb-2"></div>
             <p className="text-sm font-bold text-primary">Authorized Signature</p>

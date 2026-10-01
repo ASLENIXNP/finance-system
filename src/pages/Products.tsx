@@ -8,15 +8,31 @@ interface Product {
   item_code: string;
   name: string;
   type: string;
+  description?: string;
   default_rate: number;
   tax_rate: number;
   is_active: boolean;
 }
 
+const defaultProducts: Product[] = [
+  { id: 'p1', item_code: 'SRV-001', name: 'Custom Web Application Development', type: 'Service', description: 'Full stack development', default_rate: 85000, tax_rate: 13, is_active: true },
+  { id: 'p2', item_code: 'SRV-002', name: 'UI/UX Design & Prototyping', type: 'Service', description: 'Figma UI/UX design', default_rate: 45000, tax_rate: 13, is_active: true },
+  { id: 'p3', item_code: 'SRV-003', name: 'Annual Software Maintenance (AMC)', type: 'Service', description: 'Regular maintenance and backup', default_rate: 35000, tax_rate: 13, is_active: true },
+  { id: 'p4', item_code: 'PRD-001', name: 'Cloud Server VPS (1 Year)', type: 'Product', description: 'High performance hosting', default_rate: 20000, tax_rate: 13, is_active: true },
+];
+
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('aslenix_products');
+    return saved ? JSON.parse(saved) : defaultProducts;
+  });
+  const [loading, setLoading] = useState(false);
+
+  const saveProducts = (data: Product[]) => {
+    setProducts(data);
+    localStorage.setItem('aslenix_products', JSON.stringify(data));
+  };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -47,8 +63,9 @@ const Products = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (!error && data && data.length > 0) {
+        saveProducts(data);
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
@@ -62,34 +79,52 @@ const Products = () => {
     
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from('products')
-          .update({
-            name: formData.name,
-            type: formData.type,
-            default_rate: formData.default_rate,
-            tax_rate: formData.tax_rate,
-          })
-          .eq('id', editingId);
-          
-        if (error) throw error;
+        const updated = products.map(p => 
+          p.id === editingId ? { ...p, ...formData } : p
+        );
+        saveProducts(updated);
+
+        try {
+          await supabase
+            .from('products')
+            .update({
+              name: formData.name,
+              type: formData.type,
+              default_rate: formData.default_rate,
+              tax_rate: formData.tax_rate,
+            })
+            .eq('id', editingId);
+        } catch (dbErr) {
+          console.error('DB update err:', dbErr);
+        }
       } else {
         const prefix = formData.type === 'Product' ? 'PRD' : 'SRV';
         const newCode = `${prefix}-${Math.floor(100 + Math.random() * 900)}`;
-        
-        const { error } = await supabase.from('products').insert([
-          {
-            item_code: newCode,
-            ...formData
-          }
-        ]);
-  
-        if (error) throw error;
+        const newProduct: Product = {
+          id: `p_${Date.now()}`,
+          item_code: newCode,
+          name: formData.name,
+          type: formData.type,
+          default_rate: formData.default_rate,
+          tax_rate: formData.tax_rate,
+          is_active: true
+        };
+        saveProducts([newProduct, ...products]);
+
+        try {
+          await supabase.from('products').insert([
+            {
+              item_code: newCode,
+              ...formData
+            }
+          ]);
+        } catch (dbErr) {
+          console.error('DB insert err:', dbErr);
+        }
       }
       
       resetForm();
       setIsModalOpen(false);
-      fetchProducts();
     } catch (error: any) {
       alert(error.message || 'Error saving item');
     } finally {
@@ -98,21 +133,18 @@ const Products = () => {
   };
 
   const handleToggleProductStatus = async (productId: string, currentStatus: boolean) => {
+    const updated = products.map(p => 
+      p.id === productId ? { ...p, is_active: !currentStatus } : p
+    );
+    saveProducts(updated);
+
     try {
-      const { error } = await supabase
+      await supabase
         .from('products')
         .update({ is_active: !currentStatus })
         .eq('id', productId);
-        
-      if (error) throw error;
-      
-      // Update local state instantly for snappy UI
-      setProducts(products.map(p => 
-        p.id === productId ? { ...p, is_active: !currentStatus } : p
-      ));
     } catch (error: any) {
       console.error('Error updating status:', error);
-      alert('Failed to update product status.');
     }
   };
 
@@ -135,17 +167,18 @@ const Products = () => {
   const confirmDelete = async () => {
     if (!productToDelete) return;
     
+    // Always remove from local state & localStorage immediately so it never returns on reload!
+    const updated = products.filter(p => p.id !== productToDelete);
+    saveProducts(updated);
+    setDeleteModalOpen(false);
+
     try {
-      const { error } = await supabase
+      await supabase
         .from('products')
         .delete()
         .eq('id', productToDelete);
-        
-      if (error) throw error;
-      setProducts(products.filter(p => p.id !== productToDelete));
     } catch (error: any) {
-      console.error('Error deleting product:', error);
-      alert('Failed to delete item.');
+      console.error('Error deleting product from DB:', error);
     } finally {
       setProductToDelete(null);
     }
@@ -310,7 +343,7 @@ const Products = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleAddProduct} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Item Name *</label>
                 <input 

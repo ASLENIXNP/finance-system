@@ -137,6 +137,55 @@ CREATE TABLE expenses (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
+-- 10. Employees Table (Fixed Salary set by Accountant)
+CREATE TABLE employees (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_code VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    designation VARCHAR(100) NOT NULL,
+    department VARCHAR(100) DEFAULT 'General',
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    pan_number VARCHAR(100),
+    fixed_salary DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    bank_name VARCHAR(255),
+    bank_account_no VARCHAR(100),
+    bank_branch VARCHAR(255),
+    joining_date DATE DEFAULT CURRENT_DATE,
+    is_active BOOLEAN DEFAULT true,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- 11. Employee Salary / Payroll Records Table
+CREATE TABLE payroll_records (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    payroll_ref VARCHAR(100) UNIQUE NOT NULL,
+    employee_id UUID REFERENCES employees(id) ON DELETE CASCADE,
+    month VARCHAR(50) NOT NULL,
+    year INTEGER NOT NULL,
+    total_working_days DECIMAL(5,1) NOT NULL DEFAULT 26.0,
+    present_days DECIMAL(5,1) NOT NULL DEFAULT 0.0,
+    absent_days DECIMAL(5,1) NOT NULL DEFAULT 0.0,
+    half_days DECIMAL(5,1) NOT NULL DEFAULT 0.0,
+    effective_days DECIMAL(5,1) NOT NULL DEFAULT 0.0,
+    fixed_salary DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    per_day_rate DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    earned_salary DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    attendance_salary DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    bonus_allowance DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    deductions DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    net_before_tds DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    tds_rate DECIMAL(5,2) NOT NULL DEFAULT 1.00,
+    tds_amount DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    net_salary DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    payment_status VARCHAR(50) DEFAULT 'Unpaid',
+    payment_date DATE,
+    payment_method payment_method DEFAULT 'Bank Transfer',
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
 -- Enable Row Level Security (RLS) policies
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE company_settings ENABLE ROW LEVEL SECURITY;
@@ -146,6 +195,8 @@ ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payroll_records ENABLE ROW LEVEL SECURITY;
 
 -- Allow read/write for all authenticated users (Basic Dev Policy)
 CREATE POLICY "Allow authenticated users full access" ON customers FOR ALL TO authenticated USING (true);
@@ -155,3 +206,14 @@ CREATE POLICY "Allow authenticated users full access" ON invoice_items FOR ALL T
 CREATE POLICY "Allow authenticated users full access" ON payments FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow authenticated users full access" ON expenses FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow authenticated users full access" ON company_settings FOR ALL TO authenticated USING (true);
+CREATE POLICY "Allow authenticated users full access" ON employees FOR ALL TO authenticated USING (true);
+CREATE POLICY "Allow authenticated users full access" ON payroll_records FOR ALL TO authenticated USING (true);
+
+-- Insert Sample Employees
+INSERT INTO employees (employee_code, name, designation, department, email, phone, pan_number, fixed_salary, bank_name, bank_account_no, bank_branch, joining_date)
+VALUES 
+('EMP-001', 'Aarav Sharma', 'Senior Full Stack Engineer', 'Technology', 'aarav.sharma@aslenix.com', '9841000001', '609123456', 75000.00, 'Nabil Bank', '01901017500123', 'Putalisadak', '2025-01-15'),
+('EMP-002', 'Pooja Shrestha', 'Lead Accountant', 'Finance', 'pooja.shrestha@aslenix.com', '9841000002', '608987654', 60000.00, 'Global IME Bank', '04501010098765', 'New Baneshwor', '2025-02-01'),
+('EMP-003', 'Rohan Adhikari', 'UI/UX & Frontend Designer', 'Creative & Tech', 'rohan.adhikari@aslenix.com', '9841000003', '610543210', 48000.00, 'NIC Asia Bank', '12405060708090', 'Thamel', '2025-04-10'),
+('EMP-004', 'Sneha Karki', 'Business Development Officer', 'Marketing', 'sneha.karki@aslenix.com', '9841000004', '611223344', 38000.00, 'Sanima Bank', '08901234567890', 'Lalitpur', '2025-06-01');
+

@@ -2,7 +2,18 @@ import { useState } from 'react';
 import { Search, Plus, Filter, ArrowDownRight, Wallet, Edit, Trash2 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 
-const initialIncomeData = [
+export interface IncomeItem {
+  id: string;
+  date: string;
+  invoice: string;
+  customer: string;
+  category: string;
+  amount: number;
+  method: string;
+  status: string;
+}
+
+const initialIncomeData: IncomeItem[] = [
   { id: 'INC-001', date: 'Oct 01, 2026', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', category: 'Web Development', amount: 45000, method: 'Bank Transfer', status: 'Completed' },
   { id: 'INC-002', date: 'Sep 28, 2026', invoice: 'ASL-2083-0011', customer: 'Himalayan Coffee House', category: 'UI/UX Design', amount: 15500, method: 'eSewa', status: 'Completed' },
   { id: 'INC-003', date: 'Sep 25, 2026', invoice: 'ASL-2083-0009', customer: 'Retail Solutions', category: 'Software Development', amount: 85000, method: 'Cheque', status: 'Pending' },
@@ -11,7 +22,16 @@ const initialIncomeData = [
 
 const Income = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [incomeData, setIncomeData] = useState(initialIncomeData);
+  const [incomeData, setIncomeData] = useState<IncomeItem[]>(() => {
+    const saved = localStorage.getItem('aslenix_income');
+    return saved ? JSON.parse(saved) : initialIncomeData;
+  });
+
+  const saveIncomeData = (data: IncomeItem[]) => {
+    setIncomeData(data);
+    localStorage.setItem('aslenix_income', JSON.stringify(data));
+  };
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
   
@@ -36,7 +56,8 @@ const Income = () => {
 
   const confirmDelete = () => {
     if (incomeToDelete) {
-      setIncomeData(incomeData.filter(item => item.id !== incomeToDelete));
+      const updated = incomeData.filter(item => item.id !== incomeToDelete);
+      saveIncomeData(updated);
       setDeleteModalOpen(false);
       setIncomeToDelete(null);
     }
@@ -46,9 +67,9 @@ const Income = () => {
     setEditingId(income.id);
     setFormData({
       date: income.date,
-      source: income.source,
+      source: income.customer || income.source || '',
       amount: income.amount.toString(),
-      reference: income.reference || ''
+      reference: income.invoice || income.reference || ''
     });
     setIsModalOpen(true);
   };
@@ -56,19 +77,30 @@ const Income = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      setIncomeData(incomeData.map(item => 
+      const updated = incomeData.map(item => 
         item.id === editingId 
-          ? { ...item, ...formData, amount: Number(formData.amount) } 
+          ? { 
+              ...item, 
+              date: formData.date,
+              customer: formData.source || item.customer,
+              amount: Number(formData.amount),
+              invoice: formData.reference || item.invoice
+            } 
           : item
-      ));
+      );
+      saveIncomeData(updated);
     } else {
       const newIncome = {
         id: `INC-00${incomeData.length + 1}`,
-        status: 'Completed',
-        ...formData,
-        amount: Number(formData.amount)
+        date: formData.date,
+        customer: formData.source || 'General Client',
+        invoice: formData.reference || `INV-${Date.now().toString().slice(-4)}`,
+        category: 'Consulting / Tech',
+        amount: Number(formData.amount),
+        method: 'Bank Transfer',
+        status: 'Completed'
       };
-      setIncomeData([newIncome, ...incomeData]);
+      saveIncomeData([newIncome, ...incomeData]);
     }
     setIsModalOpen(false);
     resetForm();

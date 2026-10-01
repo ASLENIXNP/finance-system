@@ -20,45 +20,119 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 8mm 10mm;
   }
 
+  /* Completely remove non-printable chrome from the document layout */
+  aside,
+  header,
+  nav,
+  button,
+  .no-print,
+  .sidebar,
+  .navbar,
+  .header,
+  .navigation,
+  .dashboard-layout,
+  .print-button,
+  .save-button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset HTML and Body */
   html,
   body {
-    width: 210mm;
-    margin: 0;
-    padding: 0;
-    background: white;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
     overflow: visible !important;
   }
 
+  /* Flatten all app layout containers so there is zero offset or padding */
+  #root,
+  #root > div,
+  .flex,
+  main,
+  .custom-scrollbar,
+  .max-w-7xl,
+  .max-w-3xl,
+  .max-w-xl {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  /* Reset modal containers if printing from a modal (e.g. payslip) */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  .fixed.inset-0 > div {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: white !important;
+  }
+
+  /* Only printable documents are visible */
   body * {
     visibility: hidden;
   }
 
   #printable-invoice,
-  #printable-invoice * {
+  #printable-invoice *,
+  #printable-payslip,
+  #printable-payslip * {
     visibility: visible;
   }
 
-  #printable-invoice {
-    position: relative;
-    left: 0;
-    top: 0;
-    width: 210mm;
-    min-height: 297mm;
-    margin: 0;
-    padding: 8mm 12mm 6mm;
-    box-sizing: border-box;
-    background: white;
-    box-shadow: none;
-    border: none;
-    overflow: hidden;
+  /* Printable containers styling */
+  #printable-invoice,
+  #printable-payslip {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important;
   }
 
-  #printable-invoice > * {
+  #printable-invoice > *,
+  #printable-payslip > * {
     page-break-inside: avoid;
   }
 
@@ -75,60 +149,51 @@
   }
 
   #printable-invoice .print-header {
-    padding: 0 0 4mm;
-    margin: 0;
-    border-bottom: 2px solid #1f2937;
+    padding: 0 0 4mm !important;
+    margin: 0 !important;
+    border-bottom: 2px solid #1f2937 !important;
   }
 
   #printable-invoice .print-billing {
-    padding: 4mm 0;
+    padding: 4mm 0 !important;
     background: transparent !important;
+    border-bottom: 1px solid #e2e8f0 !important;
   }
 
   #printable-invoice .print-items {
-    padding: 0;
+    padding: 4mm 0 !important;
+    overflow: visible !important;
   }
 
   #printable-invoice .print-items table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 11px !important;
+    table-layout: auto !important;
   }
 
   #printable-invoice .print-items th,
   #printable-invoice .print-items td {
-    padding-top: 2px;
-    padding-bottom: 2px;
+    padding: 5px 4px !important;
+    word-break: break-word;
   }
 
   #printable-invoice .print-summary {
-    padding: 4mm 0 2mm;
+    padding: 4mm 0 2mm !important;
     background: transparent !important;
-    border-top: 1px solid #d1d5db;
+    border-top: 1px solid #d1d5db !important;
   }
 
   #printable-invoice .print-signatures {
-    margin-top: 2mm;
-    padding: 0;
+    margin-top: 4mm !important;
+    padding: 0 !important;
   }
 
   #printable-invoice .print-footer {
-    margin-top: 2mm;
-    padding-top: 3mm;
-    padding-bottom: 3mm;
-    border-top: 1px solid #d1d5db;
-  }
-
-  .no-print,
-  .sidebar,
-  .navbar,
-  .header,
-  .navigation,
-  .dashboard-layout,
-  .print-button,
-  .save-button,
-  button {
-    display: none !important;
+    margin-top: 4mm !important;
+    padding-top: 3mm !important;
+    padding-bottom: 3mm !important;
+    border-top: 1px solid #d1d5db !important;
   }
 }
 

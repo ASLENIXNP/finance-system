@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
+import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const Login = () => {
@@ -96,15 +96,28 @@ const Login = () => {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all hover:shadow-lg hover:shadow-accent/30 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all hover:shadow-lg hover:shadow-accent/30 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? 'Authenticating...' : 'Sign in to Dashboard'}
                 {!loading && <ArrowRight size={18} />}
               </button>
             </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem('demo_user', 'accountant@aslenix.com');
+                  navigate('/');
+                }}
+                className="w-full py-2.5 px-4 border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Quick Sign-In as Accountant (Demo)</span>
+              </button>
+            </div>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-100">
+          <div className="mt-6 pt-6 border-t border-slate-100">
             <p className="text-center text-xs text-slate-500">
               Only authorized personnel of Aslenix Tech and Solution are allowed to access this system.
             </p>
