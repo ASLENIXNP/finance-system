@@ -158,23 +158,11 @@ export const calculatePayrollValues = (
   };
 };
 
-export const DEFAULT_PRESET_PHOTOS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80',
-];
-
 export const getEmployeePhoto = (emp: { name: string; photo_url?: string }) => {
   if (emp.photo_url && emp.photo_url.trim() !== '') {
     return emp.photo_url;
   }
-  // Assign a deterministic high-resolution portrait from presets if not explicitly provided
-  const sum = (emp.name || 'User').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const idx = Math.abs(sum) % DEFAULT_PRESET_PHOTOS.length;
-  return DEFAULT_PRESET_PHOTOS[idx];
+  return '';
 };
 
 const initialEmployees: Employee[] = [
@@ -193,7 +181,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'Putalisadak',
     joining_date: '2081-10-01',
     is_active: true,
-    photo_url: DEFAULT_PRESET_PHOTOS[1],
+    photo_url: '',
   },
   {
     id: 'EMP-002',
@@ -210,7 +198,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'New Baneshwor',
     joining_date: '2081-11-15',
     is_active: true,
-    photo_url: DEFAULT_PRESET_PHOTOS[4],
+    photo_url: '',
   },
   {
     id: 'EMP-003',
@@ -227,7 +215,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'Thamel',
     joining_date: '2082-01-01',
     is_active: true,
-    photo_url: DEFAULT_PRESET_PHOTOS[3],
+    photo_url: '',
   },
   {
     id: 'EMP-004',
@@ -244,7 +232,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'Lalitpur',
     joining_date: '2082-03-01',
     is_active: true,
-    photo_url: DEFAULT_PRESET_PHOTOS[2],
+    photo_url: '',
   },
   {
     id: 'EMP-005',
@@ -261,7 +249,7 @@ const initialEmployees: Employee[] = [
     bank_branch: 'Lazimpat',
     joining_date: '2082-05-15',
     is_active: true,
-    photo_url: DEFAULT_PRESET_PHOTOS[5],
+    photo_url: '',
   }
 ];
 
@@ -451,14 +439,26 @@ const Payroll = () => {
     const saved = localStorage.getItem('aslenix_employees');
     return saved ? JSON.parse(saved) : initialEmployees;
   });
+
+  // Strict deduplication helper: guarantees exactly 1 row per employee per (month + year)
+  const deduplicatePayrollRecords = (records: PayrollRecord[]): PayrollRecord[] => {
+    const map = new Map<string, PayrollRecord>();
+    for (const r of records) {
+      const empKey = r.employee_id || r.employee_code || r.employee_name;
+      const key = `${empKey}_${r.month}_${r.year}`;
+      // Later entry updates/overwrites earlier entry
+      map.set(key, r);
+    }
+    return Array.from(map.values());
+  };
   
-  // Persistent state for Payroll Records with backward-compatible mapper
+  // Persistent state for Payroll Records with backward-compatible mapper and automatic deduplication
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>(() => {
     const saved = localStorage.getItem('aslenix_payroll_records');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return parsed.map((r: any) => {
+        const mapped = parsed.map((r: any) => {
           const attendance_salary = r.attendance_salary ?? r.earned_salary ?? ((r.fixed_salary / (r.total_working_days || 26)) * (r.effective_days || 0));
           const net_before_tds = r.net_before_tds ?? (attendance_salary + (r.bonus_allowance || 0) - (r.deductions || 0));
           const tds_rate = r.tds_rate ?? 1;
@@ -474,11 +474,13 @@ const Payroll = () => {
             net_salary
           };
         });
+        // Deduplicate immediately on load so any existing duplicates in user storage are cleaned up!
+        return deduplicatePayrollRecords(mapped);
       } catch (e) {
         console.error('Error loading payroll records:', e);
       }
     }
-    return initialPayrollRecords;
+    return deduplicatePayrollRecords(initialPayrollRecords);
   });
 
   // Filters & Period
@@ -576,16 +578,18 @@ const Payroll = () => {
   };
 
   const savePayrollRecords = (updated: PayrollRecord[]) => {
-    setPayrollRecords(updated);
-    localStorage.setItem('aslenix_payroll_records', JSON.stringify(updated));
+    const cleanList = deduplicatePayrollRecords(updated);
+    setPayrollRecords(cleanList);
+    localStorage.setItem('aslenix_payroll_records', JSON.stringify(cleanList));
   };
 
-  // Filtered Payroll Records for Selected Period
+  // Filtered Payroll Records for Selected Period: guaranteed strictly 1 row per employee
   const periodPayrollRecords = useMemo(() => {
-    return payrollRecords.filter(record => 
+    const periodList = payrollRecords.filter(record => 
       record.month === selectedMonth && 
       record.year === selectedYear
     );
+    return deduplicatePayrollRecords(periodList);
   }, [payrollRecords, selectedMonth, selectedYear]);
 
   const displayedPayroll = useMemo(() => {
@@ -674,12 +678,77 @@ const Payroll = () => {
         notes: record.notes || ''
       });
     } else {
-      const defaultEmpId = empId || (employees.length > 0 ? employees[0].id : '');
+      const targetEmpId = empId || (employees.length > 0 ? employees[0].id : '');
+      // Check if this employee ALREADY has a payroll record for the selected month and year
+      const existing = payrollRecords.find(r => 
+        (r.employee_id === targetEmpId || r.employee_code === targetEmpId) &&
+        r.month === selectedMonth &&
+        r.year === selectedYear
+      );
+
+      if (existing) {
+        // Pre-fill existing record to update it in-place (no duplicate rows)
+        setEditingPayrollId(existing.id);
+        setSalaryFormData({
+          employee_id: existing.employee_id,
+          month: existing.month,
+          year: existing.year,
+          total_working_days: existing.total_working_days,
+          present_days: existing.present_days,
+          half_days: existing.half_days,
+          bonus_allowance: existing.bonus_allowance,
+          deductions: existing.deductions,
+          apply_tds: existing.tds_rate > 0,
+          tds_rate: existing.tds_rate || 1,
+          notes: existing.notes || ''
+        });
+      } else {
+        setEditingPayrollId(null);
+        setSalaryFormData({
+          employee_id: targetEmpId,
+          month: selectedMonth,
+          year: selectedYear,
+          total_working_days: defaultWorkingDays,
+          present_days: defaultWorkingDays,
+          half_days: 0,
+          bonus_allowance: 0,
+          deductions: 0,
+          apply_tds: true,
+          tds_rate: 1,
+          notes: ''
+        });
+      }
+    }
+    setIsSalaryModalOpen(true);
+  };
+
+  // Auto-detect existing record when changing employee in salary modal
+  const handleEmployeeChangeInSalaryModal = (newEmpId: string) => {
+    const existing = payrollRecords.find(r => 
+      (r.employee_id === newEmpId || r.employee_code === newEmpId) &&
+      r.month === salaryFormData.month &&
+      r.year === salaryFormData.year
+    );
+
+    if (existing) {
+      setEditingPayrollId(existing.id);
+      setSalaryFormData(prev => ({
+        ...prev,
+        employee_id: newEmpId,
+        total_working_days: existing.total_working_days,
+        present_days: existing.present_days,
+        half_days: existing.half_days,
+        bonus_allowance: existing.bonus_allowance,
+        deductions: existing.deductions,
+        apply_tds: existing.tds_rate > 0,
+        tds_rate: existing.tds_rate || 1,
+        notes: existing.notes || ''
+      }));
+    } else {
       setEditingPayrollId(null);
-      setSalaryFormData({
-        employee_id: defaultEmpId,
-        month: selectedMonth,
-        year: selectedYear,
+      setSalaryFormData(prev => ({
+        ...prev,
+        employee_id: newEmpId,
         total_working_days: defaultWorkingDays,
         present_days: defaultWorkingDays,
         half_days: 0,
@@ -688,14 +757,56 @@ const Payroll = () => {
         apply_tds: true,
         tds_rate: 1,
         notes: ''
-      });
+      }));
     }
-    setIsSalaryModalOpen(true);
   };
 
-  // Submit Salary calculation modal
-  const handleSaveSalaryRecord = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Auto-detect existing record when changing period in salary modal
+  const handlePeriodChangeInSalaryModal = (newMonth: string, newYear: number) => {
+    const existing = payrollRecords.find(r => 
+      (r.employee_id === salaryFormData.employee_id || r.employee_code === salaryFormData.employee_id) &&
+      r.month === newMonth &&
+      r.year === newYear
+    );
+
+    if (existing) {
+      setEditingPayrollId(existing.id);
+      setSalaryFormData(prev => ({
+        ...prev,
+        month: newMonth,
+        year: newYear,
+        total_working_days: existing.total_working_days,
+        present_days: existing.present_days,
+        half_days: existing.half_days,
+        bonus_allowance: existing.bonus_allowance,
+        deductions: existing.deductions,
+        apply_tds: existing.tds_rate > 0,
+        tds_rate: existing.tds_rate || 1,
+        notes: existing.notes || ''
+      }));
+    } else {
+      setEditingPayrollId(null);
+      setSalaryFormData(prev => ({
+        ...prev,
+        month: newMonth,
+        year: newYear,
+        total_working_days: defaultWorkingDays,
+        present_days: defaultWorkingDays,
+        half_days: 0,
+        bonus_allowance: 0,
+        deductions: 0,
+        apply_tds: true,
+        tds_rate: 1,
+        notes: ''
+      }));
+    }
+  };
+
+  // Submit Salary calculation modal - ALWAYS updates existing employee record for that month/year (Upsert)
+  const handleSaveSalaryRecord = (e?: React.FormEvent) => {
+    if (e?.preventDefault) {
+      e.preventDefault();
+    }
     const selectedEmp = employees.find(e => e.id === salaryFormData.employee_id);
     if (!selectedEmp) {
       alert('Please select a valid employee.');
@@ -704,42 +815,63 @@ const Payroll = () => {
 
     const calc = calculatedSalaryDetails;
 
-    if (editingPayrollId) {
-      // Update existing record
-      const updated = payrollRecords.map(item => {
-        if (item.id === editingPayrollId) {
-          return {
-            ...item,
-            employee_id: selectedEmp.id,
-            employee_code: selectedEmp.employee_code,
-            employee_name: selectedEmp.name,
-            designation: selectedEmp.designation,
-            department: selectedEmp.department,
-            month: salaryFormData.month,
-            year: salaryFormData.year,
-            total_working_days: calc.total_working_days,
-            present_days: calc.present_days,
-            half_days: calc.half_days,
-            absent_days: calc.absent_days,
-            effective_days: calc.effective_days,
-            fixed_salary: calc.fixed_salary,
-            per_day_rate: calc.per_day_rate,
-            attendance_salary: calc.attendance_salary,
-            earned_salary: calc.attendance_salary,
-            bonus_allowance: calc.bonus_allowance,
-            deductions: calc.deductions,
-            net_before_tds: calc.net_before_tds,
-            tds_rate: calc.tds_rate,
-            tds_amount: calc.tds_amount,
-            net_salary: calc.net_salary,
-            notes: salaryFormData.notes
-          };
+    // Look for existing record: by editingPayrollId OR by (employee_id/code + month + year)
+    const existingIndex = payrollRecords.findIndex(item => 
+      (editingPayrollId && item.id === editingPayrollId) ||
+      ((item.employee_id === selectedEmp.id || item.employee_code === selectedEmp.employee_code) &&
+        item.month === salaryFormData.month &&
+        item.year === salaryFormData.year)
+    );
+
+    if (existingIndex >= 0) {
+      // Update existing record in-place - GUARANTEE ONE ROW PER EMPLOYEE
+      const existing = payrollRecords[existingIndex];
+      const updatedRecord: PayrollRecord = {
+        ...existing,
+        employee_id: selectedEmp.id,
+        employee_code: selectedEmp.employee_code,
+        employee_name: selectedEmp.name,
+        designation: selectedEmp.designation,
+        department: selectedEmp.department,
+        month: salaryFormData.month,
+        year: salaryFormData.year,
+        total_working_days: calc.total_working_days,
+        present_days: calc.present_days,
+        half_days: calc.half_days,
+        absent_days: calc.absent_days,
+        effective_days: calc.effective_days,
+        fixed_salary: calc.fixed_salary,
+        per_day_rate: calc.per_day_rate,
+        attendance_salary: calc.attendance_salary,
+        earned_salary: calc.attendance_salary,
+        bonus_allowance: calc.bonus_allowance,
+        deductions: calc.deductions,
+        net_before_tds: calc.net_before_tds,
+        tds_rate: calc.tds_rate,
+        tds_amount: calc.tds_amount,
+        net_salary: calc.net_salary,
+        notes: salaryFormData.notes,
+        payment_status: existing.payment_status || 'Unpaid'
+      };
+
+      const updatedList = [...payrollRecords];
+      updatedList[existingIndex] = updatedRecord;
+
+      // Filter out any other accidental duplicate rows for this employee in this month & year
+      const cleanList = updatedList.filter((item, idx) => {
+        if (
+          (item.employee_id === selectedEmp.id || item.employee_code === selectedEmp.employee_code) &&
+          item.month === salaryFormData.month &&
+          item.year === salaryFormData.year
+        ) {
+          return idx === existingIndex;
         }
-        return item;
+        return true;
       });
-      savePayrollRecords(updated);
+
+      savePayrollRecords(cleanList);
     } else {
-      // Create new record
+      // Create single new record
       const newRef = `PAY-${salaryFormData.year}-${String(monthsList.indexOf(salaryFormData.month) + 1).padStart(2, '0')}-${String(payrollRecords.length + 1).padStart(3, '0')}`;
       const newRecord: PayrollRecord = {
         id: newRef,
@@ -853,6 +985,36 @@ const Payroll = () => {
     }
 
     setIsEmployeeModalOpen(false);
+  };
+
+  // Direct photo upload by Admin on the card container itself
+  const handleDirectPhotoUpload = (employeeId: string, file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        const updated = employees.map(emp => {
+          if (emp.id === employeeId) {
+            return { ...emp, photo_url: dataUrl };
+          }
+          return emp;
+        });
+        saveEmployees(updated);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Remove photo by Admin
+  const handleRemoveEmployeePhoto = (employeeId: string) => {
+    const updated = employees.map(emp => {
+      if (emp.id === employeeId) {
+        return { ...emp, photo_url: '' };
+      }
+      return emp;
+    });
+    saveEmployees(updated);
   };
 
   // Auto-Fill All Employees for the month using exact rules
@@ -1673,23 +1835,81 @@ const Payroll = () => {
                           {/* Card Header: Profile Photo, Name, Code & Status */}
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3.5">
-                              {/* Photo Avatar with Status Indicator */}
-                              <div className="relative shrink-0">
-                                <img
-                                  src={photoSrc}
-                                  alt={emp.name}
-                                  className="w-16 h-16 rounded-2xl object-cover ring-2 ring-white shadow-md border border-slate-200/80 group-hover:scale-105 transition-transform duration-200"
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=0284c7&color=fff&size=128`;
-                                  }}
-                                />
-                                <span
-                                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                                    emp.is_active ? 'bg-emerald-500 ring-2 ring-emerald-100' : 'bg-slate-400'
-                                  }`}
-                                  title={emp.is_active ? 'Active Employee' : 'Inactive'}
-                                />
-                              </div>
+                              {/* Photo Avatar with Status Indicator & Direct Admin Upload */}
+                              {photoSrc ? (
+                                <div className="relative shrink-0 group/photo">
+                                  <img
+                                    src={photoSrc}
+                                    alt={emp.name}
+                                    className="w-16 h-16 rounded-2xl object-cover ring-2 ring-white shadow-md border border-slate-200/80 group-hover/photo:ring-blue-400 transition-all duration-200"
+                                  />
+                                  {/* Direct hover buttons for admin to change or remove photo */}
+                                  <div className="absolute inset-0 bg-slate-900/60 rounded-2xl opacity-0 group-hover/photo:opacity-100 flex items-center justify-center gap-1.5 transition-opacity backdrop-blur-xs">
+                                    <label
+                                      title="Change employee photo"
+                                      className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-colors shadow-xs"
+                                    >
+                                      <Camera size={14} />
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handleDirectPhotoUpload(emp.id, file);
+                                        }}
+                                      />
+                                    </label>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveEmployeePhoto(emp.id)}
+                                      title="Remove employee photo"
+                                      className="p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg cursor-pointer transition-colors shadow-xs"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  </div>
+                                  <span
+                                    className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                                      emp.is_active ? 'bg-emerald-500 ring-2 ring-emerald-100' : 'bg-slate-400'
+                                    }`}
+                                    title={emp.is_active ? 'Active Employee' : 'Inactive'}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="relative shrink-0">
+                                  {/* Direct upload container for admin when no photo is set */}
+                                  <label
+                                    title="Click to upload employee photo (Admin)"
+                                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-50/80 via-blue-50/60 to-slate-100 border-2 border-dashed border-indigo-200 hover:border-indigo-500 hover:bg-indigo-50/90 flex flex-col items-center justify-center text-indigo-700 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md group/upload"
+                                  >
+                                    <span className="font-bold text-sm tracking-wider text-slate-800 group-hover/upload:hidden">
+                                      {emp.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                                    </span>
+                                    <div className="hidden group-hover/upload:flex flex-col items-center gap-0.5">
+                                      <Camera size={16} className="text-indigo-600 scale-110" />
+                                      <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-600">
+                                        + Photo
+                                      </span>
+                                    </div>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleDirectPhotoUpload(emp.id, file);
+                                      }}
+                                    />
+                                  </label>
+                                  <span
+                                    className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                                      emp.is_active ? 'bg-emerald-500 ring-2 ring-emerald-100' : 'bg-slate-400'
+                                    }`}
+                                    title={emp.is_active ? 'Active Employee' : 'Inactive'}
+                                  />
+                                </div>
+                              )}
 
                               <div className="min-w-0">
                                 <h3 className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors leading-tight line-clamp-1">
@@ -1861,14 +2081,49 @@ const Payroll = () => {
                           {/* Code & Name with Photo */}
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <img
-                                src={photoSrc}
-                                alt={emp.name}
-                                className="w-10 h-10 rounded-xl object-cover ring-2 ring-white shadow-sm border border-slate-200 shrink-0"
-                                onError={(e) => {
-                                  (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=0284c7&color=fff&size=80`;
-                                }}
-                              />
+                              {photoSrc ? (
+                                <div className="relative group/tblphoto shrink-0">
+                                  <img
+                                    src={photoSrc}
+                                    alt={emp.name}
+                                    className="w-10 h-10 rounded-xl object-cover ring-2 ring-white shadow-xs border border-slate-200"
+                                  />
+                                  <label
+                                    title="Change photo (Admin)"
+                                    className="absolute inset-0 bg-slate-900/60 rounded-xl opacity-0 group-hover/tblphoto:opacity-100 flex items-center justify-center text-white cursor-pointer transition-opacity"
+                                  >
+                                    <Camera size={13} />
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleDirectPhotoUpload(emp.id, file);
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+                              ) : (
+                                <label
+                                  title="Click to upload photo (Admin)"
+                                  className="w-10 h-10 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-dashed border-indigo-200 hover:border-indigo-400 text-indigo-700 font-bold flex items-center justify-center text-xs shrink-0 cursor-pointer group/tblupload transition-colors"
+                                >
+                                  <span className="group-hover/tblupload:hidden">
+                                    {emp.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                                  </span>
+                                  <Camera size={14} className="hidden group-hover/tblupload:block text-indigo-600" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleDirectPhotoUpload(emp.id, file);
+                                    }}
+                                  />
+                                </label>
+                              )}
                               <div>
                                 <p className="font-semibold text-slate-900 leading-tight">{emp.name}</p>
                                 <span className="text-xs font-mono font-medium text-slate-400">{emp.employee_code}</span>
@@ -1995,7 +2250,7 @@ const Payroll = () => {
                     <select
                       required
                       value={salaryFormData.employee_id}
-                      onChange={(e) => setSalaryFormData({ ...salaryFormData, employee_id: e.target.value })}
+                      onChange={(e) => handleEmployeeChangeInSalaryModal(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                     >
                       {employees.map(e => (
@@ -2011,7 +2266,7 @@ const Payroll = () => {
                     <div className="flex gap-2">
                       <select
                         value={salaryFormData.month}
-                        onChange={(e) => setSalaryFormData({ ...salaryFormData, month: e.target.value })}
+                        onChange={(e) => handlePeriodChangeInSalaryModal(e.target.value, salaryFormData.year)}
                         className="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                       >
                         {monthsList.map(m => (
@@ -2021,7 +2276,7 @@ const Payroll = () => {
                       <input
                         type="number"
                         value={salaryFormData.year}
-                        onChange={(e) => setSalaryFormData({ ...salaryFormData, year: Number(e.target.value) })}
+                        onChange={(e) => handlePeriodChangeInSalaryModal(salaryFormData.month, Number(e.target.value))}
                         className="w-20 px-2 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-center font-bold"
                       />
                     </div>
@@ -2400,7 +2655,7 @@ const Payroll = () => {
                   </div>
 
                   {/* Upload button & URL input */}
-                  <div className="flex-1 w-full space-y-2">
+                  <div className="flex-1 w-full space-y-2.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <label className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-300 hover:border-slate-400 rounded-xl text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors cursor-pointer">
                         <Upload size={14} className="text-indigo-600" />
@@ -2424,36 +2679,22 @@ const Payroll = () => {
                           }}
                         />
                       </label>
-                      <span className="text-xs text-slate-400">or enter image URL below:</span>
+                      <span className="text-xs text-slate-400">or enter image link:</span>
                     </div>
 
-                    <input
-                      type="url"
-                      placeholder="https://example.com/photo.jpg"
-                      value={employeeFormData.photo_url || ''}
-                      onChange={(e) => setEmployeeFormData(prev => ({ ...prev, photo_url: e.target.value }))}
-                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                    />
-
-                    {/* Preset Headshots picker */}
-                    <div className="flex items-center gap-2 pt-1 overflow-x-auto">
-                      <span className="text-[11px] font-medium text-slate-400 shrink-0">Preset Headshots:</span>
-                      <div className="flex items-center gap-1.5">
-                        {DEFAULT_PRESET_PHOTOS.map((preset, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setEmployeeFormData(prev => ({ ...prev, photo_url: preset }))}
-                            className={`w-7 h-7 rounded-lg overflow-hidden border-2 transition-transform hover:scale-110 cursor-pointer ${
-                              employeeFormData.photo_url === preset ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-slate-200 opacity-80 hover:opacity-100'
-                            }`}
-                            title={`Select Headshot ${idx + 1}`}
-                          >
-                            <img src={preset} alt="" className="w-full h-full object-cover" />
-                          </button>
-                        ))}
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-500 font-medium shrink-0">Image URL:</span>
+                      <input
+                        type="url"
+                        placeholder="https://example.com/photo.jpg"
+                        value={employeeFormData.photo_url || ''}
+                        onChange={(e) => setEmployeeFormData(prev => ({ ...prev, photo_url: e.target.value }))}
+                        className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                      />
                     </div>
+                    <p className="text-[11px] text-slate-400">
+                      Photo uploaded directly by the accountant/admin (JPG, PNG, WEBP).
+                    </p>
                   </div>
                 </div>
               </div>
