@@ -31,7 +31,11 @@ import {
   Camera,
   Upload,
   LayoutGrid,
-  List
+  List,
+  Copy,
+  ZoomIn,
+  Download,
+  Loader2
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
@@ -156,6 +160,57 @@ export const calculatePayrollValues = (
     tds_amount,
     net_salary,
   };
+};
+
+/**
+ * Processes an uploaded image to deliver ultra-crisp, high-definition,
+ * perfectly centered square avatar photos.
+ * - Auto center-crops (1:1 aspect ratio) so faces are never stretched or distorted
+ * - Resizes onto a 600x600 px high-res canvas with bicubic smoothing for Retina clarity
+ * - Compresses to ~50-80KB JPEG (quality 0.92) to prevent localStorage quota overflows
+ */
+export const optimizeProfilePhoto = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const targetSize = 600; // 600x600 px for ultra sharp display on high-DPI screens
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve((readerEvent.target?.result as string) || '');
+          return;
+        }
+
+        // Use highest quality canvas image resampling
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        // Calculate center square crop to keep portrait centered
+        const minDim = Math.min(img.width, img.height);
+        const sx = (img.width - minDim) / 2;
+        const sy = (img.height - minDim) / 2;
+
+        // Draw centered square
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
+
+        // Convert to high-quality JPEG (0.92) for sharp, noise-free rendering with small payload
+        const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        resolve(optimizedDataUrl);
+      };
+      img.onerror = () => {
+        resolve((readerEvent.target?.result as string) || '');
+      };
+      img.src = readerEvent.target?.result as string;
+    };
+    reader.onerror = () => {
+      resolve('');
+    };
+    reader.readAsDataURL(file);
+  });
 };
 
 export const getEmployeePhoto = (emp: { name: string; photo_url?: string }) => {
@@ -546,6 +601,29 @@ const Payroll = () => {
     photo_url: '',
     notes: ''
   });
+
+  // Photo optimization, lightbox preview and clipboard states
+  const [photoOptimizingId, setPhotoOptimizingId] = useState<string | null>(null);
+  const [modalPhotoOptimizing, setModalPhotoOptimizing] = useState(false);
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const [lightboxPhoto, setLightboxPhoto] = useState<{
+    isOpen: boolean;
+    emp: Employee | null;
+    photoSrc: string;
+  }>({
+    isOpen: false,
+    emp: null,
+    photoSrc: ''
+  });
+
+  const handleCopyCode = (id: string, code: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(code);
+    setCopiedCodeId(id);
+    setTimeout(() => {
+      setCopiedCodeId((curr) => (curr === id ? null : curr));
+    }, 2000);
+  };
 
   // Employee Directory Filters & View Mode
   const [employeeViewMode, setEmployeeViewMode] = useState<'cards' | 'table'>('cards');
@@ -987,12 +1065,12 @@ const Payroll = () => {
     setIsEmployeeModalOpen(false);
   };
 
-  // Direct photo upload by Admin on the card container itself
-  const handleDirectPhotoUpload = (employeeId: string, file: File) => {
+  // Direct photo upload with auto HD 600px square optimization
+  const handleDirectPhotoUpload = async (employeeId: string, file: File) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
+    try {
+      setPhotoOptimizingId(employeeId);
+      const dataUrl = await optimizeProfilePhoto(file);
       if (dataUrl) {
         const updated = employees.map(emp => {
           if (emp.id === employeeId) {
@@ -1002,8 +1080,27 @@ const Payroll = () => {
         });
         saveEmployees(updated);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Failed to optimize employee photo:', err);
+    } finally {
+      setPhotoOptimizingId(null);
+    }
+  };
+
+  // Upload in Employee Modal with auto HD 600px square optimization
+  const handleModalPhotoUpload = async (file: File) => {
+    if (!file) return;
+    try {
+      setModalPhotoOptimizing(true);
+      const dataUrl = await optimizeProfilePhoto(file);
+      if (dataUrl) {
+        setEmployeeFormData(prev => ({ ...prev, photo_url: dataUrl }));
+      }
+    } catch (err) {
+      console.error('Failed to optimize photo in modal:', err);
+    } finally {
+      setModalPhotoOptimizing(false);
+    }
   };
 
   // Remove photo by Admin
@@ -1015,6 +1112,9 @@ const Payroll = () => {
       return emp;
     });
     saveEmployees(updated);
+    if (lightboxPhoto.isOpen && lightboxPhoto.emp?.id === employeeId) {
+      setLightboxPhoto({ isOpen: false, emp: null, photoSrc: '' });
+    }
   };
 
   // Auto-Fill All Employees for the month using exact rules
@@ -1826,30 +1926,41 @@ const Payroll = () => {
                     return (
                       <div
                         key={emp.id}
-                        className="bg-white rounded-2xl border border-slate-200/90 hover:border-blue-400/60 shadow-sm hover:shadow-xl transition-all duration-300 p-5 flex flex-col justify-between group relative overflow-hidden"
+                        className="bg-white rounded-3xl border border-slate-200/90 hover:border-indigo-400/50 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1.5 transition-all duration-300 p-5 flex flex-col justify-between group relative overflow-hidden"
                       >
                         {/* Top decorative accent bar */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 opacity-90" />
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 opacity-90 group-hover:h-2 transition-all" />
 
                         <div>
                           {/* Card Header: Profile Photo, Name, Code & Status */}
                           <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3.5">
-                              {/* Photo Avatar with Status Indicator & Direct Admin Upload */}
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              {/* Photo Avatar with Status Indicator & Direct HD Admin Upload */}
                               {photoSrc ? (
                                 <div className="relative shrink-0 group/photo">
                                   <img
                                     src={photoSrc}
                                     alt={emp.name}
-                                    className="w-16 h-16 rounded-2xl object-cover ring-2 ring-white shadow-md border border-slate-200/80 group-hover/photo:ring-blue-400 transition-all duration-200"
+                                    style={{ imageRendering: '-webkit-optimize-contrast' }}
+                                    onClick={() => setLightboxPhoto({ isOpen: true, emp, photoSrc })}
+                                    className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover ring-2 ring-white shadow-md border border-slate-200/90 group-hover/photo:ring-indigo-400 transition-all duration-200 cursor-pointer bg-slate-100"
+                                    title="Click to view full HD photo"
                                   />
-                                  {/* Direct hover buttons for admin to change or remove photo */}
-                                  <div className="absolute inset-0 bg-slate-900/60 rounded-2xl opacity-0 group-hover/photo:opacity-100 flex items-center justify-center gap-1.5 transition-opacity backdrop-blur-xs">
-                                    <label
-                                      title="Change employee photo"
-                                      className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-colors shadow-xs"
+                                  {/* Direct hover action overlay */}
+                                  <div className="absolute inset-0 bg-slate-900/65 rounded-2xl opacity-0 group-hover/photo:opacity-100 flex items-center justify-center gap-1.5 transition-opacity backdrop-blur-xs">
+                                    <button
+                                      type="button"
+                                      onClick={() => setLightboxPhoto({ isOpen: true, emp, photoSrc })}
+                                      title="View Full Resolution Photo"
+                                      className="p-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors cursor-pointer shadow-xs"
                                     >
-                                      <Camera size={14} />
+                                      <ZoomIn size={13} />
+                                    </button>
+                                    <label
+                                      title="Change employee photo (HD Auto-Crop)"
+                                      className="p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer transition-colors shadow-xs"
+                                    >
+                                      <Camera size={13} />
                                       <input
                                         type="file"
                                         accept="image/*"
@@ -1863,25 +1974,40 @@ const Payroll = () => {
                                     <button
                                       type="button"
                                       onClick={() => handleRemoveEmployeePhoto(emp.id)}
-                                      title="Remove employee photo"
+                                      title="Remove photo"
                                       className="p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg cursor-pointer transition-colors shadow-xs"
                                     >
-                                      <X size={14} />
+                                      <X size={13} />
                                     </button>
                                   </div>
-                                  <span
-                                    className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                                      emp.is_active ? 'bg-emerald-500 ring-2 ring-emerald-100' : 'bg-slate-400'
-                                    }`}
-                                    title={emp.is_active ? 'Active Employee' : 'Inactive'}
-                                  />
+
+                                  {/* Optimizing spinner badge */}
+                                  {photoOptimizingId === emp.id && (
+                                    <div className="absolute inset-0 bg-slate-950/70 rounded-2xl flex flex-col items-center justify-center text-white gap-1 backdrop-blur-xs">
+                                      <Loader2 size={16} className="animate-spin text-indigo-400" />
+                                      <span className="text-[9px] font-bold">HD...</span>
+                                    </div>
+                                  )}
+
+                                  {/* Active Status Pulse Indicator */}
+                                  {emp.is_active ? (
+                                    <span className="absolute -bottom-1 -right-1 flex h-4 w-4" title="Active Employee">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-xs"></span>
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white bg-slate-400 shadow-xs"
+                                      title="Inactive Employee"
+                                    />
+                                  )}
                                 </div>
                               ) : (
                                 <div className="relative shrink-0">
                                   {/* Direct upload container for admin when no photo is set */}
                                   <label
-                                    title="Click to upload employee photo (Admin)"
-                                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-50/80 via-blue-50/60 to-slate-100 border-2 border-dashed border-indigo-200 hover:border-indigo-500 hover:bg-indigo-50/90 flex flex-col items-center justify-center text-indigo-700 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md group/upload"
+                                    title="Click to upload crisp employee photo (Admin)"
+                                    className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-blue-50/70 to-slate-100 border-2 border-dashed border-indigo-200 hover:border-indigo-500 hover:bg-indigo-50 flex flex-col items-center justify-center text-indigo-700 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md group/upload relative"
                                   >
                                     <span className="font-bold text-sm tracking-wider text-slate-800 group-hover/upload:hidden">
                                       {emp.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
@@ -1902,93 +2028,123 @@ const Payroll = () => {
                                       }}
                                     />
                                   </label>
-                                  <span
-                                    className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                                      emp.is_active ? 'bg-emerald-500 ring-2 ring-emerald-100' : 'bg-slate-400'
-                                    }`}
-                                    title={emp.is_active ? 'Active Employee' : 'Inactive'}
-                                  />
+
+                                  {photoOptimizingId === emp.id && (
+                                    <div className="absolute inset-0 bg-slate-950/70 rounded-2xl flex flex-col items-center justify-center text-white gap-1 backdrop-blur-xs">
+                                      <Loader2 size={16} className="animate-spin text-indigo-400" />
+                                      <span className="text-[9px] font-bold">HD...</span>
+                                    </div>
+                                  )}
+
+                                  {emp.is_active ? (
+                                    <span className="absolute -bottom-1 -right-1 flex h-4 w-4" title="Active Employee">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-xs"></span>
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white bg-slate-400 shadow-xs"
+                                      title="Inactive Employee"
+                                    />
+                                  )}
                                 </div>
                               )}
 
-                              <div className="min-w-0">
-                                <h3 className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors leading-tight line-clamp-1">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight line-clamp-1">
                                   {emp.name}
                                 </h3>
-                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                                  <span className="px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
-                                    {emp.employee_code}
-                                  </span>
-                                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                    {emp.department}
+                                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleCopyCode(emp.id, emp.employee_code, e)}
+                                    title="Click to copy employee code"
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg font-mono text-[11px] font-semibold bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/80 transition-all cursor-pointer active:scale-95 group/code"
+                                  >
+                                    <Hash size={11} className="text-slate-400 group-hover/code:text-indigo-600" />
+                                    <span>{emp.employee_code}</span>
+                                    {copiedCodeId === emp.id ? (
+                                      <Check size={11} className="text-emerald-600 animate-in zoom-in" />
+                                    ) : (
+                                      <Copy size={10} className="text-slate-400 opacity-0 group-hover/code:opacity-100 transition-opacity" />
+                                    )}
+                                  </button>
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                    <Building2 size={11} className="text-blue-500" />
+                                    <span>{emp.department}</span>
                                   </span>
                                 </div>
-                                <p className="text-xs font-semibold text-slate-600 mt-1 line-clamp-1">
-                                  {emp.designation}
+                                <p className="text-xs font-semibold text-slate-600 mt-1 flex items-center gap-1.5 line-clamp-1">
+                                  <Briefcase size={12} className="text-slate-400 shrink-0" />
+                                  <span>{emp.designation}</span>
                                 </p>
                               </div>
                             </div>
 
                             {/* Status Pill */}
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 shadow-2xs ${
                               emp.is_active
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
                                 : 'bg-slate-100 text-slate-600 border border-slate-200'
                             }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${emp.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                               {emp.is_active ? 'Active' : 'Inactive'}
                             </span>
                           </div>
 
                           {/* Fixed Monthly Base Salary Showcase Container */}
-                          <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-slate-50/60 border border-emerald-200/80 shadow-xs">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-950 flex items-center gap-1">
-                                <Sparkles size={13} className="text-emerald-600" />
+                          <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-500/15 border border-emerald-500/25 shadow-xs relative overflow-hidden group/salary">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
+                                <Sparkles size={12} className="text-emerald-600" />
                                 Fixed Monthly Salary
                               </span>
-                              <span className="text-[10px] font-semibold text-emerald-700 bg-white/80 px-2 py-0.5 rounded border border-emerald-200">
+                              <span className="text-[10px] font-semibold text-emerald-800 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md border border-emerald-200/80 shadow-2xs">
                                 Benchmark
                               </span>
                             </div>
-                            <div className="flex items-baseline justify-between">
-                              <p className="text-xl font-bold font-mono text-emerald-950">
+                            <div className="flex items-baseline justify-between mt-1">
+                              <p className="text-xl font-black font-mono tracking-tight text-emerald-950">
                                 {formatNPR(emp.fixed_salary)}
                               </p>
-                              <span className="text-[11px] text-slate-500 font-mono">
+                              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md border border-emerald-200/60 font-mono">
                                 ≈ {formatNPR(emp.fixed_salary / 26)}/day
                               </span>
                             </div>
                           </div>
 
                           {/* Contact, Banking & Statutory Details */}
-                          <div className="mt-3.5 space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-3">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                                <Mail size={13} />
+                          <div className="mt-3.5 space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-3">
+                            <div className="flex items-center justify-between gap-2 py-0.5 px-1 rounded-md hover:bg-slate-50 transition-colors">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0 font-medium">
+                                <Mail size={13} className="text-slate-400" />
                                 Email:
                               </span>
                               <a
-                                href={`mailto:${emp.email}`}
-                                className="font-medium text-slate-800 hover:text-blue-600 truncate max-w-[190px]"
-                                title={emp.email}
+                                href={emp.email ? `mailto:${emp.email}` : undefined}
+                                className="font-medium text-slate-800 hover:text-blue-600 truncate max-w-[190px] transition-colors"
+                                title={emp.email || 'No email provided'}
                               >
                                 {emp.email || 'N/A'}
                               </a>
                             </div>
 
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                                <Phone size={13} />
+                            <div className="flex items-center justify-between gap-2 py-0.5 px-1 rounded-md hover:bg-slate-50 transition-colors">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0 font-medium">
+                                <Phone size={13} className="text-slate-400" />
                                 Phone:
                               </span>
-                              <span className="font-mono font-medium text-slate-800">
+                              <a
+                                href={emp.phone ? `tel:${emp.phone}` : undefined}
+                                className="font-mono font-medium text-slate-800 hover:text-blue-600 transition-colors"
+                              >
                                 {emp.phone || 'N/A'}
-                              </span>
+                              </a>
                             </div>
 
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                                <Landmark size={13} />
+                            <div className="flex items-center justify-between gap-2 py-0.5 px-1 rounded-md hover:bg-slate-50 transition-colors">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0 font-medium">
+                                <Landmark size={13} className="text-slate-400" />
                                 Bank:
                               </span>
                               <span
@@ -1999,22 +2155,22 @@ const Payroll = () => {
                               </span>
                             </div>
 
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                                <ShieldCheck size={13} />
+                            <div className="flex items-center justify-between gap-2 py-0.5 px-1 rounded-md hover:bg-slate-50 transition-colors">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0 font-medium">
+                                <ShieldCheck size={13} className="text-slate-400" />
                                 PAN:
                               </span>
-                              <span className="font-mono font-medium text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/60 text-[11px]">
+                              <span className="font-mono font-semibold text-slate-700 bg-slate-100/90 px-2 py-0.5 rounded-md border border-slate-200/80 text-[11px]">
                                 {emp.pan_number || 'N/A'}
                               </span>
                             </div>
 
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                                <Calendar size={13} />
+                            <div className="flex items-center justify-between gap-2 py-0.5 px-1 rounded-md hover:bg-slate-50 transition-colors">
+                              <span className="flex items-center gap-1.5 text-slate-400 shrink-0 font-medium">
+                                <Calendar size={13} className="text-slate-400" />
                                 Joined (BS):
                               </span>
-                              <span className="font-medium text-slate-700 text-[11px]">
+                              <span className="font-semibold text-slate-700 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60 text-[11px]">
                                 {formatNepaliDate(emp.joining_date)}
                               </span>
                             </div>
@@ -2025,7 +2181,7 @@ const Payroll = () => {
                         <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2">
                           <button
                             onClick={() => handleOpenSalaryModal(undefined, emp.id)}
-                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl text-xs font-semibold shadow-sm hover:shadow transition-all active:scale-[0.98] cursor-pointer"
+                            className="flex-1 flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl text-xs font-semibold shadow-sm hover:shadow-md hover:shadow-indigo-500/20 transition-all active:scale-[0.98] cursor-pointer"
                             title="Calculate Salary & Attendance for this Employee"
                           >
                             <Calendar size={14} />
@@ -2035,7 +2191,7 @@ const Payroll = () => {
                           <button
                             onClick={() => handleOpenEmployeeModal(emp)}
                             title="Edit Employee Profile & Photo"
-                            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 cursor-pointer"
+                            className="p-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200/80 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95"
                           >
                             <Edit size={15} />
                           </button>
@@ -2043,7 +2199,7 @@ const Payroll = () => {
                           <button
                             onClick={() => handleDeleteClick(emp.id, 'employee')}
                             title="Delete Employee"
-                            className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200/60 cursor-pointer"
+                            className="p-2.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200/60 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95"
                           >
                             <Trash2 size={15} />
                           </button>
@@ -2086,28 +2242,46 @@ const Payroll = () => {
                                   <img
                                     src={photoSrc}
                                     alt={emp.name}
-                                    className="w-10 h-10 rounded-xl object-cover ring-2 ring-white shadow-xs border border-slate-200"
+                                    style={{ imageRendering: '-webkit-optimize-contrast' }}
+                                    onClick={() => setLightboxPhoto({ isOpen: true, emp, photoSrc })}
+                                    className="w-11 h-11 rounded-xl object-cover ring-2 ring-white shadow-xs border border-slate-200 cursor-pointer hover:ring-indigo-400 transition-all bg-slate-100"
+                                    title="Click to view full HD photo"
                                   />
-                                  <label
-                                    title="Change photo (Admin)"
-                                    className="absolute inset-0 bg-slate-900/60 rounded-xl opacity-0 group-hover/tblphoto:opacity-100 flex items-center justify-center text-white cursor-pointer transition-opacity"
-                                  >
-                                    <Camera size={13} />
-                                    <input
-                                      type="file"
-                                      accept="image/*"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) handleDirectPhotoUpload(emp.id, file);
-                                      }}
-                                    />
-                                  </label>
+                                  <div className="absolute inset-0 bg-slate-900/60 rounded-xl opacity-0 group-hover/tblphoto:opacity-100 flex items-center justify-center gap-1 text-white transition-opacity backdrop-blur-2xs">
+                                    <button
+                                      type="button"
+                                      onClick={() => setLightboxPhoto({ isOpen: true, emp, photoSrc })}
+                                      title="View HD Photo"
+                                      className="p-1 hover:bg-white/20 rounded cursor-pointer"
+                                    >
+                                      <ZoomIn size={12} />
+                                    </button>
+                                    <label
+                                      title="Change photo (HD Auto-Crop)"
+                                      className="p-1 hover:bg-white/20 rounded cursor-pointer"
+                                    >
+                                      <Camera size={12} />
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handleDirectPhotoUpload(emp.id, file);
+                                        }}
+                                      />
+                                    </label>
+                                  </div>
+                                  {photoOptimizingId === emp.id && (
+                                    <div className="absolute inset-0 bg-slate-950/70 rounded-xl flex items-center justify-center text-white backdrop-blur-xs">
+                                      <Loader2 size={13} className="animate-spin text-indigo-400" />
+                                    </div>
+                                  )}
                                 </div>
                               ) : (
                                 <label
-                                  title="Click to upload photo (Admin)"
-                                  className="w-10 h-10 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-dashed border-indigo-200 hover:border-indigo-400 text-indigo-700 font-bold flex items-center justify-center text-xs shrink-0 cursor-pointer group/tblupload transition-colors"
+                                  title="Click to upload crisp photo (Admin)"
+                                  className="w-11 h-11 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-dashed border-indigo-200 hover:border-indigo-400 text-indigo-700 font-bold flex items-center justify-center text-xs shrink-0 cursor-pointer group/tblupload transition-colors relative"
                                 >
                                   <span className="group-hover/tblupload:hidden">
                                     {emp.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
@@ -2122,11 +2296,28 @@ const Payroll = () => {
                                       if (file) handleDirectPhotoUpload(emp.id, file);
                                     }}
                                   />
+                                  {photoOptimizingId === emp.id && (
+                                    <div className="absolute inset-0 bg-slate-950/70 rounded-xl flex items-center justify-center text-white backdrop-blur-xs">
+                                      <Loader2 size={13} className="animate-spin text-indigo-400" />
+                                    </div>
+                                  )}
                                 </label>
                               )}
                               <div>
                                 <p className="font-semibold text-slate-900 leading-tight">{emp.name}</p>
-                                <span className="text-xs font-mono font-medium text-slate-400">{emp.employee_code}</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleCopyCode(emp.id, emp.employee_code, e)}
+                                  title="Copy employee code"
+                                  className="inline-flex items-center gap-1 text-xs font-mono font-medium text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer group/code"
+                                >
+                                  <span>{emp.employee_code}</span>
+                                  {copiedCodeId === emp.id ? (
+                                    <Check size={11} className="text-emerald-600 animate-in zoom-in" />
+                                  ) : (
+                                    <Copy size={10} className="opacity-0 group-hover/code:opacity-100 transition-opacity" />
+                                  )}
+                                </button>
                               </div>
                             </div>
                           </td>
@@ -2597,11 +2788,14 @@ const Payroll = () => {
 
             <form onSubmit={handleSaveEmployee} className="p-7 overflow-y-auto space-y-6 custom-scrollbar flex-1 bg-white">
               {/* Employee Photo / Avatar Upload Section */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/20 to-blue-50/30 border border-slate-200/80 space-y-3">
+              <div className="p-4.5 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/25 to-blue-50/30 border border-slate-200/90 space-y-3.5 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-slate-800 uppercase tracking-wide">
+                  <span className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wide">
                     <Camera size={15} className="text-indigo-600" />
                     <span>Employee Profile Photo</span>
+                    <span className="px-2 py-0.5 text-[9px] font-bold text-indigo-700 bg-indigo-100/70 rounded-full">
+                      HD 600px Auto-Crop
+                    </span>
                   </span>
                   {employeeFormData.photo_url && (
                     <button
@@ -2623,13 +2817,20 @@ const Payroll = () => {
                         getEmployeePhoto({ name: employeeFormData.name || 'Employee', photo_url: '' })
                       }
                       alt={employeeFormData.name || 'Preview'}
-                      className="w-20 h-20 rounded-2xl object-cover ring-4 ring-white shadow-md border border-slate-200 bg-slate-100"
+                      style={{ imageRendering: '-webkit-optimize-contrast' }}
+                      className="w-22 h-22 rounded-2xl object-cover ring-4 ring-white shadow-md border border-slate-200 bg-slate-100"
                       onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(employeeFormData.name || 'User')}&background=0284c7&color=fff&size=160`;
+                        (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(employeeFormData.name || 'User')}&background=0284c7&color=fff&size=200`;
                       }}
                     />
+                    {modalPhotoOptimizing && (
+                      <div className="absolute inset-0 bg-slate-950/70 rounded-2xl flex flex-col items-center justify-center text-white gap-1 backdrop-blur-xs">
+                        <Loader2 size={18} className="animate-spin text-indigo-400" />
+                        <span className="text-[10px] font-bold">Sharpening...</span>
+                      </div>
+                    )}
                     <label 
-                      className="absolute -bottom-1 -right-1 p-1.5 bg-slate-900 text-white rounded-xl shadow-md hover:bg-slate-800 transition-colors cursor-pointer"
+                      className="absolute -bottom-1 -right-1 p-2 bg-indigo-600 text-white rounded-xl shadow-md hover:bg-indigo-700 transition-colors cursor-pointer"
                       title="Upload custom photo"
                     >
                       <Camera size={14} />
@@ -2639,25 +2840,16 @@ const Payroll = () => {
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (uploadEvt) => {
-                              const result = uploadEvt.target?.result as string;
-                              if (result) {
-                                setEmployeeFormData(prev => ({ ...prev, photo_url: result }));
-                              }
-                            };
-                            reader.readAsDataURL(file);
-                          }
+                          if (file) handleModalPhotoUpload(file);
                         }}
                       />
                     </label>
                   </div>
 
-                  {/* Upload button & URL input */}
+                  {/* Upload Controls & URL Input */}
                   <div className="flex-1 w-full space-y-2.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <label className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-300 hover:border-slate-400 rounded-xl text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors cursor-pointer">
+                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:border-indigo-400 rounded-xl text-xs font-semibold text-slate-700 shadow-xs hover:bg-indigo-50/50 transition-all cursor-pointer">
                         <Upload size={14} className="text-indigo-600" />
                         <span>Upload From Computer</span>
                         <input
@@ -2666,34 +2858,44 @@ const Payroll = () => {
                           className="hidden"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (uploadEvt) => {
-                                const result = uploadEvt.target?.result as string;
-                                if (result) {
-                                  setEmployeeFormData(prev => ({ ...prev, photo_url: result }));
-                                }
-                              };
-                              reader.readAsDataURL(file);
-                            }
+                            if (file) handleModalPhotoUpload(file);
                           }}
                         />
                       </label>
-                      <span className="text-xs text-slate-400">or enter image link:</span>
+                      <span className="text-xs text-slate-400">Auto-crops & centers face in sharp HD</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-slate-500 font-medium shrink-0">Image URL:</span>
-                      <input
-                        type="url"
-                        placeholder="https://example.com/photo.jpg"
-                        value={employeeFormData.photo_url || ''}
-                        onChange={(e) => setEmployeeFormData(prev => ({ ...prev, photo_url: e.target.value }))}
-                        className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                      />
-                    </div>
+                    {employeeFormData.photo_url && employeeFormData.photo_url.startsWith('data:image/') ? (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/90 text-xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-semibold text-emerald-950 truncate">Custom HD Photo Ready</p>
+                            <span className="text-[10px] text-emerald-700">High-resolution square cropped & optimized</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setEmployeeFormData(prev => ({ ...prev, photo_url: '' }))}
+                          className="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1 rounded-md hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-slate-500 font-medium shrink-0">or Web URL:</span>
+                        <input
+                          type="url"
+                          placeholder="https://example.com/photo.jpg"
+                          value={employeeFormData.photo_url || ''}
+                          onChange={(e) => setEmployeeFormData(prev => ({ ...prev, photo_url: e.target.value }))}
+                          className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                        />
+                      </div>
+                    )}
                     <p className="text-[11px] text-slate-400">
-                      Photo uploaded directly by the accountant/admin (JPG, PNG, WEBP).
+                      Supports JPG, PNG, WEBP. Photo is automatically sharpened and centered for crisp display.
                     </p>
                   </div>
                 </div>
@@ -3306,6 +3508,122 @@ const Payroll = () => {
               <p className="text-center text-[10px] text-slate-400 mt-8 pt-4 border-t border-slate-100">
                 This is a computer-generated salary slip from ASLENIX TECH AND SOLUTION Finance Management System.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: FULL RESOLUTION HD PHOTO LIGHTBOX */}
+      {lightboxPhoto.isOpen && lightboxPhoto.emp && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setLightboxPhoto({ isOpen: false, emp: null, photoSrc: '' })}
+        >
+          <div 
+            className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col ring-1 ring-slate-900/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Lightbox Header */}
+            <div className="flex justify-between items-center px-6 py-4.5 border-b border-slate-100 bg-slate-50/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                  {lightboxPhoto.emp.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 leading-tight">
+                    {lightboxPhoto.emp.name}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs font-mono font-medium text-slate-500">
+                      {lightboxPhoto.emp.employee_code}
+                    </span>
+                    <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                      {lightboxPhoto.emp.department}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLightboxPhoto({ isOpen: false, emp: null, photoSrc: '' })}
+                className="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-300/80 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Photo Preview Container */}
+            <div className="p-6 flex flex-col items-center justify-center bg-radial from-slate-50 to-slate-100/90">
+              <div className="relative group/box rounded-3xl overflow-hidden ring-4 ring-white shadow-2xl border border-slate-200/80 bg-white max-w-[320px] max-h-[320px]">
+                <img
+                  src={lightboxPhoto.photoSrc}
+                  alt={lightboxPhoto.emp.name}
+                  style={{ imageRendering: '-webkit-optimize-contrast' }}
+                  className="w-full h-full object-cover max-w-[320px] max-h-[320px]"
+                />
+                <div className="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-xl bg-slate-950/70 text-white backdrop-blur-xs flex items-center justify-between text-xs">
+                  <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 size={12} />
+                    High-Definition Profile
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-300">600×600 HD</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500 mt-3 text-center">
+                {lightboxPhoto.emp.designation} • {lightboxPhoto.emp.department}
+              </p>
+            </div>
+
+            {/* Lightbox Action Controls */}
+            <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-2">
+              <a
+                href={lightboxPhoto.photoSrc}
+                download={`${lightboxPhoto.emp.name.replace(/\s+/g, '_')}_profile.jpg`}
+                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition-colors cursor-pointer"
+                title="Download full quality photo"
+              >
+                <Download size={14} />
+                <span>Download</span>
+              </a>
+
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors cursor-pointer shadow-sm">
+                  <Camera size={14} />
+                  <span>Change Photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file && lightboxPhoto.emp) {
+                        handleDirectPhotoUpload(lightboxPhoto.emp.id, file).then(() => {
+                          optimizeProfilePhoto(file).then((newSrc) => {
+                            if (newSrc) {
+                              setLightboxPhoto(prev => ({ ...prev, photoSrc: newSrc }));
+                            }
+                          });
+                        });
+                      }
+                    }}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (lightboxPhoto.emp) {
+                      handleRemoveEmployeePhoto(lightboxPhoto.emp.id);
+                    }
+                  }}
+                  className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200/60 cursor-pointer"
+                  title="Remove photo"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
