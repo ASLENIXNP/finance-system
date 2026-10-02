@@ -20,6 +20,34 @@ import { formatNepaliDate, getCurrentFiscalYear } from '../lib/nepaliDate';
 const Layout = () => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [companyLogo, setCompanyLogo] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('aslenix_company_settings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.logo_url || '/logo.png';
+      }
+    } catch (e) {}
+    return '/logo.png';
+  });
+
+  useEffect(() => {
+    const handleLogoUpdate = () => {
+      try {
+        const saved = localStorage.getItem('aslenix_company_settings');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setCompanyLogo(parsed.logo_url || '/logo.png');
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('company_settings_updated', handleLogoUpdate);
+    window.addEventListener('storage', handleLogoUpdate);
+    return () => {
+      window.removeEventListener('company_settings_updated', handleLogoUpdate);
+      window.removeEventListener('storage', handleLogoUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     // Get current session
@@ -78,7 +106,7 @@ const Layout = () => {
       <aside className="w-64 bg-sidebar border-r border-slate-200 flex flex-col shadow-sm z-10 relative print:hidden">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Aslenix Logo" className="h-10 w-auto object-contain drop-shadow-sm" />
+            <img src={companyLogo || '/logo.png'} alt="Company Logo" className="h-10 max-w-[190px] w-auto object-contain drop-shadow-sm" />
           </div>
         </div>
         

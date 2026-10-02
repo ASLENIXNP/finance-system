@@ -3444,23 +3444,39 @@ const Payroll = () => {
             {/* A4 Printable Content */}
             <div id="printable-payslip" className="p-8 sm:p-12 text-slate-800 bg-white">
               {/* Company Header */}
-              <div className="border-b-2 border-slate-900 pb-5 mb-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">ASLENIX TECH AND SOLUTION</h2>
-                    <p className="text-xs text-slate-600 mt-1">Kathmandu, Nepal • Phone: +977-1-4400000</p>
-                    <p className="text-xs text-slate-600">Email: accounts@aslenix.com • Website: www.aslenix.com</p>
-                    <p className="text-xs text-slate-600 font-mono mt-0.5">PAN / VAT No: 609876543</p>
+              {(() => {
+                let comp: any = null;
+                try {
+                  const raw = localStorage.getItem('aslenix_company_settings');
+                  if (raw) comp = JSON.parse(raw);
+                } catch (e) {}
+                const compName = comp?.company_name || 'ASLENIX TECH AND SOLUTION';
+                const compAddr = comp?.address || 'Budhanagar, Kathmandu, Nepal';
+                const compPhone = comp?.phone || '+977-1-4400000';
+                const compEmail = comp?.email || 'contact@aslenix.com';
+                const compWeb = comp?.website || 'https://aslenix.com';
+                const compPan = comp?.pan_vat_no || '123456789';
+
+                return (
+                  <div className="border-b-2 border-slate-900 pb-5 mb-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">{compName}</h2>
+                        <p className="text-xs text-slate-600 mt-1">{compAddr} • Phone: {compPhone}</p>
+                        <p className="text-xs text-slate-600">Email: {compEmail} • Website: {compWeb}</p>
+                        <p className="text-xs text-slate-600 font-mono mt-0.5">PAN / VAT No: {compPan}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-3 py-1 bg-slate-100 text-slate-800 font-extrabold text-xs uppercase tracking-wider rounded border border-slate-300">
+                          Official Payslip
+                        </span>
+                        <p className="text-xs font-mono text-slate-500 mt-2">Ref: {activePayslip.payroll_ref}</p>
+                        <p className="text-xs font-semibold text-slate-800 mt-1">Pay Period: {activePayslip.month} {activePayslip.year} BS</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="inline-block px-3 py-1 bg-slate-100 text-slate-800 font-extrabold text-xs uppercase tracking-wider rounded border border-slate-300">
-                      Official Payslip
-                    </span>
-                    <p className="text-xs font-mono text-slate-500 mt-2">Ref: {activePayslip.payroll_ref}</p>
-                    <p className="text-xs font-semibold text-slate-800 mt-1">Pay Period: {activePayslip.month} {activePayslip.year} BS</p>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Employee Meta Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs mb-6">
@@ -3632,7 +3648,13 @@ const Payroll = () => {
 
               {/* Disclaimer */}
               <p className="text-center text-[10px] text-slate-400 mt-8 pt-4 border-t border-slate-100">
-                This is a computer-generated salary slip from ASLENIX TECH AND SOLUTION Finance Management System.
+                This is a computer-generated salary slip from {(() => {
+                  try {
+                    const raw = localStorage.getItem('aslenix_company_settings');
+                    if (raw) return JSON.parse(raw).company_name || 'ASLENIX TECH AND SOLUTION';
+                  } catch (e) {}
+                  return 'ASLENIX TECH AND SOLUTION';
+                })()} Finance Management System.
               </p>
             </div>
           </div>

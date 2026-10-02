@@ -4,6 +4,7 @@ import { Plus, Trash2, Printer } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
 import { formatNepaliDate, toBsDateString, getTodayBsDate } from '../lib/nepaliDate';
+import { getStoredCompanySettings, type CompanySettingsData } from './CompanySettings';
 
 interface Customer {
   id: string;
@@ -32,11 +33,11 @@ const formatCurrency = (amount: number): string => {
   return `Rs. ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const generateInvoiceNumber = (customerId?: string) => {
+const generateInvoiceNumber = (prefix = 'ASL-', customerId?: string) => {
   const currentYear = 2083;
   const serial = Math.floor(1000 + Math.random() * 9000);
   const customerTag = customerId ? customerId.replace(/[^0-9]/g, '').slice(-3).padStart(3, '0') : '001';
-  return `ASL-${String(currentYear).slice(-2)}-${customerTag}-${serial}`;
+  return `${prefix}${String(currentYear).slice(-2)}-${customerTag}-${serial}`;
 };
 
 const InvoiceCreate = () => {
@@ -44,9 +45,23 @@ const InvoiceCreate = () => {
   const searchParams = new URLSearchParams(location.search);
   const customerIdFromUrl = searchParams.get('customerId');
 
+  const [companySettings, setCompanySettings] = useState<CompanySettingsData>(getStoredCompanySettings);
+
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      setCompanySettings(getStoredCompanySettings());
+    };
+    window.addEventListener('company_settings_updated', handleSettingsUpdate);
+    window.addEventListener('storage', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('company_settings_updated', handleSettingsUpdate);
+      window.removeEventListener('storage', handleSettingsUpdate);
+    };
+  }, []);
+
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState(customerIdFromUrl || '');
-  const [invoiceNumber, setInvoiceNumber] = useState(() => generateInvoiceNumber(customerIdFromUrl || undefined));
+  const [invoiceNumber, setInvoiceNumber] = useState(() => generateInvoiceNumber(companySettings.invoice_prefix || 'ASL-', customerIdFromUrl || undefined));
   const [invoiceDate, setInvoiceDate] = useState(() => getTodayBsDate());
   const [dueDate, setDueDate] = useState(() => {
     const d = new Date();
@@ -253,23 +268,23 @@ const InvoiceCreate = () => {
               {/* Left: Aslenix Logo & Company Information */}
               <div className="flex items-start gap-4">
                 <img
-                  src="/logo.png"
-                  alt="Aslenix Logo"
+                  src={companySettings.logo_url || '/logo.png'}
+                  alt={companySettings.company_name || 'Aslenix Logo'}
                   className="h-14 sm:h-16 w-auto object-contain print:h-10"
                 />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 uppercase">
-                    ASLENIX TECH AND SOLUTION
+                    {companySettings.company_name || 'ASLENIX TECH AND SOLUTION'}
                   </h1>
                   <p className="text-slate-500 text-xs font-normal mt-1 leading-snug">
-                    Budhanagar, Kathmandu, Nepal
+                    {companySettings.address || 'Budhanagar, Kathmandu, Nepal'}
                   </p>
                   <p className="text-slate-500 text-xs font-normal mt-0.5 leading-snug">
-                    <span className="font-semibold text-slate-700">PAN:</span> 123456789
+                    <span className="font-semibold text-slate-700">PAN:</span> {companySettings.pan_vat_no || '123456789'}
                     <span className="mx-2 text-slate-300">•</span>
-                    <span className="font-semibold text-slate-700">Phone:</span> +977 1-4000000
+                    <span className="font-semibold text-slate-700">Phone:</span> {companySettings.phone || '+977 1-4000000'}
                     <span className="mx-2 text-slate-300">•</span>
-                    <span className="font-semibold text-slate-700">Email:</span> contact@aslenix.com
+                    <span className="font-semibold text-slate-700">Email:</span> {companySettings.email || 'contact@aslenix.com'}
                   </p>
                 </div>
               </div>
@@ -511,19 +526,19 @@ const InvoiceCreate = () => {
                 <div className="bg-slate-50/60 p-3.5 rounded-lg border border-slate-200/80 text-xs space-y-1 print:p-2 print:space-y-0.5">
                   <div className="grid grid-cols-[100px_1fr]">
                     <span className="text-slate-500 font-normal">Bank Name:</span>
-                    <span className="font-semibold text-slate-800">Global IME Bank</span>
+                    <span className="font-semibold text-slate-800">{companySettings.bank_name || 'Global IME Bank'}</span>
                   </div>
                   <div className="grid grid-cols-[100px_1fr]">
                     <span className="text-slate-500 font-normal">Account Name:</span>
-                    <span className="font-semibold text-slate-800">Aslenix Tech and Solution</span>
+                    <span className="font-semibold text-slate-800">{companySettings.bank_account_name || companySettings.company_name}</span>
                   </div>
                   <div className="grid grid-cols-[100px_1fr]">
                     <span className="text-slate-500 font-normal">Account No:</span>
-                    <span className="font-mono font-semibold text-slate-900">01234567890123</span>
+                    <span className="font-mono font-semibold text-slate-900">{companySettings.bank_account_no || '01234567890123'}</span>
                   </div>
                   <div className="grid grid-cols-[100px_1fr]">
                     <span className="text-slate-500 font-normal">Branch:</span>
-                    <span className="font-semibold text-slate-800">Baneshwor Branch</span>
+                    <span className="font-semibold text-slate-800">{companySettings.bank_branch || 'Baneshwor Branch'}</span>
                   </div>
                 </div>
               </div>
@@ -533,9 +548,8 @@ const InvoiceCreate = () => {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                   TERMS & CONDITIONS
                 </span>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Payment is required within 15 days of invoice date. All payments can be made via bank
-                  transfer to the account listed above.
+                <p className="text-[11px] text-slate-500 leading-relaxed whitespace-pre-line">
+                  {companySettings.terms_conditions || 'Payment is required within 15 days of invoice date. All payments can be made via bank transfer to the account listed above.'}
                 </p>
               </div>
             </div>
@@ -567,7 +581,7 @@ const InvoiceCreate = () => {
                 </div>
 
                 <div className="flex justify-between text-slate-600">
-                  <span className="font-medium">VAT (13%):</span>
+                  <span className="font-medium">VAT ({companySettings.default_tax_rate ?? 13}%):</span>
                   <span className="font-semibold text-slate-900 font-mono">
                     {formatCurrency(totalTax)}
                   </span>
@@ -590,7 +604,7 @@ const InvoiceCreate = () => {
             <div className="text-left w-52">
               <div className="border-t border-slate-400 w-44 mb-1.5"></div>
               <p className="text-xs font-bold text-slate-900">Authorized Signature</p>
-              <p className="text-[10px] text-slate-500">For Aslenix Tech and Solution</p>
+              <p className="text-[10px] text-slate-500">For {companySettings.company_name || 'Aslenix Tech and Solution'}</p>
             </div>
 
             <div className="text-right w-52">
