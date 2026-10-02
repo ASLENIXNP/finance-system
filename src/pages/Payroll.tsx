@@ -274,8 +274,8 @@ export const getEmployeePhoto = (emp: { name: string; photo_url?: string }) => {
 
 const initialEmployees: Employee[] = [
   {
-    id: 'EMP-001',
-    employee_code: 'EMP-001',
+    id: 'ASL-001',
+    employee_code: 'ASL-001',
     name: 'Aarav Sharma',
     designation: 'Senior Full Stack Engineer',
     department: 'Technology',
@@ -291,8 +291,8 @@ const initialEmployees: Employee[] = [
     photo_url: '',
   },
   {
-    id: 'EMP-002',
-    employee_code: 'EMP-002',
+    id: 'ASL-002',
+    employee_code: 'ASL-002',
     name: 'Pooja Shrestha',
     designation: 'Lead Accountant',
     department: 'Finance',
@@ -308,8 +308,8 @@ const initialEmployees: Employee[] = [
     photo_url: '',
   },
   {
-    id: 'EMP-003',
-    employee_code: 'EMP-003',
+    id: 'ASL-003',
+    employee_code: 'ASL-003',
     name: 'Rohan Adhikari',
     designation: 'UI/UX & Frontend Designer',
     department: 'Creative & Tech',
@@ -325,8 +325,8 @@ const initialEmployees: Employee[] = [
     photo_url: '',
   },
   {
-    id: 'EMP-004',
-    employee_code: 'EMP-004',
+    id: 'ASL-004',
+    employee_code: 'ASL-004',
     name: 'Sneha Karki',
     designation: 'Business Development Officer',
     department: 'Marketing',
@@ -342,8 +342,8 @@ const initialEmployees: Employee[] = [
     photo_url: '',
   },
   {
-    id: 'EMP-005',
-    employee_code: 'EMP-005',
+    id: 'ASL-005',
+    employee_code: 'ASL-005',
     name: 'Manish KC',
     designation: 'QA & Support Engineer',
     department: 'Technology',
@@ -365,8 +365,8 @@ const initialPayrollRecords: PayrollRecord[] = [
   {
     id: 'PAY-2083-06-001',
     payroll_ref: 'PAY-2083-06-001',
-    employee_id: 'EMP-001',
-    employee_code: 'EMP-001',
+    employee_id: 'ASL-001',
+    employee_code: 'ASL-001',
     employee_name: 'Aarav Sharma',
     designation: 'Senior Full Stack Engineer',
     department: 'Technology',
@@ -396,8 +396,8 @@ const initialPayrollRecords: PayrollRecord[] = [
   {
     id: 'PAY-2083-06-002',
     payroll_ref: 'PAY-2083-06-002',
-    employee_id: 'EMP-002',
-    employee_code: 'EMP-002',
+    employee_id: 'ASL-002',
+    employee_code: 'ASL-002',
     employee_name: 'Pooja Shrestha',
     designation: 'Lead Accountant',
     department: 'Finance',
@@ -427,8 +427,8 @@ const initialPayrollRecords: PayrollRecord[] = [
   {
     id: 'PAY-2083-06-003',
     payroll_ref: 'PAY-2083-06-003',
-    employee_id: 'EMP-003',
-    employee_code: 'EMP-003',
+    employee_id: 'ASL-003',
+    employee_code: 'ASL-003',
     employee_name: 'Rohan Adhikari',
     designation: 'UI/UX & Frontend Designer',
     department: 'Creative & Tech',
@@ -455,8 +455,8 @@ const initialPayrollRecords: PayrollRecord[] = [
   {
     id: 'PAY-2083-06-004',
     payroll_ref: 'PAY-2083-06-004',
-    employee_id: 'EMP-004',
-    employee_code: 'EMP-004',
+    employee_id: 'ASL-004',
+    employee_code: 'ASL-004',
     employee_name: 'Sneha Karki',
     designation: 'Business Development Officer',
     department: 'Marketing',
@@ -542,9 +542,36 @@ const Payroll = () => {
   const [activeTab, setActiveTab] = useState<'payroll' | 'employees'>('payroll');
   
   // Persistent state for Employees
+  // Persistent state for Employees (with automatic migration from legacy EMP- to fixed ASL-)
   const [employees, setEmployees] = useState<Employee[]>(() => {
     const saved = localStorage.getItem('aslenix_employees');
-    return saved ? JSON.parse(saved) : initialEmployees;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        let hasMigrated = false;
+        const migrated: Employee[] = parsed.map((e: Employee, idx: number) => {
+          const rawCode = e.employee_code || e.id || `ASL-${String(idx + 1).padStart(3, '0')}`;
+          const cleanSuffix = rawCode.replace(/^(EMP|ASL)-?/i, '');
+          const newCode = `ASL-${cleanSuffix || String(idx + 1).padStart(3, '0')}`;
+          const newId = e.id?.startsWith('ASL-') ? e.id : (e.id?.startsWith('EMP-') ? e.id.replace(/^EMP-/i, 'ASL-') : newCode);
+          if (newCode !== e.employee_code || newId !== e.id) {
+            hasMigrated = true;
+          }
+          return {
+            ...e,
+            id: newId,
+            employee_code: newCode,
+          };
+        });
+        if (hasMigrated) {
+          localStorage.setItem('aslenix_employees', JSON.stringify(migrated));
+        }
+        return migrated;
+      } catch (err) {
+        console.error('Error loading employees:', err);
+      }
+    }
+    return initialEmployees;
   });
 
   // Strict deduplication helper: guarantees exactly 1 row per employee per (month + year)
@@ -571,8 +598,12 @@ const Payroll = () => {
           const tds_rate = r.tds_rate ?? 1;
           const tds_amount = r.tds_amount ?? Number((net_before_tds * (tds_rate / 100)).toFixed(2));
           const net_salary = r.tds_amount !== undefined ? r.net_salary : Math.max(0, Number((net_before_tds - tds_amount).toFixed(2)));
+          const employee_id = (r.employee_id || '').replace(/^EMP-/i, 'ASL-');
+          const employee_code = (r.employee_code || '').replace(/^EMP-/i, 'ASL-');
           return {
             ...r,
+            employee_id,
+            employee_code,
             attendance_salary: Number(attendance_salary.toFixed(2)),
             earned_salary: Number(attendance_salary.toFixed(2)),
             net_before_tds: Number(net_before_tds.toFixed(2)),
@@ -1042,13 +1073,15 @@ const Payroll = () => {
   const handleOpenEmployeeModal = (emp?: Employee) => {
     if (emp) {
       setEditingEmployeeId(emp.id);
+      const cleanSuffix = (emp.employee_code || emp.id || '').replace(/^(EMP|ASL)-?/i, '');
       setEmployeeFormData({ 
         ...emp,
+        employee_code: `ASL-${cleanSuffix}`,
         photo_url: emp.photo_url || ''
       });
     } else {
       setEditingEmployeeId(null);
-      const nextCode = `EMP-${String(employees.length + 1).padStart(3, '0')}`;
+      const nextCode = `ASL-${String(employees.length + 1).padStart(3, '0')}`;
       setEmployeeFormData({
         name: '',
         employee_code: nextCode,
@@ -1080,12 +1113,16 @@ const Payroll = () => {
       return;
     }
 
+    const cleanSuffix = (employeeFormData.employee_code || '').replace(/^(EMP|ASL)-?/i, '').trim();
+    const finalCode = `ASL-${cleanSuffix || String(employees.length + 1).padStart(3, '0')}`;
+
     if (editingEmployeeId) {
       const updated = employees.map(emp => {
         if (emp.id === editingEmployeeId) {
           return {
             ...emp,
             ...(employeeFormData as Employee),
+            employee_code: finalCode,
             fixed_salary: Number(employeeFormData.fixed_salary) || 0,
             photo_url: employeeFormData.photo_url ?? emp.photo_url
           };
@@ -1095,8 +1132,8 @@ const Payroll = () => {
       saveEmployees(updated);
     } else {
       const newEmp: Employee = {
-        id: employeeFormData.employee_code || `EMP-${Date.now()}`,
-        employee_code: employeeFormData.employee_code || `EMP-${employees.length + 1}`,
+        id: finalCode,
+        employee_code: finalCode,
         name: employeeFormData.name || '',
         designation: employeeFormData.designation || '',
         department: employeeFormData.department || 'General',
@@ -3119,20 +3156,27 @@ const Payroll = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Employee ID / Code <span className="text-rose-500">*</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+                      <span>Employee ID / Code <span className="text-rose-500">*</span></span>
+                      <span className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                        Fixed: ASL-
+                      </span>
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        <Hash size={16} />
+                    <div className="relative flex rounded-xl shadow-xs overflow-hidden border border-slate-200 hover:border-slate-300 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all bg-slate-50/60">
+                      <div className="bg-indigo-50/90 border-r border-indigo-100 px-3.5 flex items-center gap-1.5 text-indigo-700 font-mono font-bold text-xs select-none">
+                        <Hash size={14} className="text-indigo-500" />
+                        <span>ASL-</span>
                       </div>
                       <input
                         type="text"
                         required
-                        value={employeeFormData.employee_code || ''}
-                        onChange={(e) => setEmployeeFormData({ ...employeeFormData, employee_code: e.target.value })}
-                        placeholder="e.g. EMP-006"
-                        className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-mono font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                        value={(employeeFormData.employee_code || '').replace(/^(ASL|EMP)-?/i, '')}
+                        onChange={(e) => {
+                          const suffix = e.target.value.replace(/^(ASL|EMP)-?/i, '').trim();
+                          setEmployeeFormData({ ...employeeFormData, employee_code: `ASL-${suffix}` });
+                        }}
+                        placeholder="001 or 01012"
+                        className="w-full px-3.5 py-2.5 bg-transparent text-sm font-mono font-bold text-slate-900 outline-none placeholder:text-slate-400 placeholder:font-normal"
                       />
                     </div>
                   </div>
