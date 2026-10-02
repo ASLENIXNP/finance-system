@@ -30,16 +30,17 @@ import {
   Hash,
   Camera,
   Upload,
-  LayoutGrid,
   List,
   Copy,
   ZoomIn,
   Download,
-  Loader2
+  Loader2,
+  QrCode
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
 import { formatNepaliDate, getTodayBsDate } from '../lib/nepaliDate';
+import { EmployeeIdCard } from '../components/EmployeeIdCard';
 
 export interface Employee {
   id: string;
@@ -677,7 +678,8 @@ const Payroll = () => {
   };
 
   // Employee Directory Filters & View Mode
-  const [employeeViewMode, setEmployeeViewMode] = useState<'cards' | 'table'>('cards');
+  const [employeeViewMode, setEmployeeViewMode] = useState<'cards' | 'detailed' | 'table'>('cards');
+  const [idCardModalEmp, setIdCardModalEmp] = useState<Employee | null>(null);
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
   const [employeeDeptFilter, setEmployeeDeptFilter] = useState('All');
 
@@ -1864,20 +1866,33 @@ const Payroll = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
-                {/* View Mode Toggle: Cards vs Table */}
+                {/* View Mode Toggle: Digital ID Cards vs Detailed Cards vs Table */}
                 <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
                   <button
                     type="button"
                     onClick={() => setEmployeeViewMode('cards')}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       employeeViewMode === 'cards'
-                        ? 'bg-white text-slate-900 shadow-xs'
+                        ? 'bg-white text-indigo-700 shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
-                    title="Card Containers View"
+                    title="Official Digital Employee ID Cards"
                   >
-                    <LayoutGrid size={14} />
-                    <span>Cards</span>
+                    <QrCode size={13} className={employeeViewMode === 'cards' ? 'text-indigo-600' : 'text-slate-400'} />
+                    <span>Digital ID Cards</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEmployeeViewMode('detailed')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      employeeViewMode === 'detailed'
+                        ? 'bg-white text-emerald-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="Detailed Salary Benchmark View"
+                  >
+                    <CreditCard size={13} className={employeeViewMode === 'detailed' ? 'text-emerald-600' : 'text-slate-400'} />
+                    <span>Salary Details</span>
                   </button>
                   <button
                     type="button"
@@ -1889,7 +1904,7 @@ const Payroll = () => {
                     }`}
                     title="List Table View"
                   >
-                    <List size={14} />
+                    <List size={13} />
                     <span>Table</span>
                   </button>
                 </div>
@@ -1992,8 +2007,47 @@ const Payroll = () => {
             </div>
           </div>
 
-          {/* VIEW 1: INDIVIDUAL EMPLOYEE CARD CONTAINERS WITH PHOTOS */}
+          {/* VIEW 1: OFFICIAL DIGITAL EMPLOYEE ID CARDS (MATCHING SPECIFICATION) */}
           {employeeViewMode === 'cards' && (
+            <div>
+              {filteredEmployees.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                    <User size={28} />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800">No employees found</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    No employee profiles match the current filter or search criteria.
+                  </p>
+                  <button
+                    onClick={() => { setEmployeeSearchTerm(''); setEmployeeDeptFilter('All'); }}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredEmployees.map((emp) => (
+                    <EmployeeIdCard
+                      key={emp.id}
+                      employee={emp}
+                      onCalculateSalary={() => handleOpenSalaryModal(undefined, emp.id)}
+                      onEdit={() => handleOpenEmployeeModal(emp)}
+                      onDelete={() => handleDeleteClick(emp.id, 'employee')}
+                      onViewBadge={() => setIdCardModalEmp(emp)}
+                      onUploadPhoto={(id, file) => handleDirectPhotoUpload(id, file)}
+                      onEnhancePhoto={(id, src) => handleEnhanceExistingPhoto(id, src)}
+                      onZoomPhoto={(e, src) => setLightboxPhoto({ isOpen: true, emp: e, photoSrc: src })}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* VIEW 2: DETAILED SALARY BENCHMARK CARDS */}
+          {employeeViewMode === 'detailed' && (
             <div>
               {filteredEmployees.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
@@ -2292,6 +2346,14 @@ const Payroll = () => {
                           >
                             <Calendar size={14} />
                             <span>Calculate Salary</span>
+                          </button>
+
+                          <button
+                            onClick={() => setIdCardModalEmp(emp)}
+                            title="View Official Digital ID Badge"
+                            className="p-2.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-xl transition-colors border border-indigo-200/80 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95"
+                          >
+                            <QrCode size={15} />
                           </button>
 
                           <button
@@ -3788,6 +3850,67 @@ const Payroll = () => {
                   <Trash2 size={15} />
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: OFFICIAL DIGITAL EMPLOYEE ID BADGE LIGHTBOX & PRINT */}
+      {idCardModalEmp && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setIdCardModalEmp(null)}
+        >
+          <div 
+            className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 p-6 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3.5 mb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <QrCode size={16} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-none">Digital Employee ID Badge</h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Official Scannable Credential Card</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIdCardModalEmp(null)}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Badge Render Area */}
+            <div id="printable-id-card" className="py-2 flex justify-center">
+              <EmployeeIdCard
+                employee={idCardModalEmp}
+                isPrintOnly={true}
+              />
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center gap-2.5 mt-5 pt-3.5 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <Printer size={14} />
+                <span>Print ID Badge</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIdCardModalEmp(null)}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
