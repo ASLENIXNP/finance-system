@@ -90,6 +90,7 @@ export interface PayrollRecord {
   payment_date?: string;
   payment_method?: string;
   reference_no?: string;
+  photo_url?: string;
   notes?: string;
 }
 
@@ -1156,19 +1157,51 @@ const Payroll = () => {
   };
 
   // Direct photo upload with auto HD 600px square optimization
-  const handleDirectPhotoUpload = async (employeeId: string, file: File) => {
+  const handleDirectPhotoUpload = async (employeeId: string, file: File, recordFallback?: PayrollRecord) => {
     if (!file) return;
     try {
       setPhotoOptimizingId(employeeId);
       const dataUrl = await optimizeProfilePhoto(file);
       if (dataUrl) {
+        let employeeFound = false;
         const updated = employees.map(emp => {
-          if (emp.id === employeeId) {
+          if (emp.id === employeeId || emp.employee_code === employeeId || (recordFallback && emp.name.toLowerCase() === recordFallback.employee_name.toLowerCase())) {
+            employeeFound = true;
             return { ...emp, photo_url: dataUrl };
           }
           return emp;
         });
+
+        if (!employeeFound && recordFallback) {
+          const newEmp: Employee = {
+            id: recordFallback.employee_id || employeeId,
+            employee_code: recordFallback.employee_code || employeeId,
+            name: recordFallback.employee_name,
+            designation: recordFallback.designation,
+            department: recordFallback.department || 'General',
+            email: '',
+            phone: '',
+            pan_number: '',
+            fixed_salary: recordFallback.fixed_salary,
+            bank_name: 'Nabil Bank',
+            bank_account_no: '',
+            bank_branch: '',
+            joining_date: getTodayBsDate(),
+            is_active: true,
+            photo_url: dataUrl,
+          };
+          updated.push(newEmp);
+        }
         saveEmployees(updated);
+
+        // Also sync photo_url into payroll records
+        const updatedRecords = payrollRecords.map(r => {
+          if (r.employee_id === employeeId || r.employee_code === employeeId || (recordFallback && r.employee_name.toLowerCase() === recordFallback.employee_name.toLowerCase())) {
+            return { ...r, photo_url: dataUrl };
+          }
+          return r;
+        });
+        savePayrollRecords(updatedRecords);
       }
     } catch (err) {
       console.error('Failed to optimize employee photo:', err);
@@ -1666,24 +1699,105 @@ const Payroll = () => {
                       </td>
                     </tr>
                   ) : (
-                    displayedPayroll.map((record) => (
-                      <tr key={record.id} className="hover:bg-slate-50/70 transition-colors">
-                        {/* 1. Employee */}
-                        <td className="px-4 py-3.5">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-700 text-xs border border-slate-200 shrink-0">
-                              {record.employee_name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-slate-900 leading-tight truncate">{record.employee_name}</p>
-                              <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
-                                <span className="font-mono">{record.employee_code}</span>
-                                <span>•</span>
-                                <span className="truncate max-w-[120px]">{record.designation}</span>
+                    displayedPayroll.map((record) => {
+                      const matchingEmp = employees.find(e => 
+                        (record.employee_id && (e.id === record.employee_id || e.employee_code === record.employee_id)) ||
+                        (record.employee_code && (e.employee_code === record.employee_code || e.id === record.employee_code)) ||
+                        (e.name && record.employee_name && e.name.trim().toLowerCase() === record.employee_name.trim().toLowerCase())
+                      );
+                      const photoSrc = record.photo_url || (matchingEmp ? getEmployeePhoto(matchingEmp) : '');
+                      const empId = matchingEmp?.id || record.employee_id || record.employee_code;
+                      const isOptimizing = photoOptimizingId === empId;
+
+                      return (
+                        <tr key={record.id} className="hover:bg-slate-50/70 transition-colors">
+                          {/* 1. Employee with Profile Photo */}
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-3">
+                              {photoSrc ? (
+                                <div className="relative shrink-0 group/row-photo">
+                                  <div className="w-10 h-10 rounded-full ring-2 ring-indigo-100 shadow-sm border border-slate-200 overflow-hidden bg-slate-100 group-hover/row-photo:ring-indigo-400 group-hover/row-photo:scale-105 transition-all duration-200">
+                                    <img
+                                      src={photoSrc}
+                                      alt={record.employee_name}
+                                      style={{
+                                        imageRendering: '-webkit-optimize-contrast',
+                                        filter: 'contrast(1.05) brightness(1.02)'
+                                      }}
+                                      onClick={() => setLightboxPhoto({ isOpen: true, emp: matchingEmp || null, photoSrc })}
+                                      className="w-full h-full object-cover object-center cursor-pointer"
+                                      title="Click to view full HD profile"
+                                    />
+                                  </div>
+                                  {/* Quick change photo hover button */}
+                                  <label
+                                    title="Change employee photo"
+                                    className="absolute inset-0 bg-slate-900/60 rounded-full opacity-0 group-hover/row-photo:opacity-100 flex items-center justify-center text-white cursor-pointer transition-opacity backdrop-blur-2xs"
+                                  >
+                                    <Camera size={13} />
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleDirectPhotoUpload(empId, file, record);
+                                      }}
+                                    />
+                                  </label>
+                                  {isOptimizing && (
+                                    <div className="absolute inset-0 bg-slate-950/75 rounded-full flex items-center justify-center text-white backdrop-blur-xs">
+                                      <Loader2 size={13} className="animate-spin text-indigo-400" />
+                                    </div>
+                                  )}
+                                  {/* Active Status Pulse Indicator */}
+                                  {matchingEmp?.is_active !== false && (
+                                    <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3" title="Active Employee">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white"></span>
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="relative shrink-0">
+                                  <label
+                                    title="Click to upload employee photo"
+                                    className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-50 to-slate-100 hover:bg-indigo-100 border border-dashed border-indigo-300 hover:border-indigo-500 text-indigo-700 font-bold flex flex-col items-center justify-center text-xs shrink-0 cursor-pointer group/upload transition-all shadow-xs relative ring-2 ring-white"
+                                  >
+                                    <span className="group-hover/upload:hidden tracking-wider font-semibold">
+                                      {record.employee_name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                                    </span>
+                                    <div className="hidden group-hover/upload:flex flex-col items-center gap-0.5">
+                                      <Camera size={14} className="text-indigo-600 scale-110" />
+                                      <span className="text-[7px] font-bold uppercase tracking-wider text-indigo-600">Photo</span>
+                                    </div>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleDirectPhotoUpload(empId, file, record);
+                                      }}
+                                    />
+                                  </label>
+                                  {isOptimizing && (
+                                    <div className="absolute inset-0 bg-slate-950/75 rounded-full flex items-center justify-center text-white backdrop-blur-xs">
+                                      <Loader2 size={13} className="animate-spin text-indigo-400" />
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-semibold text-slate-900 leading-tight truncate">{record.employee_name}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
+                                  <span className="font-mono">{record.employee_code}</span>
+                                  <span>•</span>
+                                  <span className="truncate max-w-[120px]">{record.designation}</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
                         {/* 2. Fixed Salary */}
                         <td className="px-3 py-3.5 text-right font-medium text-slate-900 whitespace-nowrap">
@@ -1850,7 +1964,8 @@ const Payroll = () => {
                           </div>
                         </td>
                       </tr>
-                    ))
+                    );
+                  })
                   )}
                 </tbody>
               </table>
@@ -3585,40 +3700,62 @@ const Payroll = () => {
               })()}
 
               {/* Employee Meta Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs mb-6">
-                <div>
-                  <span className="text-slate-400 uppercase font-semibold text-[10px]">Employee ID</span>
-                  <p className="font-bold text-slate-900 mt-0.5">{activePayslip.employee_code}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 uppercase font-semibold text-[10px]">Employee Name</span>
-                  <p className="font-bold text-slate-900 mt-0.5">{activePayslip.employee_name}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 uppercase font-semibold text-[10px]">Designation</span>
-                  <p className="font-bold text-slate-900 mt-0.5">{activePayslip.designation}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 uppercase font-semibold text-[10px]">Department</span>
-                  <p className="font-bold text-slate-900 mt-0.5">{activePayslip.department}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 uppercase font-semibold text-[10px]">Payment Method</span>
-                  <p className="font-semibold text-slate-900 mt-0.5">{activePayslip.payment_method || 'Bank Transfer'}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 uppercase font-semibold text-[10px]">Payment Status</span>
-                  <p className="font-bold text-emerald-700 mt-0.5">{activePayslip.payment_status}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 uppercase font-semibold text-[10px]">Payment Date</span>
-                  <p className="font-semibold text-slate-900 mt-0.5">{activePayslip.payment_date ? formatNepaliDate(activePayslip.payment_date, 'full') : 'Pending'}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 uppercase font-semibold text-[10px]">Txn Reference</span>
-                  <p className="font-mono text-slate-900 mt-0.5">{activePayslip.reference_no || 'N/A'}</p>
-                </div>
-              </div>
+              {(() => {
+                const payslipEmp = employees.find(e => 
+                  (activePayslip.employee_id && (e.id === activePayslip.employee_id || e.employee_code === activePayslip.employee_id)) ||
+                  (activePayslip.employee_code && (e.employee_code === activePayslip.employee_code || e.id === activePayslip.employee_code)) ||
+                  (e.name && activePayslip.employee_name && e.name.trim().toLowerCase() === activePayslip.employee_name.trim().toLowerCase())
+                );
+                const payslipPhoto = activePayslip.photo_url || (payslipEmp ? getEmployeePhoto(payslipEmp) : '');
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs mb-6">
+                    <div>
+                      <span className="text-slate-400 uppercase font-semibold text-[10px]">Employee ID</span>
+                      <p className="font-bold text-slate-900 mt-0.5">{activePayslip.employee_code}</p>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      {payslipPhoto ? (
+                        <div className="w-10 h-10 rounded-full ring-2 ring-white border border-slate-300 overflow-hidden bg-slate-100 shrink-0 shadow-xs">
+                          <img
+                            src={payslipPhoto}
+                            alt={activePayslip.employee_name}
+                            className="w-full h-full object-cover object-center"
+                          />
+                        </div>
+                      ) : null}
+                      <div className="min-w-0">
+                        <span className="text-slate-400 uppercase font-semibold text-[10px]">Employee Name</span>
+                        <p className="font-bold text-slate-900 mt-0.5 truncate">{activePayslip.employee_name}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 uppercase font-semibold text-[10px]">Designation</span>
+                      <p className="font-bold text-slate-900 mt-0.5">{activePayslip.designation}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 uppercase font-semibold text-[10px]">Department</span>
+                      <p className="font-bold text-slate-900 mt-0.5">{activePayslip.department}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 uppercase font-semibold text-[10px]">Payment Method</span>
+                      <p className="font-semibold text-slate-900 mt-0.5">{activePayslip.payment_method || 'Bank Transfer'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 uppercase font-semibold text-[10px]">Payment Status</span>
+                      <p className="font-bold text-emerald-700 mt-0.5">{activePayslip.payment_status}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 uppercase font-semibold text-[10px]">Payment Date</span>
+                      <p className="font-semibold text-slate-900 mt-0.5">{activePayslip.payment_date ? formatNepaliDate(activePayslip.payment_date, 'full') : 'Pending'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 uppercase font-semibold text-[10px]">Txn Reference</span>
+                      <p className="font-mono text-slate-900 mt-0.5">{activePayslip.reference_no || 'N/A'}</p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Attendance Table */}
               <div className="mb-6">
