@@ -325,31 +325,31 @@ const InvoiceCreate = () => {
         id="printable-invoice"
         className="max-w-[840px] mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden print:shadow-none print:border-none print:rounded-none print:m-0 print:w-full print:max-w-full relative"
       >
-        {/* Subtle Official Watermark Centered in Background */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">
+        {/* Subtle Official Watermark Layer (Zero In-Flow Height) */}
+        <div className="invoice-watermark-layer absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">
           <img
             src={companySettings.logo_url || '/logo.png'}
             alt="Aslenix Watermark"
-            className="w-[440px] max-w-[68%] object-contain opacity-[0.038] select-none filter blur-[0.2px]"
+            className="w-[380px] max-w-[62%] object-contain opacity-[0.038] select-none filter blur-[0.2px]"
           />
         </div>
 
         {/* Content Container (Layered on top of watermark) */}
-        <div className="relative z-10 p-8 sm:p-12 print:p-0 text-slate-800 flex flex-col justify-between min-h-[1050px] print:min-h-0">
+        <div className="invoice-content-wrapper relative z-10 p-8 sm:p-12 print:p-0 text-slate-800 flex flex-col justify-between min-h-[1050px] print:min-h-0 print:h-full">
           <div>
             {/* 1. OFFICIAL ASLENIX LETTERHEAD HEADER (Exact match to sample) */}
-            <div className="print-header pb-2 mb-4">
-              <div className="flex justify-between items-start gap-4">
+            <div className="print-header pb-1 mb-3">
+              <div className="header-row flex justify-between items-start gap-4 w-full">
                 {/* Top-Left: Brand Name & Registrations */}
-                <div className="flex flex-col text-left">
-                  <h1 className="text-3xl sm:text-4xl font-black tracking-[0.25em] text-slate-950 font-sans uppercase leading-none">
+                <div className="header-left flex flex-col text-left">
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-slate-950 font-sans uppercase leading-none">
                     ASLENIX
                   </h1>
-                  <p className="text-[10px] sm:text-xs font-bold tracking-[0.32em] text-slate-900 uppercase mt-1.5 leading-none">
+                  <p className="text-[10px] sm:text-xs font-bold tracking-[0.32em] text-slate-900 uppercase mt-1 leading-none">
                     TECH & SOLUTION
                   </p>
                   
-                  <div className="mt-4 text-xs font-semibold text-slate-800 space-y-1">
+                  <div className="mt-3 text-xs font-semibold text-slate-800 space-y-0.5">
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-slate-950">Reg No:</span>
                       <input
@@ -376,9 +376,9 @@ const InvoiceCreate = () => {
                 </div>
 
                 {/* Top-Right: PAN No, Stylized Logo & Customizable Date */}
-                <div className="flex flex-col items-end text-right">
+                <div className="header-right flex flex-col items-end text-right shrink-0">
                   {/* PAN No top right */}
-                  <div className="text-xs font-bold text-slate-950 mb-1 flex items-center justify-end gap-1">
+                  <div className="text-xs font-bold text-slate-950 mb-0.5 flex items-center justify-end gap-1">
                     <span>PAN No:</span>
                     <input
                       type="text"
@@ -395,7 +395,7 @@ const InvoiceCreate = () => {
                     <img
                       src={companySettings.logo_url || '/logo.png'}
                       alt="ASLENIX Logo"
-                      className="h-16 sm:h-20 w-auto object-contain print:h-14"
+                      className="h-14 sm:h-16 w-auto object-contain print:h-12"
                     />
                   </div>
 
@@ -415,7 +415,7 @@ const InvoiceCreate = () => {
               </div>
 
               {/* Solid Horizontal Dividing Line matching template */}
-              <div className="w-full h-[1.5px] bg-slate-900 mt-2 mb-4"></div>
+              <div className="w-full h-[1.5px] bg-slate-900 mt-2 mb-3"></div>
             </div>
 
             {/* 2. TAX INVOICE HEADER BAR */}
