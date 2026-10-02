@@ -37,16 +37,16 @@ export interface CompanySettingsData {
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettingsData = {
-  company_name: 'ASLENIX TECH AND SOLUTION',
-  registration_no: 'REG-2080-9842',
-  pan_vat_no: '123456789',
-  address: 'Budhanagar, Kathmandu, Nepal',
-  phone: '+977 1-4000000',
-  email: 'contact@aslenix.com',
-  website: 'https://aslenix.com',
+  company_name: 'ASLENIX TECH & SOLUTION',
+  registration_no: '391840/82/83',
+  pan_vat_no: '623611557',
+  address: 'Buddhanagar, Kathmandu',
+  phone: '+977 9709043147',
+  email: 'aslenixtech@gmail.com',
+  website: 'www.aslenix.tech',
   logo_url: '/logo.png',
   bank_name: 'Global IME Bank',
-  bank_account_name: 'ASLENIX TECH AND SOLUTION',
+  bank_account_name: 'ASLENIX TECH & SOLUTION',
   bank_account_no: '01234567890123',
   bank_branch: 'Baneshwor Branch',
   fiscal_year: '2082/83',
@@ -59,7 +59,15 @@ export const getStoredCompanySettings = (): CompanySettingsData => {
   try {
     const saved = localStorage.getItem('aslenix_company_settings');
     if (saved) {
-      return { ...DEFAULT_COMPANY_SETTINGS, ...JSON.parse(saved) };
+      const parsed = JSON.parse(saved);
+      // Migrate legacy placeholder values to official registered values if untouched
+      if (parsed.pan_vat_no === '123456789') parsed.pan_vat_no = '623611557';
+      if (parsed.registration_no === 'REG-2080-9842') parsed.registration_no = '391840/82/83';
+      if (parsed.phone === '+977 1-4000000') parsed.phone = '+977 9709043147';
+      if (parsed.email === 'contact@aslenix.com') parsed.email = 'aslenixtech@gmail.com';
+      if (parsed.website === 'https://aslenix.com') parsed.website = 'www.aslenix.tech';
+      if (parsed.address === 'Budhanagar, Kathmandu, Nepal') parsed.address = 'Buddhanagar, Kathmandu';
+      return { ...DEFAULT_COMPANY_SETTINGS, ...parsed };
     }
   } catch (err) {
     console.error('Failed to parse saved company settings', err);
