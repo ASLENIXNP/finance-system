@@ -1,7 +1,25 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Plus, Filter, Package, Edit, Trash2, Loader2, RotateCcw } from 'lucide-react';
+import { 
+  Search, 
+  Plus, 
+  Filter, 
+  Package, 
+  Edit, 
+  Trash2, 
+  Loader2, 
+  RotateCcw,
+  Download,
+  Copy,
+  Check,
+  X,
+  Layers,
+  Box,
+  Percent,
+  Tag
+} from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
+import { getTodayBsDate } from '../lib/nepaliDate';
 
 interface Product {
   id: string;
@@ -15,10 +33,10 @@ interface Product {
 }
 
 const defaultProducts: Product[] = [
-  { id: 'p1', item_code: 'SRV-001', name: 'Custom Web Application Development', type: 'Service', description: 'Full stack development', default_rate: 85000, tax_rate: 13, is_active: true },
-  { id: 'p2', item_code: 'SRV-002', name: 'UI/UX Design & Prototyping', type: 'Service', description: 'Figma UI/UX design', default_rate: 45000, tax_rate: 13, is_active: true },
-  { id: 'p3', item_code: 'SRV-003', name: 'Annual Software Maintenance (AMC)', type: 'Service', description: 'Regular maintenance and backup', default_rate: 35000, tax_rate: 13, is_active: true },
-  { id: 'p4', item_code: 'PRD-001', name: 'Cloud Server VPS (1 Year)', type: 'Product', description: 'High performance hosting', default_rate: 20000, tax_rate: 13, is_active: true },
+  { id: 'p1', item_code: 'SRV-001', name: 'Custom Web Application Development', type: 'Service', description: 'Full stack scalable software development', default_rate: 85000, tax_rate: 13, is_active: true },
+  { id: 'p2', item_code: 'SRV-002', name: 'UI/UX Design & Prototyping', type: 'Service', description: 'Figma interactive prototype & user journey design', default_rate: 45000, tax_rate: 13, is_active: true },
+  { id: 'p3', item_code: 'SRV-003', name: 'Annual Software Maintenance (AMC)', type: 'Service', description: 'Regular SLA maintenance, uptime, and database backups', default_rate: 35000, tax_rate: 13, is_active: true },
+  { id: 'p4', item_code: 'PRD-001', name: 'Cloud Server VPS (1 Year)', type: 'Product', description: 'High-performance cloud hosting with dedicated RAM/SSD', default_rate: 20000, tax_rate: 13, is_active: true },
 ];
 
 const DELETED_PRODUCTS_KEY = 'aslenix_deleted_products';
@@ -45,10 +63,15 @@ const recordDeletedProductId = (id: string, code?: string) => {
   }
 };
 
+const formatNPR = (amount: number): string => {
+  return `रु. ${Number(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('aslenix_products');
@@ -68,15 +91,42 @@ const Products = () => {
 
   const saveProducts = (data: Product[]) => {
     setProducts(data);
-    localStorage.setItem('aslenix_products', JSON.stringify(data));
+    try {
+      localStorage.setItem('aslenix_products', JSON.stringify(data));
+    } catch (e) {
+      console.error('Failed to save products to localStorage', e);
+    }
   };
+
+  // Dynamic Statistics
+  const dynamicStats = useMemo(() => {
+    const totalCount = products.length;
+    const activeCount = products.filter(p => p.is_active).length;
+    const inactiveCount = totalCount - activeCount;
+
+    const services = products.filter(p => p.type === 'Service');
+    const physicalProducts = products.filter(p => p.type === 'Product');
+
+    const avgRate = totalCount > 0 
+      ? products.reduce((acc, p) => acc + (Number(p.default_rate) || 0), 0) / totalCount 
+      : 0;
+
+    return {
+      totalCount,
+      activeCount,
+      inactiveCount,
+      serviceCount: services.length,
+      productCount: physicalProducts.length,
+      avgRate
+    };
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const q = searchTerm.toLowerCase().trim();
       const matchesSearch = !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.item_code.toLowerCase().includes(q) ||
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.item_code && p.item_code.toLowerCase().includes(q)) ||
         (p.description && p.description.toLowerCase().includes(q));
 
       const matchesType = typeFilter === 'All' || p.type === typeFilter;
@@ -95,12 +145,13 @@ const Products = () => {
   const [formData, setFormData] = useState({
     name: '',
     type: 'Service',
+    description: '',
     default_rate: 0,
     tax_rate: 13,
   });
 
   const resetForm = () => {
-    setFormData({ name: '', type: 'Service', default_rate: 0, tax_rate: 13 });
+    setFormData({ name: '', type: 'Service', description: '', default_rate: 0, tax_rate: 13 });
     setEditingId(null);
   };
 
@@ -143,7 +194,7 @@ const Products = () => {
     }
   };
 
-  const handleAddProduct = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
@@ -160,6 +211,7 @@ const Products = () => {
             .update({
               name: formData.name,
               type: formData.type,
+              description: formData.description,
               default_rate: formData.default_rate,
               tax_rate: formData.tax_rate,
             })
@@ -175,6 +227,7 @@ const Products = () => {
           item_code: newCode,
           name: formData.name,
           type: formData.type,
+          description: formData.description,
           default_rate: formData.default_rate,
           tax_rate: formData.tax_rate,
           is_active: true
@@ -227,10 +280,24 @@ const Products = () => {
     setFormData({
       name: product.name,
       type: product.type,
+      description: product.description || '',
       default_rate: product.default_rate,
       tax_rate: product.tax_rate,
     });
     setIsModalOpen(true);
+  };
+
+  const handleDuplicate = (product: Product) => {
+    const prefix = product.type === 'Product' ? 'PRD' : 'SRV';
+    const newCode = `${prefix}-${Math.floor(100 + Math.random() * 900)}`;
+    const duplicated: Product = {
+      ...product,
+      id: `p_${Date.now()}`,
+      item_code: newCode,
+      name: `${product.name} (Copy)`,
+      is_active: true
+    };
+    saveProducts([duplicated, ...products]);
   };
 
   const handleDeleteClick = (productId: string) => {
@@ -260,42 +327,180 @@ const Products = () => {
     }
   };
 
+  const handleCopyId = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
+
+  const handleExportCSV = () => {
+    if (filteredProducts.length === 0) return;
+    const headers = ['Item Code', 'Item Name', 'Type', 'Description', 'Default Rate (NPR)', 'Tax Rate (%)', 'Status'];
+    const rows = filteredProducts.map(p => [
+      p.item_code,
+      `"${(p.name || '').replace(/"/g, '""')}"`,
+      `"${p.type}"`,
+      `"${(p.description || '').replace(/"/g, '""')}"`,
+      p.default_rate,
+      p.tax_rate,
+      `"${p.is_active ? 'Active' : 'Inactive'}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `aslenix-catalog-${getTodayBsDate()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16">
+      {/* 1. Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-primary">Products & Services</h2>
-          <p className="text-slate-500 text-sm mt-1">Manage your service offerings, products, and standard rates.</p>
+          <h2 className="text-2xl font-bold text-primary tracking-tight">Products & Services Catalog</h2>
+          <p className="text-slate-500 text-sm mt-0.5">
+            Manage your service offerings, product inventory, standard billing rates, and tax rules.
+          </p>
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          <button 
+            onClick={handleExportCSV}
+            disabled={filteredProducts.length === 0}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+            title="Export catalog to CSV"
+          >
+            <Download size={14} />
+            <span>Export CSV</span>
+          </button>
           <button 
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none"
+            className="flex items-center justify-center gap-2 px-5 py-2 bg-accent text-white rounded-xl font-semibold hover:bg-accent-hover transition-all shadow-sm shadow-accent/20 cursor-pointer flex-1 md:flex-none text-xs"
           >
-            <Plus size={18} />
-            Add Item
+            <Plus size={16} />
+            <span>Add Offering</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        {/* Table Header/Controls */}
-        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-slate-50/50">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+      {/* 2. DYNAMIC SUMMARY METRIC CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Card 1: Total Catalog Offerings */}
+        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Catalog Offerings
+              </p>
+              <h3 className="text-2xl font-black text-slate-900 mt-1 font-mono">
+                {dynamicStats.totalCount}
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                <strong>{dynamicStats.activeCount}</strong> active • {dynamicStats.inactiveCount} archived
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100 shrink-0">
+              <Package size={22} />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+        </div>
+
+        {/* Card 2: Professional Services */}
+        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Service Offerings
+              </p>
+              <h3 className="text-2xl font-black text-indigo-600 mt-1 font-mono">
+                {dynamicStats.serviceCount}
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Development, design, consulting & retainer
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100 shrink-0">
+              <Layers size={22} />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+        </div>
+
+        {/* Card 3: Products & Hosting */}
+        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Products & Subscriptions
+              </p>
+              <h3 className="text-2xl font-black text-amber-600 mt-1 font-mono">
+                {dynamicStats.productCount}
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Cloud servers, licenses & infrastructure
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 border border-amber-100 shrink-0">
+              <Box size={22} />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+        </div>
+
+        {/* Card 4: Average Catalog Rate */}
+        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Average Unit Price
+              </p>
+              <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
+                {formatNPR(dynamicStats.avgRate)}
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Standard rate across active catalog
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100 shrink-0">
+              <Percent size={22} />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+        </div>
+      </div>
+
+      {/* 3. SEARCH & FILTER TOOLBAR */}
+      <div className="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/90 mb-6 space-y-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-[280px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
               type="text" 
-              placeholder="Search items by name, code, or description..." 
-              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+              placeholder="Search offerings by name, item code (e.g. SRV-001), or description..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-9 py-2.5 bg-slate-50/70 hover:bg-slate-50 border border-slate-200/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-white transition-all shadow-2xs"
             />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          {/* Filters & Actions */}
+          <div className="flex flex-wrap items-center gap-2">
             {/* Type Filter */}
-            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
-              <Filter size={14} className="text-slate-400" />
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-2xs">
+              <Filter size={13} className="text-slate-400" />
               <span className="font-semibold text-slate-500">Type:</span>
               <select
                 value={typeFilter}
@@ -309,7 +514,7 @@ const Products = () => {
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-2xs">
               <span className="font-semibold text-slate-500">Status:</span>
               <select
                 value={statusFilter}
@@ -317,11 +522,12 @@ const Products = () => {
                 className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
               >
                 <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="Active">Active Only</option>
+                <option value="Inactive">Inactive Only</option>
               </select>
             </div>
 
+            {/* Reset Filters Button */}
             {(typeFilter !== 'All' || statusFilter !== 'All' || searchTerm) && (
               <button
                 onClick={() => {
@@ -329,122 +535,182 @@ const Products = () => {
                   setStatusFilter('All');
                   setSearchTerm('');
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors shadow-sm"
-                title="Clear all filters"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer border border-rose-200"
+                title="Reset active filters"
               >
-                <RotateCcw size={13} />
-                Clear
+                <RotateCcw size={12} />
+                <span>Reset</span>
               </button>
             )}
 
-            <div className="text-xs text-slate-400 font-medium pl-1">
-              Showing <span className="font-semibold text-slate-700">{filteredProducts.length}</span> of {products.length}
+            <div className="text-xs text-slate-500 font-medium pl-1">
+              Showing <strong className="text-slate-800">{filteredProducts.length}</strong> of {products.length}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Table */}
+      {/* 4. PRODUCTS & SERVICES TABLE */}
+      <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-slate-50 text-slate-500 font-medium">
+            <thead className="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-200/80 uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-6 py-4">Item Name / Code</th>
-                <th className="px-6 py-4">Type</th>
-                <th className="px-6 py-4 text-right">Default Rate</th>
-                <th className="px-6 py-4 text-right">Tax (%)</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-5 py-3.5">Item Code & Name</th>
+                <th className="px-5 py-3.5">Offering Type</th>
+                <th className="px-5 py-3.5">Standard Rate (NPR)</th>
+                <th className="px-5 py-3.5">Tax (VAT)</th>
+                <th className="px-5 py-3.5">Status</th>
+                <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={6} className="px-6 py-16 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Loader2 className="animate-spin text-accent" size={24} />
-                      <p>Loading products...</p>
+                      <p className="text-xs font-medium">Loading catalog items...</p>
                     </div>
                   </td>
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <p className="font-medium text-slate-700">No products or services match your filter criteria.</p>
-                      <button 
-                        onClick={() => {
-                          setTypeFilter('All');
-                          setStatusFilter('All');
-                          setSearchTerm('');
-                        }}
-                        className="text-accent text-xs font-semibold hover:underline mt-1"
-                      >
-                        Reset filters to view all items
-                      </button>
+                  <td colSpan={6} className="px-6 py-16 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                      <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-3 border border-indigo-100">
+                        <Package size={26} />
+                      </div>
+                      <h4 className="font-bold text-slate-800 text-base">No Catalog Items Found</h4>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        {products.length > 0 
+                          ? 'No items match your filter criteria. Try resetting filters.'
+                          : 'Your catalog is currently empty. Add your first service or product offering to get started.'}
+                      </p>
+                      {products.length > 0 ? (
+                        <button
+                          onClick={() => {
+                            setTypeFilter('All');
+                            setStatusFilter('All');
+                            setSearchTerm('');
+                          }}
+                          className="mt-3.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          Reset Filters
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => { resetForm(); setIsModalOpen(true); }}
+                          className="mt-4 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Plus size={14} />
+                          <span>+ Add First Item</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
-                          <Package size={20} />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-primary">{item.name}</div>
-                          <div className="text-slate-500 text-xs mt-0.5">{item.item_code}</div>
-                        </div>
+                filteredProducts.map((product) => (
+                  <tr key={product.id} className="hover:bg-slate-50/70 transition-colors group">
+                    {/* 1. Item Code & Name */}
+                    <td className="px-5 py-4">
+                      <div className="font-bold text-slate-900 leading-snug">{product.name}</div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 font-mono mt-0.5">
+                        <span 
+                          onClick={(e) => handleCopyId(product.item_code, e)}
+                          className="text-slate-600 hover:text-accent font-semibold cursor-pointer flex items-center gap-1 transition-colors"
+                          title="Click to copy Item Code"
+                        >
+                          {product.item_code}
+                          {copiedId === product.item_code ? (
+                            <Check size={11} className="text-emerald-600" />
+                          ) : (
+                            <Copy size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </span>
+                        {product.description && (
+                          <>
+                            <span>•</span>
+                            <span className="text-slate-500 font-sans truncate max-w-[280px]" title={product.description}>
+                              {product.description}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium">
-                        {item.type}
+
+                    {/* 2. Offering Type */}
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold border ${
+                        product.type === 'Service'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}>
+                        {product.type === 'Service' ? <Layers size={11} /> : <Box size={11} />}
+                        <span>{product.type}</span>
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right font-medium text-primary">
-                      रु. {item.default_rate.toLocaleString('en-IN')}
+
+                    {/* 3. Rate */}
+                    <td className="px-5 py-4 font-black text-slate-900 text-sm font-mono">
+                      {formatNPR(product.default_rate)}
                     </td>
-                    <td className="px-6 py-4 text-right text-slate-500">
-                      {item.tax_rate}%
+
+                    {/* 4. Tax */}
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-semibold border border-slate-200 font-mono">
+                        <Tag size={10} className="text-slate-400" />
+                        <span>{product.tax_rate}% VAT</span>
+                      </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <button 
-                        onClick={() => handleToggleProductStatus(item.id, item.is_active)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
-                          item.is_active ? 'bg-emerald-500' : 'bg-slate-300'
-                        }`}
-                      >
-                        <span className="sr-only">Toggle status</span>
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            item.is_active ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-right relative overflow-hidden">
-                      <div className="flex items-center justify-end transition-transform duration-300 group-hover:-translate-x-20 text-slate-400">
-                        {/* A visual cue that you can slide or hover */}
-                        <span className="text-xs mr-2 opacity-0 group-hover:opacity-100 transition-opacity">Actions</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
-                      </div>
-                      
-                      <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
+
+                    {/* 5. Status Toggle */}
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
                         <button 
-                          onClick={() => handleEditClick(item)}
-                          className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
+                          type="button"
+                          onClick={() => handleToggleProductStatus(product.id, product.is_active)}
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            product.is_active ? 'bg-emerald-500' : 'bg-slate-300'
+                          }`}
+                          title={`Click to mark as ${product.is_active ? 'Inactive' : 'Active'}`}
                         >
-                          <Edit size={16} />
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                              product.is_active ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                        <span className={`text-xs font-bold ${product.is_active ? 'text-emerald-700' : 'text-slate-400'}`}>
+                          {product.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* 6. Actions */}
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button 
+                          onClick={() => handleDuplicate(product)}
+                          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                          title="Duplicate Item"
+                        >
+                          <Copy size={15} />
                         </button>
                         <button 
-                          onClick={() => handleDeleteClick(item.id)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors shadow-sm"
+                          onClick={() => handleEditClick(product)}
+                          className="p-1.5 text-slate-400 hover:text-accent hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                          title="Edit Item Details"
                         >
-                          <Trash2 size={16} />
+                          <Edit size={15} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteClick(product.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Delete Item"
+                        >
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -456,103 +722,133 @@ const Products = () => {
         </div>
       </div>
 
-      {/* Add / Edit Product Modal */}
+      {/* 5. ADD / EDIT PRODUCT MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-primary">
-                {editingId ? 'Edit Item' : 'Add New Item'}
-              </h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+            <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+                  <Package size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {editingId ? 'Edit Offering' : 'Add New Offering'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {editingId ? `Updating record #${editingId}` : 'Add a billable service or sellable product to your inventory'}
+                  </p>
+                </div>
+              </div>
               <button 
                 onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-200/60 transition-colors cursor-pointer"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
             
-            <form onSubmit={handleAddProduct} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Offering Type <span className="text-rose-500">*</span>
+                  </label>
+                  <select 
+                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium cursor-pointer"
+                    value={formData.type}
+                    onChange={(e) => setFormData({...formData, type: e.target.value})}
+                  >
+                    <option value="Service">Professional Service</option>
+                    <option value="Product">Physical / Digital Product</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Item Name <span className="text-rose-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. Custom Web Application Development"
+                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Item Name *</label>
-                <input 
-                  type="text" 
-                  required
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="e.g. Website Maintenance"
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Item Description
+                </label>
+                <textarea 
+                  rows={2}
+                  placeholder="Detailed description of features, deliverables, or specifications..."
+                  className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm resize-none font-medium"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
                 />
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Item Type</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2">
-                    <input 
-                      type="radio" 
-                      name="type" 
-                      value="Service" 
-                      checked={formData.type === 'Service'}
-                      onChange={(e) => setFormData({...formData, type: e.target.value})}
-                      className="text-accent focus:ring-accent"
-                    />
-                    <span className="text-sm text-slate-700">Service</span>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Default Unit Rate (रु. NPR) <span className="text-rose-500">*</span>
                   </label>
-                  <label className="flex items-center gap-2">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                      रु.
+                    </span>
                     <input 
-                      type="radio" 
-                      name="type" 
-                      value="Product" 
-                      checked={formData.type === 'Product'}
-                      onChange={(e) => setFormData({...formData, type: e.target.value})}
-                      className="text-accent focus:ring-accent"
+                      type="number" 
+                      required
+                      min="0"
+                      step="any"
+                      placeholder="e.g. 50000"
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-semibold font-mono"
+                      value={formData.default_rate}
+                      onChange={(e) => setFormData({...formData, default_rate: parseFloat(e.target.value) || 0})}
                     />
-                    <span className="text-sm text-slate-700">Product</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Standard Tax Rate (% VAT)
                   </label>
+                  <div className="relative">
+                    <input 
+                      type="number" 
+                      required
+                      min="0"
+                      max="100"
+                      placeholder="13"
+                      className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-semibold font-mono"
+                      value={formData.tax_rate}
+                      onChange={(e) => setFormData({...formData, tax_rate: parseFloat(e.target.value) || 0})}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                      %
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Default Rate (रु.) *</label>
-                  <input 
-                    type="number" 
-                    required
-                    min="0"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                    value={formData.default_rate}
-                    onChange={(e) => setFormData({...formData, default_rate: Number(e.target.value)})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Tax Rate (%)</label>
-                  <input 
-                    type="number" 
-                    min="0"
-                    max="100"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                    value={formData.tax_rate}
-                    onChange={(e) => setFormData({...formData, tax_rate: Number(e.target.value)})}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-6 mt-6 border-t border-slate-100 flex justify-end gap-3">
+              <div className="pt-4 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white">
                 <button 
                   type="button"
                   onClick={() => { setIsModalOpen(false); resetForm(); }}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                  className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover font-medium transition-colors disabled:opacity-70 flex items-center gap-2"
+                  className="px-6 py-2.5 bg-accent text-white rounded-xl font-bold text-xs hover:bg-accent-hover transition-all shadow-md shadow-accent/20 cursor-pointer flex items-center gap-2 disabled:opacity-70"
                 >
-                  {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-                  {isSubmitting ? 'Saving...' : (editingId ? 'Save Changes' : 'Save Item')}
+                  {isSubmitting && <Loader2 size={14} className="animate-spin" />}
+                  <span>{isSubmitting ? 'Saving...' : (editingId ? 'Save Offering Changes' : 'Save Offering')}</span>
                 </button>
               </div>
             </form>
@@ -560,13 +856,14 @@ const Products = () => {
         </div>
       )}
 
+      {/* 6. CONFIRM DELETE MODAL */}
       <ConfirmModal 
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete Item"
-        message="Are you sure you want to delete this item? This action cannot be undone."
-        confirmText="Delete Item"
+        title="Delete Offering"
+        message="Are you sure you want to permanently delete this catalog item? This will remove it from future invoice creation."
+        confirmText="Delete Offering"
         isDanger={true}
       />
     </div>

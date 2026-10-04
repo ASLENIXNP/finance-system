@@ -1,8 +1,28 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Filter, Download, Loader2, Edit, Trash2, FileText, RotateCcw } from 'lucide-react';
+import { 
+  Search, 
+  Plus, 
+  Filter, 
+  Download, 
+  Loader2, 
+  Edit, 
+  Trash2, 
+  FileText, 
+  RotateCcw,
+  Users,
+  Building2,
+  ShieldCheck,
+  UserCheck,
+  Copy,
+  Check,
+  Phone,
+  Mail,
+  X
+} from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
+import { getTodayBsDate } from '../lib/nepaliDate';
 
 interface Customer {
   id: string;
@@ -46,11 +66,27 @@ const recordDeletedCustomerId = (id: string, code?: string) => {
   }
 };
 
+const getTypeColor = (type: string) => {
+  switch (type?.toLowerCase()) {
+    case 'company':
+      return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'individual':
+      return 'bg-purple-50 text-purple-700 border-purple-200';
+    case 'organization':
+      return 'bg-amber-50 text-amber-700 border-amber-200';
+    case 'government':
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    default:
+      return 'bg-slate-50 text-slate-700 border-slate-200';
+  }
+};
+
 const Customers = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [customers, setCustomers] = useState<Customer[]>(() => {
     const saved = localStorage.getItem('aslenix_customers');
@@ -70,17 +106,41 @@ const Customers = () => {
 
   const saveCustomers = (data: Customer[]) => {
     setCustomers(data);
-    localStorage.setItem('aslenix_customers', JSON.stringify(data));
+    try {
+      localStorage.setItem('aslenix_customers', JSON.stringify(data));
+    } catch (e) {
+      console.error('Failed to save customers to localStorage', e);
+    }
   };
+
+  // Dynamic Statistics
+  const dynamicStats = useMemo(() => {
+    const totalCount = customers.length;
+    const activeCount = customers.filter(c => c.is_active).length;
+    const inactiveCount = totalCount - activeCount;
+
+    const companyCount = customers.filter(c => c.type === 'Company' || c.type === 'Organization').length;
+    const individualCount = customers.filter(c => c.type === 'Individual').length;
+    const panRegisteredCount = customers.filter(c => c.pan_number && c.pan_number.trim().length >= 9).length;
+
+    return {
+      totalCount,
+      activeCount,
+      inactiveCount,
+      companyCount,
+      individualCount,
+      panRegisteredCount
+    };
+  }, [customers]);
 
   const filteredCustomers = useMemo(() => {
     return customers.filter((c) => {
       const q = searchTerm.toLowerCase().trim();
       const matchesSearch = !q ||
-        c.name.toLowerCase().includes(q) ||
+        (c.name && c.name.toLowerCase().includes(q)) ||
         (c.company_name && c.company_name.toLowerCase().includes(q)) ||
         (c.pan_number && c.pan_number.toLowerCase().includes(q)) ||
-        c.customer_id.toLowerCase().includes(q) ||
+        (c.customer_id && c.customer_id.toLowerCase().includes(q)) ||
         (c.email && c.email.toLowerCase().includes(q)) ||
         (c.phone && c.phone.includes(q));
 
@@ -276,46 +336,181 @@ const Customers = () => {
     }
   };
 
+  const handleCopyId = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
+
+  const handleExportCSV = () => {
+    if (filteredCustomers.length === 0) return;
+    const headers = ['Customer ID', 'Client Name', 'Company Name', 'PAN Number', 'Phone', 'Email', 'Type', 'Status'];
+    const rows = filteredCustomers.map(c => [
+      c.customer_id,
+      `"${(c.name || '').replace(/"/g, '""')}"`,
+      `"${(c.company_name || '').replace(/"/g, '""')}"`,
+      `"${c.pan_number || ''}"`,
+      `"${c.phone || ''}"`,
+      `"${c.email || ''}"`,
+      `"${c.type}"`,
+      `"${c.is_active ? 'Active' : 'Inactive'}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `aslenix-customers-${getTodayBsDate()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16">
+      {/* 1. Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-primary">Customers</h2>
-          <p className="text-slate-500 text-sm mt-1">Manage your clients, companies, and organizations.</p>
+          <h2 className="text-2xl font-bold text-primary tracking-tight">Client & Customer Directory</h2>
+          <p className="text-slate-500 text-sm mt-0.5">
+            Manage your client entities, corporate accounts, tax profiles, and contact details.
+          </p>
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
-          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm flex-1 md:flex-none">
-            <Download size={18} />
-            Export
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          <button 
+            onClick={handleExportCSV}
+            disabled={filteredCustomers.length === 0}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+            title="Export customer list to CSV"
+          >
+            <Download size={14} />
+            <span>Export CSV</span>
           </button>
           <button 
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent-hover transition-colors shadow-sm flex-1 md:flex-none"
+            className="flex items-center justify-center gap-2 px-5 py-2 bg-accent text-white rounded-xl font-semibold hover:bg-accent-hover transition-all shadow-sm shadow-accent/20 cursor-pointer flex-1 md:flex-none text-xs"
           >
-            <Plus size={18} />
-            Add Customer
+            <Plus size={16} />
+            <span>Add Customer</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        {/* Table Header/Controls */}
-        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-slate-50/50">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+      {/* 2. DYNAMIC SUMMARY METRIC CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Card 1: Total Client Accounts */}
+        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Total Client Accounts
+              </p>
+              <h3 className="text-2xl font-black text-slate-900 mt-1 font-mono">
+                {dynamicStats.totalCount}
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                <strong>{dynamicStats.activeCount}</strong> active accounts • {dynamicStats.inactiveCount} inactive
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100 shrink-0">
+              <Users size={22} />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+        </div>
+
+        {/* Card 2: Corporate Entities */}
+        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Corporate Entities
+              </p>
+              <h3 className="text-2xl font-black text-indigo-600 mt-1 font-mono">
+                {dynamicStats.companyCount}
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Companies, businesses & institutions
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100 shrink-0">
+              <Building2 size={22} />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+        </div>
+
+        {/* Card 3: Tax Verified (PAN) Accounts */}
+        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Tax-Verified (PAN)
+              </p>
+              <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
+                {dynamicStats.panRegisteredCount}
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Accounts registered for IRD/VAT compliance
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100 shrink-0">
+              <ShieldCheck size={22} />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+        </div>
+
+        {/* Card 4: Individual & Retail */}
+        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Individual Accounts
+              </p>
+              <h3 className="text-2xl font-black text-purple-600 mt-1 font-mono">
+                {dynamicStats.individualCount}
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Retail clients & individual customers
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 border border-purple-100 shrink-0">
+              <UserCheck size={22} />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
+        </div>
+      </div>
+
+      {/* 3. SEARCH & FILTER TOOLBAR */}
+      <div className="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/90 mb-6 space-y-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* Search Box */}
+          <div className="relative flex-1 min-w-[280px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
               type="text" 
-              placeholder="Search customers by name, company, or PAN..." 
-              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+              placeholder="Search customers by name, company, PAN, phone, or email..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-9 py-2.5 bg-slate-50/70 hover:bg-slate-50 border border-slate-200/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-white transition-all shadow-2xs"
             />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          {/* Filters & Actions */}
+          <div className="flex flex-wrap items-center gap-2">
             {/* Type Filter */}
-            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
-              <Filter size={14} className="text-slate-400" />
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-2xs">
+              <Filter size={13} className="text-slate-400" />
               <span className="font-semibold text-slate-500">Type:</span>
               <select
                 value={typeFilter}
@@ -327,12 +522,11 @@ const Customers = () => {
                 <option value="Individual">Individual</option>
                 <option value="Organization">Organization</option>
                 <option value="Government">Government</option>
-                <option value="Other">Other</option>
               </select>
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 text-xs text-slate-700 shadow-2xs">
               <span className="font-semibold text-slate-500">Status:</span>
               <select
                 value={statusFilter}
@@ -340,11 +534,12 @@ const Customers = () => {
                 className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
               >
                 <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="Active">Active Only</option>
+                <option value="Inactive">Inactive Only</option>
               </select>
             </div>
 
+            {/* Reset Filters Button */}
             {(typeFilter !== 'All' || statusFilter !== 'All' || searchTerm) && (
               <button
                 onClick={() => {
@@ -352,238 +547,350 @@ const Customers = () => {
                   setStatusFilter('All');
                   setSearchTerm('');
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors shadow-sm"
-                title="Clear all filters"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer border border-rose-200"
+                title="Reset active filters"
               >
-                <RotateCcw size={13} />
-                Clear
+                <RotateCcw size={12} />
+                <span>Reset</span>
               </button>
             )}
 
-            <div className="text-xs text-slate-400 font-medium pl-1">
-              Showing <span className="font-semibold text-slate-700">{filteredCustomers.length}</span> of {customers.length}
+            <div className="text-xs text-slate-500 font-medium pl-1">
+              Showing <strong className="text-slate-800">{filteredCustomers.length}</strong> of {customers.length}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Table */}
+      {/* 4. CUSTOMERS TABLE */}
+      <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-slate-50 text-slate-500 font-medium">
+            <thead className="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-200/80 uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Contact Info</th>
-                <th className="px-6 py-4">Type / PAN</th>
-                <th className="px-6 py-4">Total Billed</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-5 py-3.5">Client Profile</th>
+                <th className="px-5 py-3.5">Contact Details</th>
+                <th className="px-5 py-3.5">Category & Tax Info</th>
+                <th className="px-5 py-3.5">Account Status</th>
+                <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={5} className="px-6 py-16 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Loader2 className="animate-spin text-accent" size={24} />
-                      <p>Loading customers...</p>
+                      <p className="text-xs font-medium">Loading customer accounts...</p>
                     </div>
                   </td>
                 </tr>
               ) : filteredCustomers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <p className="font-medium text-slate-700">No customers match your filter criteria.</p>
-                      <button 
-                        onClick={() => {
-                          setTypeFilter('All');
-                          setStatusFilter('All');
-                          setSearchTerm('');
-                        }}
-                        className="text-accent text-xs font-semibold hover:underline mt-1"
-                      >
-                        Reset filters to view all customers
-                      </button>
+                  <td colSpan={5} className="px-6 py-16 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                      <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-accent mb-3 border border-blue-100">
+                        <Users size={26} />
+                      </div>
+                      <h4 className="font-bold text-slate-800 text-base">No Customers Found</h4>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        {customers.length > 0 
+                          ? 'No customer records match your filter criteria. Try resetting filters.'
+                          : 'Your client directory is currently empty. Add your first customer or company to get started.'}
+                      </p>
+                      {customers.length > 0 ? (
+                        <button
+                          onClick={() => {
+                            setTypeFilter('All');
+                            setStatusFilter('All');
+                            setSearchTerm('');
+                          }}
+                          className="mt-3.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          Reset Filters
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => { resetForm(); setIsModalOpen(true); }}
+                          className="mt-4 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Plus size={14} />
+                          <span>+ Add First Customer</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredCustomers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-slate-50/80 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="font-semibold text-primary">{customer.company_name || customer.name}</div>
-                      <div className="text-slate-500 text-xs mt-0.5">{customer.customer_id} {customer.company_name ? `• ${customer.name}` : ''}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>{customer.phone || 'N/A'}</div>
-                      <div className="text-slate-500 text-xs mt-0.5">{customer.email || 'N/A'}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium mb-1">
-                        {customer.type}
-                      </span>
-                      <div className="text-xs text-slate-500">PAN: {customer.pan_number || 'N/A'}</div>
-                    </td>
-                    <td className="px-6 py-4 font-medium text-primary">
-                      रु. 0.00 {/* To be calculated from invoices */}
-                    </td>
-                    <td className="px-6 py-4">
-                      <button 
-                        onClick={() => handleToggleCustomerStatus(customer.id, customer.is_active)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
-                          customer.is_active ? 'bg-emerald-500' : 'bg-slate-300'
-                        }`}
-                      >
-                        <span className="sr-only">Toggle status</span>
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            customer.is_active ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-right relative overflow-hidden">
-                      <div className="flex items-center justify-end transition-transform duration-300 group-hover:-translate-x-20 text-slate-400">
-                        {/* A visual cue that you can slide or hover */}
-                        <span className="text-xs mr-2 opacity-0 group-hover:opacity-100 transition-opacity">Actions</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mx-0.5"></div>
-                      </div>
-                      
-                      <div className="absolute top-0 bottom-0 -right-24 group-hover:right-0 px-4 flex items-center justify-center gap-2 bg-slate-50 transition-all duration-300">
-                        <button 
-                          onClick={() => handleCreateInvoice(customer)}
-                          className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
-                          title="Create invoice for this customer"
-                        >
-                          <FileText size={16} />
-                        </button>
-                        <button 
-                          onClick={() => handleEditClick(customer)}
-                          className="p-2 text-slate-400 hover:text-accent hover:bg-white rounded-lg transition-colors shadow-sm"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteClick(customer.id)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-white rounded-lg transition-colors shadow-sm"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                filteredCustomers.map((customer) => {
+                  const displayName = customer.company_name || customer.name || 'Client';
+                  const initials = displayName.slice(0, 2).toUpperCase();
+
+                  return (
+                    <tr key={customer.id} className="hover:bg-slate-50/70 transition-colors group">
+                      {/* 1. Client Profile */}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-300/80 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0 shadow-2xs">
+                            {initials}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900 leading-snug">{displayName}</div>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-mono mt-0.5">
+                              <span 
+                                onClick={(e) => handleCopyId(customer.customer_id, e)}
+                                className="text-slate-600 hover:text-accent font-semibold cursor-pointer flex items-center gap-1 transition-colors"
+                                title="Click to copy ID"
+                              >
+                                {customer.customer_id}
+                                {copiedId === customer.customer_id ? (
+                                  <Check size={11} className="text-emerald-600" />
+                                ) : (
+                                  <Copy size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                )}
+                              </span>
+                              {customer.company_name && customer.name && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-slate-500 font-sans">{customer.name}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* 2. Contact Details */}
+                      <td className="px-5 py-4">
+                        <div className="space-y-1">
+                          {customer.phone ? (
+                            <a 
+                              href={`tel:${customer.phone}`}
+                              className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-accent transition-colors"
+                            >
+                              <Phone size={12} className="text-slate-400" />
+                              <span>{customer.phone}</span>
+                            </a>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">No phone</span>
+                          )}
+
+                          {customer.email ? (
+                            <a 
+                              href={`mailto:${customer.email}`}
+                              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-accent transition-colors"
+                            >
+                              <Mail size={12} className="text-slate-400" />
+                              <span className="truncate max-w-[200px]">{customer.email}</span>
+                            </a>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">No email</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 3. Category & Tax Info */}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-semibold border ${getTypeColor(customer.type)}`}>
+                            {customer.type}
+                          </span>
+                          {customer.pan_number ? (
+                            <span className="text-xs font-mono font-semibold px-2 py-0.5 bg-slate-100 text-slate-700 rounded border border-slate-200" title="IRD VAT/PAN">
+                              PAN: {customer.pan_number}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">No PAN</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 4. Status Toggle */}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <button 
+                            type="button"
+                            onClick={() => handleToggleCustomerStatus(customer.id, customer.is_active)}
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              customer.is_active ? 'bg-emerald-500' : 'bg-slate-300'
+                            }`}
+                            title={`Click to mark as ${customer.is_active ? 'Inactive' : 'Active'}`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                customer.is_active ? 'translate-x-4' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                          <span className={`text-xs font-bold ${customer.is_active ? 'text-emerald-700' : 'text-slate-400'}`}>
+                            {customer.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 5. Visible Actions */}
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button 
+                            onClick={() => handleCreateInvoice(customer)}
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                            title="Generate Invoice for this client"
+                          >
+                            <FileText size={15} />
+                          </button>
+                          <button 
+                            onClick={() => handleEditClick(customer)}
+                            className="p-1.5 text-slate-400 hover:text-accent hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            title="Edit Client Profile"
+                          >
+                            <Edit size={15} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteClick(customer.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Delete Client Record"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination placeholder */}
-        <div className="p-4 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500 bg-slate-50/30">
-          <div>Showing 1 to 4 of 4 entries</div>
-          <div className="flex gap-1">
-            <button className="px-3 py-1 border border-slate-200 rounded text-slate-400 cursor-not-allowed">Prev</button>
-            <button className="px-3 py-1 bg-accent text-white rounded font-medium">1</button>
-            <button className="px-3 py-1 border border-slate-200 rounded text-slate-400 cursor-not-allowed">Next</button>
-          </div>
-        </div>
       </div>
 
-      {/* Add / Edit Customer Modal */}
+      {/* 5. ADD / EDIT CUSTOMER MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-primary">
-                {editingId ? 'Edit Customer' : 'Add New Customer'}
-              </h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+            <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-accent border border-blue-100 flex items-center justify-center">
+                  <Users size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {editingId ? 'Edit Customer Profile' : 'Add New Customer'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {editingId ? `Updating record #${editingId}` : 'Register a new client company or individual for billing'}
+                  </p>
+                </div>
+              </div>
               <button 
                 onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-200/60 transition-colors cursor-pointer"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Customer Type</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Customer Entity Type
+                  </label>
                   <select 
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium cursor-pointer"
                     value={formData.type}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
                   >
-                    <option value="Company">Company</option>
-                    <option value="Individual">Individual</option>
-                    <option value="Organization">Organization</option>
+                    <option value="Company">Company / Pvt. Ltd.</option>
+                    <option value="Individual">Individual Client</option>
+                    <option value="Organization">Non-Profit / Organization</option>
+                    <option value="Government">Government / Public Body</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Primary Contact Name *</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Primary Contact Name <span className="text-rose-500">*</span>
+                  </label>
                   <input 
                     type="text" 
                     required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    placeholder="e.g. Suwam Subedi"
+                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Company / Organization Name
+                  </label>
                   <input 
                     type="text" 
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    placeholder="e.g. Global Tech Nepal Pvt. Ltd."
+                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
                     value={formData.company_name}
                     onChange={(e) => setFormData({...formData, company_name: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">PAN Number</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    PAN / VAT Registration No.
+                  </label>
                   <input 
                     type="text" 
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    maxLength={9}
+                    placeholder="9-digit PAN e.g. 601234567"
+                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-mono"
                     value={formData.pan_number}
                     onChange={(e) => setFormData({...formData, pan_number: e.target.value})}
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Phone / Mobile Number
+                  </label>
                   <input 
                     type="text" 
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    placeholder="e.g. 9851000001"
+                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Email Address
+                  </label>
                   <input 
                     type="email" 
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    placeholder="e.g. billing@globaltech.com.np"
+                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                   />
                 </div>
               </div>
 
-              <div className="pt-6 mt-6 border-t border-slate-100 flex justify-end gap-3">
+              <div className="pt-4 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white">
                 <button 
                   type="button"
                   onClick={() => { setIsModalOpen(false); resetForm(); }}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                  className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover font-medium transition-colors disabled:opacity-70 flex items-center gap-2"
+                  className="px-6 py-2.5 bg-accent text-white rounded-xl font-bold text-xs hover:bg-accent-hover transition-all shadow-md shadow-accent/20 cursor-pointer flex items-center gap-2 disabled:opacity-70"
                 >
-                  {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-                  {isSubmitting ? 'Saving...' : (editingId ? 'Save Changes' : 'Save Customer')}
+                  {isSubmitting && <Loader2 size={14} className="animate-spin" />}
+                  <span>{isSubmitting ? 'Saving...' : (editingId ? 'Save Client Changes' : 'Save Customer')}</span>
                 </button>
               </div>
             </form>
@@ -591,13 +898,14 @@ const Customers = () => {
         </div>
       )}
 
+      {/* 6. CONFIRM DELETE MODAL */}
       <ConfirmModal 
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete Customer"
-        message="Are you sure you want to delete this customer? This action cannot be undone and may affect existing invoices."
-        confirmText="Delete Customer"
+        title="Delete Customer Profile"
+        message="Are you sure you want to permanently delete this customer record? All associated contact details will be removed."
+        confirmText="Delete Record"
         isDanger={true}
       />
     </div>

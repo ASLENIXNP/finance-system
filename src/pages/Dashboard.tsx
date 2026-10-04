@@ -130,24 +130,75 @@ const Dashboard = () => {
   });
   const [customEnd, setCustomEnd] = useState<string>(() => todayBs);
 
-  // Raw records from localStorage or fallbacks
-  const [incomeList, setIncomeList] = useState<IncomeRecord[]>(defaultIncomeRecords);
-  const [expenseList, setExpenseList] = useState<ExpenseRecord[]>(defaultExpenseRecords);
-  const [paymentList, setPaymentList] = useState<PaymentRecord[]>(defaultPaymentRecords);
+  const getDeletedIds = (storageKey: string): Set<string> => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw);
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch {
+      return new Set();
+    }
+  };
+
+  // Raw records from localStorage or fallbacks sanitized against deleted tombstones
+  const [incomeList, setIncomeList] = useState<IncomeRecord[]>(() => {
+    const deletedIds = getDeletedIds('aslenix_deleted_income');
+    const stored = localStorage.getItem('aslenix_income');
+    if (stored !== null) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed.filter((item: any) => !deletedIds.has(item.id));
+      } catch {}
+    }
+    return defaultIncomeRecords.filter(item => !deletedIds.has(item.id));
+  });
+
+  const [expenseList, setExpenseList] = useState<ExpenseRecord[]>(() => {
+    const deletedIds = getDeletedIds('aslenix_deleted_expenses');
+    const stored = localStorage.getItem('aslenix_expenses');
+    if (stored !== null) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed.filter((item: any) => !deletedIds.has(item.id));
+      } catch {}
+    }
+    return defaultExpenseRecords.filter(item => !deletedIds.has(item.id));
+  });
+
+  const [paymentList, setPaymentList] = useState<PaymentRecord[]>(() => {
+    const deletedIds = getDeletedIds('aslenix_deleted_payments');
+    const stored = localStorage.getItem('aslenix_payments');
+    if (stored !== null) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed.filter((item: any) => !deletedIds.has(item.id));
+      } catch {}
+    }
+    return defaultPaymentRecords.filter(item => !deletedIds.has(item.id));
+  });
 
   useEffect(() => {
     try {
+      const deletedIncome = getDeletedIds('aslenix_deleted_income');
       const storedIncome = localStorage.getItem('aslenix_income');
-      if (storedIncome) {
-        setIncomeList(JSON.parse(storedIncome));
+      if (storedIncome !== null) {
+        const parsed = JSON.parse(storedIncome);
+        if (Array.isArray(parsed)) setIncomeList(parsed.filter((item: any) => !deletedIncome.has(item.id)));
       }
+
+      const deletedExpenses = getDeletedIds('aslenix_deleted_expenses');
       const storedExpenses = localStorage.getItem('aslenix_expenses');
-      if (storedExpenses) {
-        setExpenseList(JSON.parse(storedExpenses));
+      if (storedExpenses !== null) {
+        const parsed = JSON.parse(storedExpenses);
+        if (Array.isArray(parsed)) setExpenseList(parsed.filter((item: any) => !deletedExpenses.has(item.id)));
       }
+
+      const deletedPayments = getDeletedIds('aslenix_deleted_payments');
       const storedPayments = localStorage.getItem('aslenix_payments');
-      if (storedPayments) {
-        setPaymentList(JSON.parse(storedPayments));
+      if (storedPayments !== null) {
+        const parsed = JSON.parse(storedPayments);
+        if (Array.isArray(parsed)) setPaymentList(parsed.filter((item: any) => !deletedPayments.has(item.id)));
       }
     } catch (e) {
       console.error('Error loading dashboard data', e);
