@@ -195,7 +195,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     width: 100% !important;
     max-width: 210mm !important;
     height: auto !important;
-    min-height: 0 !important;
+    min-height: 285mm !important;
     max-height: none !important;
     margin: 0 auto !important;
     padding: 6mm 10mm !important;
@@ -242,10 +242,11 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-invoice .invoice-content-wrapper {
     position: relative !important;
     z-index: 10 !important;
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
     width: 100% !important;
     height: auto !important;
-    min-height: 0 !important;
+    min-height: 273mm !important;
     box-sizing: border-box !important;
     padding: 0 !important;
   }
@@ -370,7 +371,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   }
 
   #printable-invoice .print-header img {
-    height: 78px !important;
+    height: 100px !important;
     width: auto !important;
     object-fit: contain !important;
   }
@@ -435,7 +436,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   }
 
   #printable-invoice .print-footer {
-    margin-top: 14mm !important;
+    margin-top: auto !important;
     padding-top: 3.5mm !important;
     padding-bottom: 0 !important;
     border-top: 1px solid #0f172a !important;
