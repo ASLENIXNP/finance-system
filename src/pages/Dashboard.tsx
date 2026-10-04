@@ -95,23 +95,61 @@ const defaultPaymentRecords: PaymentRecord[] = [
 
 type DateFilterOption = 'today' | 'this_week' | 'this_month' | 'fiscal_year' | 'custom';
 
-const StatCard = ({ title, value, change, isPositive, icon }: any) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow">
-    <div className="flex justify-between items-start mb-4">
-      <div className="p-3 bg-slate-50 text-accent rounded-xl">
-        {icon}
+const StatCard = ({ title, tag, value, change, isPositive, icon, theme = 'blue' }: any) => {
+  const themeClasses: Record<string, { bg: string; border: string; iconBg: string; text: string; tag: string }> = {
+    emerald: {
+      bg: 'bg-[#F6FAF7]',
+      border: 'border-emerald-100/90',
+      iconBg: 'bg-emerald-100/80 text-emerald-600 border-emerald-200/60',
+      text: 'text-emerald-600',
+      tag: 'text-emerald-600'
+    },
+    rose: {
+      bg: 'bg-[#FFF6F6]',
+      border: 'border-rose-100/90',
+      iconBg: 'bg-rose-100/80 text-rose-600 border-rose-200/60',
+      text: 'text-rose-600',
+      tag: 'text-rose-600'
+    },
+    blue: {
+      bg: 'bg-[#F8FAFF]',
+      border: 'border-blue-100/90',
+      iconBg: 'bg-blue-100/80 text-blue-600 border-blue-200/60',
+      text: 'text-blue-600',
+      tag: 'text-blue-600'
+    },
+    orange: {
+      bg: 'bg-[#FFF9F5]',
+      border: 'border-orange-100/90',
+      iconBg: 'bg-orange-100/80 text-orange-600 border-orange-200/60',
+      text: 'text-orange-600',
+      tag: 'text-orange-600'
+    },
+  };
+
+  const t = themeClasses[theme] || themeClasses.blue;
+
+  return (
+    <div className={`${t.bg} p-5 rounded-3xl shadow-xs border ${t.border} flex flex-col justify-between hover:shadow-md transition-all`}>
+      <div className="flex justify-between items-center mb-3">
+        <div className={`w-10 h-10 ${t.iconBg} rounded-2xl flex items-center justify-center border shrink-0`}>
+          {icon}
+        </div>
+        <span className={`text-[11px] font-bold uppercase tracking-wider ${t.tag}`}>
+          {tag}
+        </span>
       </div>
-      <div className={`flex items-center gap-1 text-sm font-medium px-2.5 py-1 rounded-full ${isPositive ? 'text-emerald-700 bg-emerald-50' : 'text-red-700 bg-red-50'}`}>
-        {isPositive ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-        {change}
+      <div>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
+        <h3 className={`text-2xl font-black mt-1 font-mono ${theme === 'rose' ? 'text-rose-600' : 'text-slate-900'}`}>{value}</h3>
+        <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1 font-medium">
+          {isPositive ? <ArrowUpRight size={14} className="text-emerald-600" /> : <ArrowDownRight size={14} className="text-rose-500" />}
+          {change}
+        </p>
       </div>
     </div>
-    <div>
-      <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
-      <h3 className="text-2xl font-bold text-primary">{value}</h3>
-    </div>
-  </div>
-);
+  );
+};
 
 const Dashboard = () => {
   // Current BS Date details
@@ -488,34 +526,42 @@ const Dashboard = () => {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Total Income" 
+          tag="REVENUE"
+          theme="emerald"
           value={`रु. ${totalIncome.toLocaleString('en-IN')}`} 
-          change={`${filteredIncome.length} txns`} 
+          change={`${filteredIncome.length} transactions recorded`} 
           isPositive={true} 
-          icon={<Banknote size={24} />} 
+          icon={<Banknote size={20} />} 
         />
         <StatCard 
           title="Total Expenditure" 
+          tag="OUTGOINGS"
+          theme="rose"
           value={`रु. ${totalExpense.toLocaleString('en-IN')}`} 
-          change={`${filteredExpenses.length} bills`} 
+          change={`${filteredExpenses.length} expense vouchers`} 
           isPositive={false} 
-          icon={<CreditCard size={24} />} 
+          icon={<CreditCard size={20} />} 
         />
         <StatCard 
           title="Net Profit" 
+          tag="NET SURPLUS"
+          theme="blue"
           value={`रु. ${netProfit.toLocaleString('en-IN')}`} 
-          change={netProfit >= 0 ? "+ Profit" : "- Loss"} 
+          change={netProfit >= 0 ? "+ Surplus Profit" : "- Net Deficit"} 
           isPositive={netProfit >= 0} 
-          icon={<Activity size={24} />} 
+          icon={<Activity size={20} />} 
         />
         <StatCard 
           title="Total Outstanding" 
+          tag="RECEIVABLES"
+          theme="orange"
           value={`रु. ${totalOutstanding.toLocaleString('en-IN')}`} 
-          change="Receivables" 
+          change="Pending invoice settlement" 
           isPositive={totalOutstanding === 0} 
-          icon={<FileText size={24} />} 
+          icon={<FileText size={20} />} 
         />
       </div>
 

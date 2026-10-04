@@ -252,67 +252,75 @@ const Users = () => {
 
       {/* 4 Dynamic Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex justify-between items-start mb-3">
-            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+        <div className="bg-[#F8FAFF] p-5 rounded-3xl border border-blue-100/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-blue-100/80 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-200/60 shrink-0">
               <UsersIcon size={20} />
             </div>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-              Directory
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+              DIRECTORY
             </span>
           </div>
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total System Users</p>
-          <div className="mt-1 flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold text-slate-900">{stats.total}</h3>
-            <span className="text-xs text-slate-500 font-medium">accounts</span>
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total System Users</p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <h3 className="text-2xl font-black text-slate-900 font-mono">{stats.total}</h3>
+              <span className="text-xs text-slate-500 font-medium">accounts</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex justify-between items-start mb-3">
-            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
+        <div className="bg-[#FAF7FD] p-5 rounded-3xl border border-purple-100/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-purple-100/80 rounded-2xl flex items-center justify-center text-purple-600 border border-purple-200/60 shrink-0">
               <ShieldCheck size={20} />
             </div>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-              Privileged
+            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">
+              ADMINISTRATORS
             </span>
           </div>
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Super Admins & Admins</p>
-          <div className="mt-1 flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold text-purple-700">{stats.admins}</h3>
-            <span className="text-xs text-slate-500 font-medium">with full rights</span>
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Super Admins & Admins</p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <h3 className="text-2xl font-black text-purple-700 font-mono">{stats.admins}</h3>
+              <span className="text-xs text-slate-500 font-medium">with full rights</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex justify-between items-start mb-3">
-            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+        <div className="bg-[#F6FAF7] p-5 rounded-3xl border border-emerald-100/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-emerald-100/80 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-200/60 shrink-0">
               <UserCheck size={20} />
             </div>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-              {stats.activePercentage}% active
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
+              {stats.activePercentage}% ACTIVE
             </span>
           </div>
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Operators</p>
-          <div className="mt-1 flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold text-emerald-600">{stats.active}</h3>
-            <span className="text-xs text-slate-500 font-medium">active logins</span>
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Operators</p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <h3 className="text-2xl font-black text-emerald-600 font-mono">{stats.active}</h3>
+              <span className="text-xs text-slate-500 font-medium">active logins</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex justify-between items-start mb-3">
-            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+        <div className="bg-[#FFF9F5] p-5 rounded-3xl border border-orange-100/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-orange-100/80 rounded-2xl flex items-center justify-center text-orange-600 border border-orange-200/60 shrink-0">
               <Briefcase size={20} />
             </div>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-              Finance & Billing
+            <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600">
+              FINANCE STAFF
             </span>
           </div>
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Staff Accounts</p>
-          <div className="mt-1 flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold text-amber-700">{stats.staff}</h3>
-            <span className="text-xs text-slate-500 font-medium">operational roles</span>
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Staff Accounts</p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <h3 className="text-2xl font-black text-orange-600 font-mono">{stats.staff}</h3>
+              <span className="text-xs text-slate-500 font-medium">operational roles</span>
+            </div>
           </div>
         </div>
       </div>

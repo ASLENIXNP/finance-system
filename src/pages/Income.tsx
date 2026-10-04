@@ -734,100 +734,108 @@ const Income = () => {
       {/* 2. DYNAMIC SUMMARY METRIC CARDS (100% Calculated in Real Time) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Card 1: Total Income (This Month) */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                This Month's Realized Income
-              </p>
-              <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
-                {formatNPR(dynamicStats.thisMonthReceived)}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                {dynamicStats.thisMonthCount > 0 ? (
-                  <span><strong>{dynamicStats.thisMonthCount}</strong> received payments this month</span>
-                ) : (
-                  <span>No completed revenue recorded this month</span>
-                )}
-              </p>
+        <div className="bg-[#F6FAF7] p-5 rounded-3xl shadow-xs border border-emerald-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-emerald-100/80 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-200/60 shrink-0">
+              <Wallet size={20} />
             </div>
-            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100 shrink-0">
-              <Wallet size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
+              THIS MONTH
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              This Month's Realized Income
+            </p>
+            <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
+              {formatNPR(dynamicStats.thisMonthReceived)}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              {dynamicStats.thisMonthCount > 0 ? (
+                <span><strong className="text-slate-700">{dynamicStats.thisMonthCount}</strong> received payments this month</span>
+              ) : (
+                <span>No completed revenue recorded this month</span>
+              )}
+            </p>
+          </div>
         </div>
 
         {/* Card 2: All-Time Realized Revenue */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                All-Time Realized Revenue
-              </p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1 font-mono">
-                {formatNPR(dynamicStats.allTimeReceived)}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Across <strong>{dynamicStats.completedCount}</strong> cleared receipts (Avg. {formatNPR(dynamicStats.avgIncome)})
-              </p>
+        <div className="bg-[#F8FAFF] p-5 rounded-3xl shadow-xs border border-blue-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-blue-100/80 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-200/60 shrink-0">
+              <TrendingUp size={20} />
             </div>
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100 shrink-0">
-              <TrendingUp size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+              TOTAL REVENUE
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              All-Time Realized Revenue
+            </p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1 font-mono">
+              {formatNPR(dynamicStats.allTimeReceived)}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Across <strong className="text-slate-700">{dynamicStats.completedCount}</strong> cleared receipts (Avg. {formatNPR(dynamicStats.avgIncome)})
+            </p>
+          </div>
         </div>
 
         {/* Card 3: Pending / Uncollected Payments */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Pending / Receivables
-              </p>
-              <h3 className="text-2xl font-black text-amber-600 mt-1 font-mono">
-                {formatNPR(dynamicStats.pendingTotal)}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                {dynamicStats.pendingCount > 0 ? (
-                  <span><strong>{dynamicStats.pendingCount}</strong> pending payments awaiting clearance</span>
-                ) : (
-                  <span>All issued client invoices are fully cleared</span>
-                )}
-              </p>
+        <div className="bg-[#FFF9F5] p-5 rounded-3xl shadow-xs border border-orange-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-orange-100/80 rounded-2xl flex items-center justify-center text-orange-600 border border-orange-200/60 shrink-0">
+              <Clock size={20} />
             </div>
-            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 border border-amber-100 shrink-0">
-              <Clock size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600">
+              RECEIVABLES
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Pending / Receivables
+            </p>
+            <h3 className="text-2xl font-black text-orange-600 mt-1 font-mono">
+              {formatNPR(dynamicStats.pendingTotal)}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              {dynamicStats.pendingCount > 0 ? (
+                <span><strong className="text-slate-700">{dynamicStats.pendingCount}</strong> pending payments awaiting clearance</span>
+              ) : (
+                <span>All issued client invoices are fully cleared</span>
+              )}
+            </p>
+          </div>
         </div>
 
         {/* Card 4: Top Revenue Category */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div className="min-w-0 pr-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Leading Revenue Stream
-              </p>
-              <h3 className="text-lg font-bold text-slate-900 mt-1 truncate" title={dynamicStats.topCategory?.name || 'None'}>
-                {dynamicStats.topCategory?.name || 'No Cleared Records'}
-              </h3>
-              <p className="text-xs font-semibold text-emerald-600 font-mono mt-0.5">
-                {dynamicStats.topCategory ? formatNPR(dynamicStats.topCategory.amount) : 'रु. 0.00'}
-                {dynamicStats.topCategory && (
-                  <span className="text-[10px] text-slate-400 font-normal ml-1.5 font-sans">
-                    ({dynamicStats.topCategory.percentage}% of revenue)
-                  </span>
-                )}
-              </p>
+        <div className="bg-[#FAF7FD] p-5 rounded-3xl shadow-xs border border-purple-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-purple-100/80 rounded-2xl flex items-center justify-center text-purple-600 border border-purple-200/60 shrink-0">
+              <PieChart size={20} />
             </div>
-            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 border border-purple-100 shrink-0">
-              <PieChart size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">
+              TOP STREAM
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Leading Revenue Stream
+            </p>
+            <h3 className="text-lg font-bold text-slate-900 mt-1 truncate" title={dynamicStats.topCategory?.name || 'None'}>
+              {dynamicStats.topCategory?.name || 'No Cleared Records'}
+            </h3>
+            <p className="text-xs font-semibold text-emerald-600 font-mono mt-0.5">
+              {dynamicStats.topCategory ? formatNPR(dynamicStats.topCategory.amount) : 'रु. 0.00'}
+              {dynamicStats.topCategory && (
+                <span className="text-[10px] text-slate-400 font-normal ml-1.5 font-sans">
+                  ({dynamicStats.topCategory.percentage}% of revenue)
+                </span>
+              )}
+            </p>
+          </div>
         </div>
       </div>
 

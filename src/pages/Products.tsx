@@ -389,87 +389,95 @@ const Products = () => {
       {/* 2. DYNAMIC SUMMARY METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Card 1: Total Catalog Offerings */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Catalog Offerings
-              </p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1 font-mono">
-                {dynamicStats.totalCount}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                <strong>{dynamicStats.activeCount}</strong> active • {dynamicStats.inactiveCount} archived
-              </p>
+        <div className="bg-[#F8FAFF] p-5 rounded-3xl shadow-xs border border-blue-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-blue-100/80 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-200/60 shrink-0">
+              <Package size={20} />
             </div>
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100 shrink-0">
-              <Package size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+              CATALOG
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Catalog Offerings
+            </p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1 font-mono">
+              {dynamicStats.totalCount}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              <strong className="text-slate-700">{dynamicStats.activeCount}</strong> active • {dynamicStats.inactiveCount} archived
+            </p>
+          </div>
         </div>
 
         {/* Card 2: Professional Services */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Service Offerings
-              </p>
-              <h3 className="text-2xl font-black text-indigo-600 mt-1 font-mono">
-                {dynamicStats.serviceCount}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Development, design, consulting & retainer
-              </p>
+        <div className="bg-[#F8F9FE] p-5 rounded-3xl shadow-xs border border-indigo-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-indigo-100/80 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-200/60 shrink-0">
+              <Layers size={20} />
             </div>
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100 shrink-0">
-              <Layers size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+              SERVICES
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Service Offerings
+            </p>
+            <h3 className="text-2xl font-black text-indigo-600 mt-1 font-mono">
+              {dynamicStats.serviceCount}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Development, design, consulting & retainer
+            </p>
+          </div>
         </div>
 
         {/* Card 3: Products & Hosting */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Products & Subscriptions
-              </p>
-              <h3 className="text-2xl font-black text-amber-600 mt-1 font-mono">
-                {dynamicStats.productCount}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Cloud servers, licenses & infrastructure
-              </p>
+        <div className="bg-[#FFF9F5] p-5 rounded-3xl shadow-xs border border-orange-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-orange-100/80 rounded-2xl flex items-center justify-center text-orange-600 border border-orange-200/60 shrink-0">
+              <Box size={20} />
             </div>
-            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 border border-amber-100 shrink-0">
-              <Box size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600">
+              SUBSCRIPTIONS
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Products & Subscriptions
+            </p>
+            <h3 className="text-2xl font-black text-orange-600 mt-1 font-mono">
+              {dynamicStats.productCount}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Cloud servers, licenses & infrastructure
+            </p>
+          </div>
         </div>
 
         {/* Card 4: Average Catalog Rate */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Average Unit Price
-              </p>
-              <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
-                {formatNPR(dynamicStats.avgRate)}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Standard rate across active catalog
-              </p>
+        <div className="bg-[#F6FAF7] p-5 rounded-3xl shadow-xs border border-emerald-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-emerald-100/80 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-200/60 shrink-0">
+              <Percent size={20} />
             </div>
-            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100 shrink-0">
-              <Percent size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
+              AVG RATE
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Average Unit Price
+            </p>
+            <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
+              {formatNPR(dynamicStats.avgRate)}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Standard rate across active catalog
+            </p>
+          </div>
         </div>
       </div>
 

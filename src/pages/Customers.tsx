@@ -399,87 +399,95 @@ const Customers = () => {
       {/* 2. DYNAMIC SUMMARY METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Card 1: Total Client Accounts */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Total Client Accounts
-              </p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1 font-mono">
-                {dynamicStats.totalCount}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                <strong>{dynamicStats.activeCount}</strong> active accounts • {dynamicStats.inactiveCount} inactive
-              </p>
+        <div className="bg-[#F8FAFF] p-5 rounded-3xl shadow-xs border border-blue-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-blue-100/80 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-200/60 shrink-0">
+              <Users size={20} />
             </div>
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100 shrink-0">
-              <Users size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+              PORTFOLIO
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Total Client Accounts
+            </p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1 font-mono">
+              {dynamicStats.totalCount}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              <strong className="text-slate-700">{dynamicStats.activeCount}</strong> active accounts • {dynamicStats.inactiveCount} inactive
+            </p>
+          </div>
         </div>
 
         {/* Card 2: Corporate Entities */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Corporate Entities
-              </p>
-              <h3 className="text-2xl font-black text-indigo-600 mt-1 font-mono">
-                {dynamicStats.companyCount}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Companies, businesses & institutions
-              </p>
+        <div className="bg-[#F8F9FE] p-5 rounded-3xl shadow-xs border border-indigo-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-indigo-100/80 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-200/60 shrink-0">
+              <Building2 size={20} />
             </div>
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100 shrink-0">
-              <Building2 size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+              CORPORATE
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Corporate Entities
+            </p>
+            <h3 className="text-2xl font-black text-indigo-600 mt-1 font-mono">
+              {dynamicStats.companyCount}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Companies, businesses & institutions
+            </p>
+          </div>
         </div>
 
         {/* Card 3: Tax Verified (PAN) Accounts */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Tax-Verified (PAN)
-              </p>
-              <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
-                {dynamicStats.panRegisteredCount}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Accounts registered for IRD/VAT compliance
-              </p>
+        <div className="bg-[#F6FAF7] p-5 rounded-3xl shadow-xs border border-emerald-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-emerald-100/80 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-200/60 shrink-0">
+              <ShieldCheck size={20} />
             </div>
-            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100 shrink-0">
-              <ShieldCheck size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
+              TAX-VERIFIED
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Tax-Verified (PAN)
+            </p>
+            <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
+              {dynamicStats.panRegisteredCount}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Accounts registered for IRD/VAT compliance
+            </p>
+          </div>
         </div>
 
         {/* Card 4: Individual & Retail */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 relative overflow-hidden group hover:shadow-md transition-all">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Individual Accounts
-              </p>
-              <h3 className="text-2xl font-black text-purple-600 mt-1 font-mono">
-                {dynamicStats.individualCount}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Retail clients & individual customers
-              </p>
+        <div className="bg-[#FAF7FD] p-5 rounded-3xl shadow-xs border border-purple-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-purple-100/80 rounded-2xl flex items-center justify-center text-purple-600 border border-purple-200/60 shrink-0">
+              <UserCheck size={20} />
             </div>
-            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 border border-purple-100 shrink-0">
-              <UserCheck size={22} />
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">
+              INDIVIDUAL
+            </span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Individual Accounts
+            </p>
+            <h3 className="text-2xl font-black text-purple-600 mt-1 font-mono">
+              {dynamicStats.individualCount}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Retail clients & individual customers
+            </p>
+          </div>
         </div>
       </div>
 

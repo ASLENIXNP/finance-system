@@ -1488,72 +1488,87 @@ const Payroll = () => {
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Card 1: Total Gross / Attendance Salary */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Gross Attendance</span>
-            <div className="p-2 bg-blue-50 text-accent rounded-xl">
-              <DollarSign size={18} />
+        <div className="bg-[#F8FAFF] p-5 rounded-3xl shadow-xs border border-blue-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-blue-100/80 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-200/60 shrink-0">
+              <DollarSign size={20} />
             </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+              GROSS SALARY
+            </span>
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl font-bold text-primary">{formatNPR(summaryMetrics.totalAttendanceSalary)}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Before Allowances & TDS</p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Gross Attendance</p>
+            <h3 className="text-xl font-black text-slate-900 mt-1 font-mono">{formatNPR(summaryMetrics.totalAttendanceSalary)}</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">Before Allowances & TDS</p>
           </div>
         </div>
 
         {/* Card 2: 1% TDS Withheld */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total 1% TDS</span>
-            <div className="p-2 bg-red-50 text-red-600 rounded-xl">
-              <Receipt size={18} />
+        <div className="bg-[#FFF6F6] p-5 rounded-3xl shadow-xs border border-rose-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-rose-100/80 rounded-2xl flex items-center justify-center text-rose-600 border border-rose-200/60 shrink-0">
+              <Receipt size={20} />
             </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600">
+              1% TDS
+            </span>
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl font-bold text-red-600">-{formatNPR(summaryMetrics.totalTds)}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Statutory tax deducted</p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total 1% TDS</p>
+            <h3 className="text-xl font-black text-rose-600 mt-1 font-mono">-{formatNPR(summaryMetrics.totalTds)}</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">Statutory tax deducted</p>
           </div>
         </div>
 
         {/* Card 3: Final Net Payroll */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Final Net Payroll</span>
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
-              <CheckCircle2 size={18} />
+        <div className="bg-[#F6FAF7] p-5 rounded-3xl shadow-xs border border-emerald-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-emerald-100/80 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-200/60 shrink-0">
+              <CheckCircle2 size={20} />
             </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
+              NET PAYOUT
+            </span>
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl font-bold text-emerald-600">{formatNPR(summaryMetrics.totalPayroll)}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Net payable to staff</p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Final Net Payroll</p>
+            <h3 className="text-xl font-black text-emerald-600 mt-1 font-mono">{formatNPR(summaryMetrics.totalPayroll)}</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">Net payable to staff</p>
           </div>
         </div>
 
         {/* Card 4: Pending Payout */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Pending Payout</span>
-            <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
-              <Clock size={18} />
+        <div className="bg-[#FFF9F5] p-5 rounded-3xl shadow-xs border border-orange-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-orange-100/80 rounded-2xl flex items-center justify-center text-orange-600 border border-orange-200/60 shrink-0">
+              <Clock size={20} />
             </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600">
+              APPROVAL
+            </span>
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl font-bold text-amber-600">{formatNPR(summaryMetrics.pendingPayout)}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Unpaid / In Approval</p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Pending Payout</p>
+            <h3 className="text-xl font-black text-orange-600 mt-1 font-mono">{formatNPR(summaryMetrics.pendingPayout)}</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">Unpaid / In Approval</p>
           </div>
         </div>
 
         {/* Card 5: Average Attendance */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Avg. Attendance</span>
-            <div className="p-2 bg-purple-50 text-purple-600 rounded-xl">
-              <Percent size={18} />
+        <div className="bg-[#FAF7FD] p-5 rounded-3xl shadow-xs border border-purple-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-purple-100/80 rounded-2xl flex items-center justify-center text-purple-600 border border-purple-200/60 shrink-0">
+              <Percent size={20} />
             </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">
+              ATTENDANCE
+            </span>
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl font-bold text-purple-700">{summaryMetrics.avgAttendance}%</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{summaryMetrics.activeEmployeesCount} active employees</p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Avg. Attendance</p>
+            <h3 className="text-xl font-black text-purple-700 mt-1 font-mono">{summaryMetrics.avgAttendance}%</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5"><strong className="text-slate-700">{summaryMetrics.activeEmployeesCount}</strong> active employees</p>
           </div>
         </div>
       </div>
