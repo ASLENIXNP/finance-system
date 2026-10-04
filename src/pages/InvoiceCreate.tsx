@@ -397,7 +397,7 @@ const InvoiceCreate = () => {
                     className="h-16 sm:h-20 w-auto object-contain print:h-16 drop-shadow-xs"
                   />
                   <div className="header-reference mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-950 sm:mt-auto sm:mb-1">
-                    <span className="text-slate-500 font-semibold uppercase text-[11px]">Ref No:</span>
+                    <span className="whitespace-nowrap text-slate-500 font-semibold uppercase text-[11px]">Ref No:</span>
                     <input
                       type="text"
                       value={invoiceNumber}
@@ -429,13 +429,13 @@ const InvoiceCreate = () => {
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 text-slate-950 font-bold ml-auto">
-                <span className="text-slate-500 font-semibold uppercase text-[11px]">DATE:</span>
+              <div className="invoice-date-field ml-auto flex min-w-[190px] items-center justify-center gap-2 text-center text-slate-950 font-bold">
+                <span className="whitespace-nowrap text-slate-500 font-semibold uppercase text-[11px]">DATE:</span>
                 <input
                   type="text"
                   value={formatInvoiceDate(invoiceDate)}
                   onChange={(e) => setInvoiceDate(storeInvoiceDate(e.target.value))}
-                  className="font-bold text-slate-950 bg-transparent border-b border-transparent hover:border-slate-400 focus:border-slate-950 p-0 focus:ring-0 outline-none text-right font-mono w-28 hover:bg-slate-200/50 focus:bg-white rounded px-1 transition-all"
+                  className="w-28 rounded bg-transparent px-1 p-0 text-center font-mono font-bold text-slate-950 border-b border-transparent hover:border-slate-400 focus:border-slate-950 focus:ring-0 outline-none hover:bg-slate-200/50 focus:bg-white transition-all"
                   placeholder="MM/DD/YYYY"
                   title="Invoice Date (BS)"
                 />

@@ -321,6 +321,21 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-invoice .print-header .header-reference {
     margin-top: auto !important;
     margin-bottom: 1mm !important;
+    gap: 2mm !important;
+  }
+
+  #printable-invoice .print-header .header-reference input {
+    text-align: center !important;
+  }
+
+  #printable-invoice .invoice-date-field {
+    min-width: 50mm !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  #printable-invoice .invoice-date-field input {
+    text-align: center !important;
   }
 
   #printable-invoice .print-header .header-center {
