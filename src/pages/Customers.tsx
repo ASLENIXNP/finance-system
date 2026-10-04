@@ -773,38 +773,44 @@ const Customers = () => {
 
       {/* 5. ADD / EDIT CUSTOMER MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
-            <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-accent border border-blue-100 flex items-center justify-center">
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200/80">
+            <div className="px-7 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/70">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-white text-slate-900 border border-slate-200/90 shadow-xs flex items-center justify-center shrink-0">
                   <Users size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
-                    {editingId ? 'Edit Customer Profile' : 'Add New Customer'}
-                  </h3>
-                  <p className="text-xs text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                      {editingId ? 'Edit Customer Profile' : 'Add New Customer'}
+                    </h3>
+                    <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                      {editingId ? 'UPDATE' : 'NEW'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {editingId ? `Updating record #${editingId}` : 'Register a new client company or individual for billing'}
                   </p>
                 </div>
               </div>
               <button 
                 onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-200/60 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm">
+            <form onSubmit={handleSubmit} className="p-7 space-y-5 text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Building2 size={13} className="text-slate-400" />
                     Customer Entity Type
                   </label>
                   <select 
-                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium cursor-pointer"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-semibold text-slate-900 transition-all cursor-pointer"
                     value={formData.type}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
                   >
@@ -815,14 +821,15 @@ const Customers = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <UserCheck size={13} className="text-slate-400" />
                     Primary Contact Name <span className="text-rose-500">*</span>
                   </label>
                   <input 
                     type="text" 
                     required
                     placeholder="e.g. Suwam Subedi"
-                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-semibold text-slate-900 placeholder:text-slate-400 transition-all"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                   />
@@ -831,26 +838,28 @@ const Customers = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Building2 size={13} className="text-slate-400" />
                     Company / Organization Name
                   </label>
                   <input 
                     type="text" 
                     placeholder="e.g. Global Tech Nepal Pvt. Ltd."
-                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-semibold text-slate-900 placeholder:text-slate-400 transition-all"
                     value={formData.company_name}
                     onChange={(e) => setFormData({...formData, company_name: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <ShieldCheck size={13} className="text-slate-400" />
                     PAN / VAT Registration No.
                   </label>
                   <input 
                     type="text" 
                     maxLength={9}
                     placeholder="9-digit PAN e.g. 601234567"
-                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-mono"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-mono font-bold text-slate-900 placeholder:text-slate-400 transition-all"
                     value={formData.pan_number}
                     onChange={(e) => setFormData({...formData, pan_number: e.target.value})}
                   />
@@ -859,43 +868,45 @@ const Customers = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Phone size={13} className="text-slate-400" />
                     Phone / Mobile Number
                   </label>
                   <input 
                     type="text" 
                     placeholder="e.g. 9851000001"
-                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-semibold text-slate-900 placeholder:text-slate-400 transition-all font-mono"
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Mail size={13} className="text-slate-400" />
                     Email Address
                   </label>
                   <input 
                     type="email" 
                     placeholder="e.g. billing@globaltech.com.np"
-                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-medium text-slate-900 placeholder:text-slate-400 transition-all"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                   />
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white">
+              <div className="pt-5 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white">
                 <button 
                   type="button"
                   onClick={() => { setIsModalOpen(false); resetForm(); }}
-                  className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-semibold text-xs transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-accent text-white rounded-xl font-bold text-xs hover:bg-accent-hover transition-all shadow-md shadow-accent/20 cursor-pointer flex items-center gap-2 disabled:opacity-70"
+                  className="px-7 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs transition-all shadow-xs active:scale-98 cursor-pointer flex items-center gap-2 disabled:opacity-70"
                 >
                   {isSubmitting && <Loader2 size={14} className="animate-spin" />}
                   <span>{isSubmitting ? 'Saving...' : (editingId ? 'Save Client Changes' : 'Save Customer')}</span>

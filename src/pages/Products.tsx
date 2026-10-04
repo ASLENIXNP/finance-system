@@ -732,38 +732,44 @@ const Products = () => {
 
       {/* 5. ADD / EDIT PRODUCT MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
-            <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200/80">
+            <div className="px-7 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/70">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-white text-slate-900 border border-slate-200/90 shadow-xs flex items-center justify-center shrink-0">
                   <Package size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
-                    {editingId ? 'Edit Offering' : 'Add New Offering'}
-                  </h3>
-                  <p className="text-xs text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                      {editingId ? 'Edit Offering' : 'Add New Offering'}
+                    </h3>
+                    <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                      {editingId ? 'UPDATE' : 'NEW'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {editingId ? `Updating record #${editingId}` : 'Add a billable service or sellable product to your inventory'}
                   </p>
                 </div>
               </div>
               <button 
                 onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-200/60 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm">
+            <form onSubmit={handleSubmit} className="p-7 space-y-5 text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Layers size={13} className="text-slate-400" />
                     Offering Type <span className="text-rose-500">*</span>
                   </label>
                   <select 
-                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium cursor-pointer"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-semibold text-slate-900 transition-all cursor-pointer"
                     value={formData.type}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
                   >
@@ -772,14 +778,15 @@ const Products = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Tag size={13} className="text-slate-400" />
                     Item Name <span className="text-rose-500">*</span>
                   </label>
                   <input 
                     type="text" 
                     required
                     placeholder="e.g. Custom Web Application Development"
-                    className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-medium"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-semibold text-slate-900 placeholder:text-slate-400 transition-all"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                   />
@@ -787,13 +794,14 @@ const Products = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Box size={13} className="text-slate-400" />
                   Item Description
                 </label>
                 <textarea 
                   rows={2}
                   placeholder="Detailed description of features, deliverables, or specifications..."
-                  className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm resize-none font-medium"
+                  className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm text-slate-900 placeholder:text-slate-400 resize-none transition-all leading-relaxed"
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                 />
@@ -801,11 +809,11 @@ const Products = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                     Default Unit Rate (रु. NPR) <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
                       रु.
                     </span>
                     <input 
@@ -814,14 +822,15 @@ const Products = () => {
                       min="0"
                       step="any"
                       placeholder="e.g. 50000"
-                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-semibold font-mono"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-bold font-mono text-slate-900 placeholder:text-slate-400 transition-all"
                       value={formData.default_rate}
                       onChange={(e) => setFormData({...formData, default_rate: parseFloat(e.target.value) || 0})}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Percent size={13} className="text-slate-400" />
                     Standard Tax Rate (% VAT)
                   </label>
                   <div className="relative">
@@ -831,29 +840,29 @@ const Products = () => {
                       min="0"
                       max="100"
                       placeholder="13"
-                      className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm font-semibold font-mono"
+                      className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-bold font-mono text-slate-900 placeholder:text-slate-400 transition-all"
                       value={formData.tax_rate}
                       onChange={(e) => setFormData({...formData, tax_rate: parseFloat(e.target.value) || 0})}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
                       %
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white">
+              <div className="pt-5 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white">
                 <button 
                   type="button"
                   onClick={() => { setIsModalOpen(false); resetForm(); }}
-                  className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-semibold text-xs transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-accent text-white rounded-xl font-bold text-xs hover:bg-accent-hover transition-all shadow-md shadow-accent/20 cursor-pointer flex items-center gap-2 disabled:opacity-70"
+                  className="px-7 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs transition-all shadow-xs active:scale-98 cursor-pointer flex items-center gap-2 disabled:opacity-70"
                 >
                   {isSubmitting && <Loader2 size={14} className="animate-spin" />}
                   <span>{isSubmitting ? 'Saving...' : (editingId ? 'Save Offering Changes' : 'Save Offering')}</span>

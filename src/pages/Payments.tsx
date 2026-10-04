@@ -570,29 +570,39 @@ const Payments = () => {
 
       {/* Record / Edit Payment Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">
-                  {editingId ? 'Edit Payment Receipt' : 'Record Received Payment'}
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {editingId ? 'Modify payment receipt details' : 'Log a settled or pending payment against an invoice'}
-                </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200/80">
+            <div className="flex justify-between items-center px-7 py-5 border-b border-slate-100 bg-slate-50/70">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-white text-slate-900 border border-slate-200/90 shadow-xs flex items-center justify-center shrink-0">
+                  <CreditCard size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                      {editingId ? 'Edit Payment Receipt' : 'Record Received Payment'}
+                    </h2>
+                    <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                      {editingId ? 'UPDATE' : 'NEW'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {editingId ? 'Modify payment receipt details' : 'Log a settled or pending payment against an invoice'}
+                  </p>
+                </div>
               </div>
               <button 
                 onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-7 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Payment Date (BS)</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Payment Date (BS)</label>
                   <NepaliDatePicker 
                     value={formData.date}
                     onChange={(bsDate) => setFormData({ ...formData, date: bsDate })}
@@ -600,38 +610,43 @@ const Payments = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Amount (रु. NPR)</label>
-                  <input 
-                    type="number" 
-                    required
-                    min="1"
-                    step="any"
-                    placeholder="e.g. 25000"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-white transition-all font-semibold"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                  />
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Amount (रु. NPR)</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                      रु.
+                    </span>
+                    <input 
+                      type="number" 
+                      required
+                      min="1"
+                      step="any"
+                      placeholder="e.g. 25000"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-bold font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all"
+                      value={formData.amount}
+                      onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Customer Name</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Customer Name</label>
                   <input 
                     type="text" 
                     required
                     placeholder="e.g. Tech Innovations Pvt. Ltd."
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-white transition-all"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all"
                     value={formData.to}
                     onChange={(e) => setFormData({...formData, to: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Invoice Number</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Invoice Number</label>
                   <input 
                     type="text" 
                     placeholder="e.g. ASL-2083-0012"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-white transition-all font-mono"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-bold font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all"
                     value={formData.invoice}
                     onChange={(e) => setFormData({...formData, invoice: e.target.value})}
                   />
@@ -640,10 +655,10 @@ const Payments = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Payment Method</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Payment Method</label>
                   <select
                     required
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-white transition-all cursor-pointer"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all cursor-pointer"
                     value={formData.method}
                     onChange={(e) => setFormData({...formData, method: e.target.value})}
                   >
@@ -656,11 +671,11 @@ const Payments = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Transaction Reference</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Transaction Reference</label>
                   <input 
                     type="text" 
                     placeholder="e.g. NABIL987654 or CHQ-002"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-white transition-all font-mono uppercase"
+                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-bold font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all uppercase"
                     value={formData.ref}
                     onChange={(e) => setFormData({...formData, ref: e.target.value})}
                   />
@@ -668,10 +683,10 @@ const Payments = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Verification Status</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Verification Status</label>
                 <select
                   required
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-white transition-all cursor-pointer"
+                  className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all cursor-pointer"
                   value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
                 >
@@ -680,17 +695,17 @@ const Payments = () => {
                 </select>
               </div>
               
-              <div className="pt-5 mt-5 border-t border-slate-100 flex justify-end gap-3">
+              <div className="pt-5 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white">
                 <button 
                   type="button"
                   onClick={() => { setIsModalOpen(false); resetForm(); }}
-                  className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium text-sm transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="px-5 py-2.5 bg-accent text-white rounded-xl hover:bg-accent-hover font-semibold text-sm transition-all shadow-md shadow-accent/20 cursor-pointer"
+                  className="px-7 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs transition-all shadow-xs active:scale-98 cursor-pointer"
                 >
                   {editingId ? 'Save Changes' : 'Record Payment'}
                 </button>
