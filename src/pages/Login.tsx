@@ -103,18 +103,6 @@ const Login = () => {
               </button>
             </div>
 
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  localStorage.setItem('demo_user', 'accountant@aslenix.com');
-                  navigate('/');
-                }}
-                className="w-full py-2.5 px-4 border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Direct Sign-In as Accountant</span>
-              </button>
-            </div>
           </form>
 
           <div className="mt-6 pt-6 border-t border-slate-100">
