@@ -150,7 +150,7 @@ const Layout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden print:h-auto print:block print:overflow-visible print:w-full">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#f1f0ee] print:h-auto print:block print:overflow-visible print:w-full">
         {/* Top Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-0 print:hidden">
           <h2 className="text-xl font-semibold text-primary">Overview</h2>
@@ -167,7 +167,7 @@ const Layout = () => {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar print:p-0 print:overflow-visible print:h-auto print:block print:w-full">
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#f1f0ee] print:p-0 print:overflow-visible print:h-auto print:block print:w-full">
           <div className="max-w-7xl mx-auto pb-12 print:max-w-none print:m-0 print:p-0 print:w-full print:pb-0">
             <Outlet />
           </div>

@@ -7,13 +7,14 @@
   --color-accent-hover: #2563eb;
   
   --color-sidebar: #ffffff;
-  --color-background: #f8fafc;
+  --color-background: #f1f0ee;
   --color-card: #ffffff;
 }
 
 @layer base {
-  body {
+  html, body {
     @apply bg-background text-primary antialiased;
+    background-color: #f1f0ee;
   }
 }
 
