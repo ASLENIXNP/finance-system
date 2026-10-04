@@ -353,57 +353,67 @@ const Dashboard = () => {
     return pendingInc + pendingPay;
   }, [filteredIncome, filteredPayments]);
 
-  // Chart 1: Monthly Income vs Expenditure breakdown across Nepali months
+  // Chart 1: Dynamic monthly income vs expenditure based on selected BS date range
   const monthlyChartData = useMemo(() => {
-    const nepaliMonthsList = NEPALI_MONTHS;
-    const currentYear = currentBs.year;
+    const rangeStart = dateRange.start;
+    const rangeEnd = dateRange.end;
 
-    return nepaliMonthsList.map(mInfo => {
-      const monthPrefix = `${currentYear}-${String(mInfo.monthNumber).padStart(2, '0')}`;
-      
-      const incForMonth = incomeList
-        .filter(item => toBsDateString(item.date).startsWith(monthPrefix))
+    const monthKeys: string[] = [];
+    const [startYear, startMonth] = rangeStart.split('-').map(Number);
+    const [endYear, endMonth] = rangeEnd.split('-').map(Number);
+
+    let cursorYear = startYear;
+    let cursorMonth = startMonth;
+
+    while (cursorYear < endYear || (cursorYear === endYear && cursorMonth <= endMonth)) {
+      monthKeys.push(`${cursorYear}-${String(cursorMonth).padStart(2, '0')}`);
+      cursorMonth += 1;
+      if (cursorMonth > 12) {
+        cursorMonth = 1;
+        cursorYear += 1;
+      }
+    }
+
+    return monthKeys.map((monthKey) => {
+      const monthInfo = NEPALI_MONTHS.find((m) => m.monthNumber === Number(monthKey.split('-')[1])) || NEPALI_MONTHS[5];
+      const income = incomeList
+        .filter((item) => toBsDateString(item.date).startsWith(monthKey))
         .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
-      const expForMonth = expenseList
-        .filter(item => toBsDateString(item.date).startsWith(monthPrefix))
+      const expense = expenseList
+        .filter((item) => toBsDateString(item.date).startsWith(monthKey))
         .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-
-      // Provide baseline values for illustration if empty
-      const isCurrentOrPast = mInfo.index <= currentBs.month;
-      const baselineIncome = isCurrentOrPast ? [145000, 190000, 240000, 180000, 210000, 260000][mInfo.index] || 0 : 0;
-      const baselineExpense = isCurrentOrPast ? [85000, 92000, 120000, 78000, 95000, 110000][mInfo.index] || 0 : 0;
 
       return {
-        name: mInfo.name,
-        nepaliName: mInfo.nepaliName,
-        income: incForMonth > 0 ? incForMonth : baselineIncome,
-        expense: expForMonth > 0 ? expForMonth : baselineExpense,
+        name: monthInfo.name,
+        short: monthInfo.short,
+        income,
+        expense,
       };
     });
-  }, [incomeList, expenseList, currentBs]);
+  }, [dateRange, incomeList, expenseList]);
 
-  // Chart 2: Income by Category (dynamically aggregated)
+  // Chart 2: Income by category, aggregated from the selected date window or current records
   const categoryData = useMemo(() => {
     const categoriesMap: Record<string, number> = {};
     const dataset = filteredIncome.length > 0 ? filteredIncome : incomeList;
 
-    dataset.forEach(item => {
+    dataset.forEach((item) => {
       const cat = item.category || 'General';
       categoriesMap[cat] = (categoriesMap[cat] || 0) + (Number(item.amount) || 0);
     });
 
-    const result = Object.entries(categoriesMap).map(([name, value]) => ({ name, value }));
+    const result = Object.entries(categoriesMap)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
 
-    if (result.length === 0) {
-      return [
-        { name: 'Web Dev', value: 45000 },
-        { name: 'UI/UX Design', value: 15500 },
-        { name: 'Software Dev', value: 85000 },
-        { name: 'Consulting', value: 12000 },
-      ];
-    }
-    return result;
+    return result.length > 0 ? result : [
+      { name: 'Web Dev', value: 0 },
+      { name: 'UI/UX Design', value: 0 },
+      { name: 'Software Dev', value: 0 },
+      { name: 'Consulting', value: 0 },
+    ];
   }, [filteredIncome, incomeList]);
 
   // Recent invoices / transactions in range (fallback to recent overall if filtered empty)
@@ -587,20 +597,20 @@ const Dashboard = () => {
 
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart data={monthlyChartData} margin={{ top: 10, right: 12, left: 4, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.38} />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.04} />
                   </linearGradient>
                   <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.32} />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0.03} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e2e8f0" />
                 <XAxis 
-                  dataKey="name" 
+                  dataKey="short" 
                   axisLine={false} 
                   tickLine={false} 
                   tick={{fill: '#64748b', fontSize: 12}} 
@@ -610,15 +620,17 @@ const Dashboard = () => {
                   axisLine={false} 
                   tickLine={false} 
                   tick={{fill: '#64748b', fontSize: 12}} 
-                  dx={-10} 
-                  tickFormatter={(value) => `रु.${value >= 1000 ? `${(value/1000).toFixed(0)}k` : value}`} 
+                  dx={-6} 
+                  tickFormatter={(value) => (value >= 1000 ? `रु.${(value/1000).toFixed(0)}k` : `रु.${value}`)} 
                 />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: any) => [`रु. ${Number(value).toLocaleString('en-IN')}`, undefined]}
+                <Tooltip
+                  cursor={{ stroke: '#94a3b8', strokeDasharray: '4 4' }}
+                  contentStyle={{ borderRadius: '14px', border: '1px solid #e2e8f0', boxShadow: '0 14px 30px rgba(15, 23, 42, 0.12)' }}
+                  formatter={(value: any, name: string | number | undefined) => [`रु. ${Number(value).toLocaleString('en-IN')}`, String(name || 'Value')]}
+                  labelFormatter={(label) => `Month: ${String(label)}`}
                 />
-                <Area type="monotone" dataKey="income" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" name="Income" />
-                <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" name="Expense" />
+                <Area type="monotone" dataKey="income" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" name="Income" activeDot={{ r: 6, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }} />
+                <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" name="Expense" activeDot={{ r: 6, fill: '#ef4444', stroke: '#fff', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -631,8 +643,14 @@ const Dashboard = () => {
           </div>
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <BarChart data={categoryData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                <defs>
+                  <linearGradient id="barIncomeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#2563eb" stopOpacity={0.86} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e2e8f0" />
                 <XAxis 
                   dataKey="name" 
                   axisLine={false} 
@@ -640,13 +658,14 @@ const Dashboard = () => {
                   tick={{fill: '#64748b', fontSize: 11}} 
                   dy={10} 
                 />
-                <YAxis hide />
-                <Tooltip 
-                  cursor={{fill: '#f8fafc'}}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} hide={false} />
+                <Tooltip
+                  cursor={{ fill: '#eff6ff' }}
+                  contentStyle={{ borderRadius: '14px', border: '1px solid #e2e8f0', boxShadow: '0 14px 30px rgba(15, 23, 42, 0.12)' }}
                   formatter={(value: any) => [`रु. ${Number(value).toLocaleString('en-IN')}`, 'Revenue']}
+                  labelFormatter={(label) => `Category: ${String(label)}`}
                 />
-                <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} fill="url(#barIncomeGradient)" maxBarSize={58} />
               </BarChart>
             </ResponsiveContainer>
           </div>
