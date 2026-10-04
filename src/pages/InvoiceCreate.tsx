@@ -323,7 +323,7 @@ const InvoiceCreate = () => {
       {/* Printable Corporate A4 Letterhead Canvas */}
       <div
         id="printable-invoice"
-        className="max-w-[840px] mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden print:shadow-none print:border-none print:rounded-none print:m-0 print:w-full print:max-w-full relative"
+        className="max-w-[840px] mx-auto bg-[#f1f0ee] rounded-2xl shadow-xl border border-slate-300/80 overflow-hidden print:shadow-none print:border-none print:rounded-none print:m-0 print:w-full print:max-w-full relative"
       >
         {/* Subtle Official Watermark Layer (Zero In-Flow Height) */}
         <div className="invoice-watermark-layer absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">
@@ -436,7 +436,7 @@ const InvoiceCreate = () => {
             {/* 3. BILLED TO & PAYMENT STATUS CARDS */}
             <div className="print-billing grid grid-cols-1 md:grid-cols-3 gap-5 mb-5 print:gap-3 print:mb-2">
               {/* Billed To (2 Cols) */}
-              <div className="md:col-span-2 space-y-1.5 p-3.5 rounded-xl border border-slate-200/90 bg-slate-50/40">
+              <div className="md:col-span-2 space-y-1.5 p-3.5 rounded-xl border border-slate-300/80 bg-white/60">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
                   BILLED TO
                 </span>
@@ -490,7 +490,7 @@ const InvoiceCreate = () => {
               </div>
 
               {/* Payment Status (1 Col) */}
-              <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/90 flex flex-col justify-between print:p-2.5 print:rounded-lg">
+              <div className="bg-white/60 p-3.5 rounded-xl border border-slate-300/80 flex flex-col justify-between print:p-2.5 print:rounded-lg">
                 <div>
                   <div className="flex justify-between items-center mb-2.5 print:mb-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -524,7 +524,7 @@ const InvoiceCreate = () => {
             <div className="print-items mb-5 overflow-x-auto print:overflow-visible print:mb-2">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-y border-slate-200 bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-700 font-bold">
+                  <tr className="border-y border-slate-300/80 bg-slate-200/50 text-[11px] uppercase tracking-wider text-slate-700 font-bold">
                     <th className="py-2.5 px-3 text-center w-10">S.N.</th>
                     <th className="py-2.5 px-3">Item Details</th>
                     <th className="py-2.5 px-2 text-center w-14">Qty</th>
@@ -648,7 +648,7 @@ const InvoiceCreate = () => {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                     BANK DETAILS
                   </span>
-                  <div className="bg-slate-50/60 p-3 rounded-lg border border-slate-200/80 text-xs space-y-1 print:p-2 print:space-y-0.5">
+                  <div className="bg-white/60 p-3 rounded-lg border border-slate-300/80 text-xs space-y-1 print:p-2 print:space-y-0.5">
                     <div className="grid grid-cols-[100px_1fr]">
                       <span className="text-slate-500 font-normal">Bank Name:</span>
                       <span className="font-semibold text-slate-800">{companySettings.bank_name || 'Global IME Bank'}</span>
