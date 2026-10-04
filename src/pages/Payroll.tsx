@@ -1055,19 +1055,77 @@ const Payroll = () => {
     const finalCode = `ASL-${cleanSuffix || String(employees.length + 1).padStart(3, '0')}`;
 
     if (editingEmployeeId) {
+      const existingEmployee = employees.find(emp => emp.id === editingEmployeeId);
+      if (!existingEmployee) {
+        alert('The employee profile could not be found. Refresh the page and try again.');
+        return;
+      }
+      const updatedEmployee: Employee = {
+        ...existingEmployee,
+        ...(employeeFormData as Employee),
+        id: existingEmployee.id,
+        employee_code: finalCode,
+        fixed_salary: Number(employeeFormData.fixed_salary) || 0,
+        photo_url: employeeFormData.photo_url ?? existingEmployee.photo_url ?? ''
+      };
       const updated = employees.map(emp => {
         if (emp.id === editingEmployeeId) {
-          return {
-            ...emp,
-            ...(employeeFormData as Employee),
-            employee_code: finalCode,
-            fixed_salary: Number(employeeFormData.fixed_salary) || 0,
-            photo_url: employeeFormData.photo_url ?? emp.photo_url
-          };
+          return updatedEmployee;
         }
         return emp;
       });
       saveEmployees(updated);
+
+      const employeeNameKeys = new Set([
+        existingEmployee.name.trim().toLowerCase(),
+        updatedEmployee.name.trim().toLowerCase()
+      ]);
+      const employeeIds = new Set([
+        existingEmployee.id,
+        existingEmployee.employee_code,
+        updatedEmployee.id,
+        updatedEmployee.employee_code
+      ]);
+      const updatedPayroll = payrollRecords.map(record => {
+        const belongsToEmployee =
+          employeeIds.has(record.employee_id) ||
+          employeeIds.has(record.employee_code) ||
+          employeeNameKeys.has(record.employee_name.trim().toLowerCase());
+
+        if (!belongsToEmployee || record.payment_status === 'Paid') return record;
+
+        const calc = calculatePayrollValues(
+          updatedEmployee.fixed_salary,
+          record.total_working_days,
+          record.present_days,
+          record.half_days,
+          record.bonus_allowance,
+          record.deductions,
+          record.tds_rate > 0,
+          record.tds_rate || 1
+        );
+
+        return {
+          ...record,
+          employee_id: updatedEmployee.id,
+          employee_code: updatedEmployee.employee_code,
+          employee_name: updatedEmployee.name,
+          designation: updatedEmployee.designation,
+          department: updatedEmployee.department,
+          fixed_salary: calc.fixed_salary,
+          total_working_days: calc.total_working_days,
+          absent_days: calc.absent_days,
+          effective_days: calc.effective_days,
+          per_day_rate: calc.per_day_rate,
+          attendance_salary: calc.attendance_salary,
+          earned_salary: calc.earned_salary,
+          net_before_tds: calc.net_before_tds,
+          tds_rate: calc.tds_rate,
+          tds_amount: calc.tds_amount,
+          net_salary: calc.net_salary
+        };
+      });
+      savePayrollRecords(updatedPayroll);
     } else {
       const newEmp: Employee = {
         id: finalCode,
@@ -1314,9 +1372,20 @@ const Payroll = () => {
       const updated = payrollRecords.filter(r => r.id !== itemToDelete.id);
       savePayrollRecords(updated);
     } else {
+      const employeeToDelete = employees.find(emp => emp.id === itemToDelete.id);
       const updatedEmployees = employees.filter(e => e.id !== itemToDelete.id);
       saveEmployees(updatedEmployees);
-      const updatedPayroll = payrollRecords.filter(r => r.employee_id !== itemToDelete.id);
+      const employeeIds = new Set([
+        itemToDelete.id,
+        employeeToDelete?.id || '',
+        employeeToDelete?.employee_code || ''
+      ]);
+      const employeeName = employeeToDelete?.name.trim().toLowerCase();
+      const updatedPayroll = payrollRecords.filter(record =>
+        !employeeIds.has(record.employee_id) &&
+        !employeeIds.has(record.employee_code) &&
+        (!employeeName || record.employee_name.trim().toLowerCase() !== employeeName)
+      );
       savePayrollRecords(updatedPayroll);
     }
     setDeleteModalOpen(false);
@@ -1559,10 +1628,9 @@ const Payroll = () => {
                 onClick={() => window.location.reload()}
                 title="Refresh payroll data"
                 aria-label="Refresh payroll data"
-                className="group flex items-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-semibold rounded-xl border border-blue-500/30 transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98]"
+                className="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:shadow-md active:scale-[0.98] cursor-pointer"
               >
-                <RefreshCw size={14} className="transition-transform duration-500 group-hover:rotate-180" />
-                <span>Refresh</span>
+                <RefreshCw size={16} className="transition-transform duration-500 group-hover:rotate-180" />
               </button>
 
               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs shadow-sm">
