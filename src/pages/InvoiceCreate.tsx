@@ -335,9 +335,8 @@ const InvoiceCreate = () => {
         </div>
 
         {/* Content Container (Layered on top of watermark) */}
-        <div className="invoice-content-wrapper relative z-10 p-8 sm:p-12 print:p-0 text-slate-800 flex flex-col justify-between min-h-[1050px] print:min-h-0 print:h-full">
-          <div>
-            {/* 1. OFFICIAL ASLENIX LETTERHEAD HEADER (Exact match to sample & user layout) */}
+        <div className="invoice-content-wrapper relative z-10 p-8 sm:p-10 print:p-0 text-slate-800 flex flex-col">
+          {/* 1. OFFICIAL ASLENIX LETTERHEAD HEADER (Exact match to sample & user layout) */}
             <div className="print-header pb-1 mb-3">
               <div className="header-row relative flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 w-full">
                 {/* Top-Left: Brand Name & Registrations */}
@@ -737,11 +736,9 @@ const InvoiceCreate = () => {
                 <p className="text-[10px] text-slate-500">Received in good condition</p>
               </div>
             </div>
-          </div>
 
-          {/* 9. OFFICIAL ASLENIX LETTERHEAD FOOTER (Matches template exactly) */}
-          <div className="print-footer mt-auto pt-3 print:pt-1">
-            <div className="w-full h-[1px] bg-slate-900 mb-2"></div>
+            {/* 9. OFFICIAL ASLENIX LETTERHEAD FOOTER (Matches template exactly) */}
+            <div className="print-footer mt-6 pt-3 border-t border-slate-900 print:mt-4 print:pt-2">
             <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-800 font-medium px-1">
               <div className="flex items-center gap-1.5">
                 <Phone size={12} className="text-slate-950 shrink-0" />
