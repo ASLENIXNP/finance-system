@@ -341,29 +341,25 @@ const InvoiceCreate = () => {
               <div className="header-row relative grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-4 w-full">
                 {/* Left: Registration details */}
                 <div className="header-left flex flex-col text-left">
-                  <div className="text-[13px] font-bold text-slate-950 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold">Reg No:</span>
+                  <div className="grid min-w-[175px] grid-cols-[52px_minmax(0,1fr)] items-center gap-x-2 gap-y-1 text-[13px] font-bold text-slate-950">
+                    <span className="font-bold whitespace-nowrap">Reg No:</span>
                       <input
                         type="text"
                         value={registrationNo}
                         onChange={(e) => setRegistrationNo(e.target.value)}
-                        className="font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none w-36 hover:bg-slate-200/50 focus:bg-white rounded px-1 -mx-1"
+                        className="w-full min-w-0 whitespace-nowrap font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none hover:bg-slate-200/50 focus:bg-white rounded px-1"
                         placeholder="391840/82/83"
                         title="Registration Number (click to edit)"
                       />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold">PAN No:</span>
+                    <span className="font-bold whitespace-nowrap">PAN No:</span>
                       <input
                         type="text"
                         value={panNo}
                         onChange={(e) => setPanNo(e.target.value)}
-                        className="font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none w-36 hover:bg-slate-200/50 focus:bg-white rounded px-1 -mx-1 font-mono"
+                        className="w-full min-w-0 whitespace-nowrap font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none hover:bg-slate-200/50 focus:bg-white rounded px-1 font-mono"
                         placeholder="623611557"
                         title="PAN Number (click to edit)"
                       />
-                    </div>
                   </div>
                 </div>
 
