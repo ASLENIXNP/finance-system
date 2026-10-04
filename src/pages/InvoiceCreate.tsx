@@ -342,94 +342,92 @@ const InvoiceCreate = () => {
               <div className="header-row flex justify-between items-start gap-4 w-full">
                 {/* Top-Left: Brand Name & Registrations */}
                 <div className="header-left flex flex-col text-left">
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-slate-950 font-sans uppercase leading-none">
-                    ASLENIX
+                  <h1 className="text-3xl sm:text-4xl font-black tracking-[0.28em] text-slate-950 font-sans uppercase leading-none">
+                    A S L E N I X
                   </h1>
-                  <p className="text-[10px] sm:text-xs font-bold tracking-[0.32em] text-slate-900 uppercase mt-1 leading-none">
-                    TECH & SOLUTION
+                  <p className="text-[11px] sm:text-xs font-black tracking-[0.36em] text-slate-950 uppercase mt-2 leading-none">
+                    T E C H & S O L U T I O N
                   </p>
                   
-                  <div className="mt-3 text-xs font-semibold text-slate-800 space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-slate-950">Reg No:</span>
+                  <div className="mt-5 text-[13px] font-bold text-slate-950 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold">Reg No:</span>
                       <input
                         type="text"
                         value={registrationNo}
                         onChange={(e) => setRegistrationNo(e.target.value)}
-                        className="font-semibold text-slate-800 bg-transparent border-none p-0 focus:ring-0 outline-none w-36 hover:bg-slate-50 focus:bg-white rounded px-1 -mx-1"
+                        className="font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none w-36 hover:bg-slate-200/50 focus:bg-white rounded px-1 -mx-1"
                         placeholder="391840/82/83"
                         title="Registration Number (click to edit)"
                       />
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-slate-950">Ref No:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold">PAN No:</span>
                       <input
                         type="text"
-                        value={invoiceNumber}
-                        onChange={(e) => setInvoiceNumber(e.target.value)}
-                        className="font-semibold text-slate-800 bg-transparent border-none p-0 focus:ring-0 outline-none w-44 font-mono hover:bg-slate-50 focus:bg-white rounded px-1 -mx-1"
-                        placeholder="ASL-2026-167"
-                        title="Reference / Invoice Number (click to edit)"
+                        value={panNo}
+                        onChange={(e) => setPanNo(e.target.value)}
+                        className="font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none w-36 hover:bg-slate-200/50 focus:bg-white rounded px-1 -mx-1 font-mono"
+                        placeholder="623611557"
+                        title="PAN Number (click to edit)"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Top-Right: PAN No, Stylized Logo & Customizable Date */}
-                <div className="header-right flex flex-col items-end text-right shrink-0">
-                  {/* PAN No top right */}
-                  <div className="text-xs font-bold text-slate-950 mb-0.5 flex items-center justify-end gap-1">
-                    <span>PAN No:</span>
-                    <input
-                      type="text"
-                      value={panNo}
-                      onChange={(e) => setPanNo(e.target.value)}
-                      className="font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none font-mono text-right w-24 hover:bg-slate-50 focus:bg-white rounded px-1"
-                      placeholder="623611557"
-                      title="PAN Number (click to edit)"
-                    />
-                  </div>
-
-                  {/* Stylized Logo */}
-                  <div className="my-0.5">
-                    <img
-                      src={companySettings.logo_url || '/logo.png'}
-                      alt="ASLENIX Logo"
-                      className="h-14 sm:h-16 w-auto object-contain print:h-12"
-                    />
-                  </div>
-
-                  {/* Customizable DATE: 2083-06-12 */}
-                  <div className="mt-1 flex items-center justify-end gap-1.5 text-xs font-bold text-slate-950">
-                    <span className="tracking-wider">DATE:</span>
-                    <input
-                      type="text"
-                      value={invoiceDate}
-                      onChange={(e) => setInvoiceDate(e.target.value)}
-                      className="font-bold text-slate-950 bg-transparent border-b border-transparent hover:border-slate-400 focus:border-slate-950 p-0 focus:ring-0 outline-none text-right font-mono w-28 hover:bg-slate-50 focus:bg-white rounded px-1 transition-all"
-                      placeholder="2083-06-12"
-                      title="Customizable Date (click to edit directly or use date picker above)"
-                    />
-                  </div>
+                {/* Top-Right: Clean Official Aslenix Logo */}
+                <div className="header-right flex flex-col items-center justify-center shrink-0 pr-1">
+                  <img
+                    src={companySettings.logo_url || '/logo.png'}
+                    alt="ASLENIX Logo"
+                    className="h-20 sm:h-24 w-auto object-contain print:h-20 drop-shadow-xs"
+                  />
                 </div>
               </div>
 
               {/* Solid Horizontal Dividing Line matching template */}
-              <div className="w-full h-[1.5px] bg-slate-900 mt-2 mb-3"></div>
+              <div className="w-full h-[2px] bg-slate-900 mt-4 mb-3"></div>
             </div>
 
-            {/* 2. TAX INVOICE HEADER BAR */}
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2.5">
-                <span className="px-3 py-0.5 bg-slate-950 text-white text-[11px] font-black tracking-widest uppercase rounded shadow-xs">
+            {/* 2. TAX INVOICE & INVOICE METADATA BAR */}
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-4 pt-0.5">
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 bg-slate-950 text-white text-[11px] font-black tracking-widest uppercase rounded shadow-xs">
                   TAX INVOICE
                 </span>
-                <span className="text-xs text-slate-500 font-medium">
-                  Payment Due: <span className="font-semibold text-slate-800">{dueDate}</span>
-                </span>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-950">
+                  <span className="text-slate-500 font-semibold uppercase text-[11px]">Ref No:</span>
+                  <input
+                    type="text"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                    className="font-semibold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none w-36 font-mono hover:bg-slate-200/50 focus:bg-white rounded px-1 -mx-1"
+                    placeholder="ASL-2026-167"
+                    title="Invoice / Reference Number (click to edit)"
+                  />
+                </div>
               </div>
-              <div className="text-right text-xs text-slate-500">
-                Fiscal Year: <span className="font-bold text-slate-900 font-mono">{companySettings.fiscal_year || '2082/83'}</span>
+
+              <div className="flex items-center gap-3.5 text-xs font-medium">
+                <div className="flex items-center gap-1.5 text-slate-950 font-bold">
+                  <span className="text-slate-500 font-semibold uppercase text-[11px]">DATE:</span>
+                  <input
+                    type="text"
+                    value={invoiceDate}
+                    onChange={(e) => setInvoiceDate(e.target.value)}
+                    className="font-bold text-slate-950 bg-transparent border-b border-transparent hover:border-slate-400 focus:border-slate-950 p-0 focus:ring-0 outline-none text-right font-mono w-24 hover:bg-slate-200/50 focus:bg-white rounded px-1 transition-all"
+                    placeholder="2083-06-12"
+                    title="Invoice Date (BS)"
+                  />
+                </div>
+                <span className="text-slate-300">|</span>
+                <span className="text-slate-600">
+                  Payment Due: <span className="font-semibold text-slate-900">{dueDate}</span>
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="text-slate-500">
+                  Fiscal Year: <span className="font-bold text-slate-900 font-mono">{companySettings.fiscal_year || '2082/83'}</span>
+                </span>
               </div>
             </div>
 
