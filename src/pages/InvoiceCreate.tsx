@@ -337,9 +337,9 @@ const InvoiceCreate = () => {
         {/* Content Container (Layered on top of watermark) */}
         <div className="invoice-content-wrapper relative z-10 p-8 sm:p-12 print:p-0 text-slate-800 flex flex-col justify-between min-h-[1050px] print:min-h-0 print:h-full">
           <div>
-            {/* 1. OFFICIAL ASLENIX LETTERHEAD HEADER (Exact match to sample) */}
+            {/* 1. OFFICIAL ASLENIX LETTERHEAD HEADER (Exact match to sample & user layout) */}
             <div className="print-header pb-1 mb-3">
-              <div className="header-row flex justify-between items-start gap-4 w-full">
+              <div className="header-row relative flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 w-full">
                 {/* Top-Left: Brand Name & Registrations */}
                 <div className="header-left flex flex-col text-left">
                   <h1 className="text-3xl sm:text-4xl font-black tracking-[0.28em] text-slate-950 font-sans uppercase leading-none">
@@ -375,13 +375,31 @@ const InvoiceCreate = () => {
                   </div>
                 </div>
 
-                {/* Top-Right: Clean Official Aslenix Logo */}
-                <div className="header-right flex flex-col items-center justify-center shrink-0 pr-1">
+                {/* Center: TAX INVOICE Badge (Positioned in Center above line per diagram) */}
+                <div className="header-center sm:absolute sm:left-1/2 sm:-translate-x-1/2 sm:bottom-1 print:absolute print:left-1/2 print:-translate-x-1/2 print:bottom-1 self-center sm:self-auto py-1">
+                  <span className="px-4 py-1.5 bg-slate-950 text-white text-xs sm:text-sm font-black tracking-[0.25em] uppercase rounded shadow-xs text-center inline-block">
+                    TAX INVOICE
+                  </span>
+                </div>
+
+                {/* Top-Right: Clean Official Aslenix Logo & Ref No (Box 1 per diagram) */}
+                <div className="header-right flex flex-col items-start sm:items-end justify-center shrink-0 pr-1">
                   <img
                     src={companySettings.logo_url || '/logo.png'}
                     alt="ASLENIX Logo"
-                    className="h-20 sm:h-24 w-auto object-contain print:h-20 drop-shadow-xs"
+                    className="h-16 sm:h-20 w-auto object-contain print:h-16 drop-shadow-xs"
                   />
+                  <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-950">
+                    <span className="text-slate-500 font-semibold uppercase text-[11px]">Ref No:</span>
+                    <input
+                      type="text"
+                      value={invoiceNumber}
+                      onChange={(e) => setInvoiceNumber(e.target.value)}
+                      className="font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none w-32 font-mono sm:text-right hover:bg-slate-200/50 focus:bg-white rounded px-1"
+                      placeholder="ASL-2026-167"
+                      title="Invoice / Reference Number (click to edit)"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -389,45 +407,28 @@ const InvoiceCreate = () => {
               <div className="w-full h-[2px] bg-slate-900 mt-4 mb-3"></div>
             </div>
 
-            {/* 2. TAX INVOICE & INVOICE METADATA BAR */}
-            <div className="flex flex-wrap justify-between items-center gap-3 mb-4 pt-0.5">
-              <div className="flex items-center gap-3">
-                <span className="px-3 py-1 bg-slate-950 text-white text-[11px] font-black tracking-widest uppercase rounded shadow-xs">
-                  TAX INVOICE
-                </span>
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-950">
-                  <span className="text-slate-500 font-semibold uppercase text-[11px]">Ref No:</span>
-                  <input
-                    type="text"
-                    value={invoiceNumber}
-                    onChange={(e) => setInvoiceNumber(e.target.value)}
-                    className="font-semibold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none w-36 font-mono hover:bg-slate-200/50 focus:bg-white rounded px-1 -mx-1"
-                    placeholder="ASL-2026-167"
-                    title="Invoice / Reference Number (click to edit)"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3.5 text-xs font-medium">
-                <div className="flex items-center gap-1.5 text-slate-950 font-bold">
-                  <span className="text-slate-500 font-semibold uppercase text-[11px]">DATE:</span>
-                  <input
-                    type="text"
-                    value={invoiceDate}
-                    onChange={(e) => setInvoiceDate(e.target.value)}
-                    className="font-bold text-slate-950 bg-transparent border-b border-transparent hover:border-slate-400 focus:border-slate-950 p-0 focus:ring-0 outline-none text-right font-mono w-24 hover:bg-slate-200/50 focus:bg-white rounded px-1 transition-all"
-                    placeholder="2083-06-12"
-                    title="Invoice Date (BS)"
-                  />
-                </div>
-                <span className="text-slate-300">|</span>
-                <span className="text-slate-600">
+            {/* 2. SUB-HEADER METADATA BAR (Payment Due / Fiscal Year on Left, DATE on Right per diagram Box 2) */}
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-4 pt-0.5 text-xs font-medium">
+              <div className="flex items-center gap-3 text-slate-600">
+                <span>
                   Payment Due: <span className="font-semibold text-slate-900">{dueDate}</span>
                 </span>
                 <span className="text-slate-300">|</span>
                 <span className="text-slate-500">
                   Fiscal Year: <span className="font-bold text-slate-900 font-mono">{companySettings.fiscal_year || '2082/83'}</span>
                 </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 text-slate-950 font-bold ml-auto">
+                <span className="text-slate-500 font-semibold uppercase text-[11px]">DATE:</span>
+                <input
+                  type="text"
+                  value={invoiceDate}
+                  onChange={(e) => setInvoiceDate(e.target.value)}
+                  className="font-bold text-slate-950 bg-transparent border-b border-transparent hover:border-slate-400 focus:border-slate-950 p-0 focus:ring-0 outline-none text-right font-mono w-28 hover:bg-slate-200/50 focus:bg-white rounded px-1 transition-all"
+                  placeholder="2083-06-12"
+                  title="Invoice Date (BS)"
+                />
               </div>
             </div>
 
