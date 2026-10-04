@@ -1937,10 +1937,11 @@ const Payroll = () => {
                             {/* Payslip */}
                             <button
                               onClick={() => handleOpenPayslip(record)}
-                              title="View & Print Official Payslip"
-                              className="p-1.5 text-slate-500 hover:text-accent hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                              title={`View & print salary slip for ${record.employee_name}`}
+                              aria-label={`View and print salary slip for ${record.employee_name}`}
+                              className="p-1.5 text-slate-500 hover:text-accent hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                             >
-                              <FileText size={15} />
+                              <Printer size={15} />
                             </button>
 
                             {/* Pay Salary button (if not already paid) */}
@@ -3672,7 +3673,7 @@ const Payroll = () => {
                   className="btn-gradient flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
                 >
                   <Printer size={15} className="text-black" />
-                  <span>Print Payslip</span>
+                  <span>Print Salary Slip</span>
                 </button>
                 <button
                   onClick={() => setIsPayslipModalOpen(false)}
@@ -3710,7 +3711,7 @@ const Payroll = () => {
                       </div>
                       <div className="text-right">
                         <span className="inline-block px-3 py-1 bg-slate-100 text-slate-800 font-extrabold text-xs uppercase tracking-wider rounded border border-slate-300">
-                          Official Payslip
+                          Official Salary Slip
                         </span>
                         <p className="text-xs font-mono text-slate-500 mt-2">Ref: {activePayslip.payroll_ref}</p>
                         <p className="text-xs font-semibold text-slate-800 mt-1">Pay Period: {activePayslip.month} {activePayslip.year} BS</p>
@@ -3825,7 +3826,7 @@ const Payroll = () => {
                     </div>
                     <div className="p-4 space-y-2.5">
                       <div className="flex justify-between">
-                        <span className="text-slate-600">Fixed Monthly Base:</span>
+                        <span className="text-slate-600">Basic Monthly Salary:</span>
                         <span className="font-semibold text-slate-800">{formatNPR(activePayslip.fixed_salary)}</span>
                       </div>
                       <div className="flex justify-between">
@@ -3854,7 +3855,7 @@ const Payroll = () => {
                     </div>
                     <div className="p-4 space-y-2.5">
                       <div className="flex justify-between text-slate-600">
-                        <span>Absent / Half-day Adjustment:</span>
+                        <span>Attendance Adjustment:</span>
                         <span className="text-red-600 font-mono">
                           -{formatNPR(activePayslip.per_day_rate * (activePayslip.total_working_days - activePayslip.effective_days))}
                         </span>
@@ -3869,7 +3870,11 @@ const Payroll = () => {
                       </div>
                       <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-red-700">
                         <span>Total Deductions & Tax:</span>
-                        <span>-{formatNPR(activePayslip.deductions + activePayslip.tds_amount)}</span>
+                        <span>-{formatNPR(
+                          activePayslip.per_day_rate * (activePayslip.total_working_days - activePayslip.effective_days) +
+                          activePayslip.deductions +
+                          activePayslip.tds_amount
+                        )}</span>
                       </div>
                     </div>
                   </div>
@@ -3879,7 +3884,7 @@ const Payroll = () => {
               {/* Net Payable Highlight Banner */}
               <div className="p-4 bg-slate-900 text-white rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3 mb-6">
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-slate-400 font-bold">Final Net Salary Payable</span>
+                  <span className="text-xs uppercase tracking-wider text-slate-300 font-bold">Net Salary Payable to {activePayslip.employee_name}</span>
                   <p className="text-xs text-slate-300 italic mt-0.5">
                     {numberToWordsNepali(activePayslip.net_salary)}
                   </p>
