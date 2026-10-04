@@ -311,9 +311,16 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-invoice .print-header .header-right {
     display: flex !important;
     flex-direction: column !important;
+    height: 100% !important;
+    justify-content: space-between !important;
     align-items: flex-end !important;
     align-self: start !important;
     text-align: right !important;
+  }
+
+  #printable-invoice .print-header .header-reference {
+    margin-top: auto !important;
+    margin-bottom: 1mm !important;
   }
 
   #printable-invoice .print-header .header-center {

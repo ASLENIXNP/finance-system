@@ -17,9 +17,53 @@ import {
 import { supabase } from '../lib/supabase';
 import { formatNepaliDate, getCurrentFiscalYear } from '../lib/nepaliDate';
 
+interface SidebarBranding {
+  logoUrl: string;
+  companyName: string;
+}
+
+const getSidebarBranding = (): SidebarBranding => {
+  try {
+    const saved = localStorage.getItem('aslenix_company_settings');
+    if (saved) {
+      const settings = JSON.parse(saved) as { logo_url?: string; company_name?: string };
+      return {
+        logoUrl: settings.logo_url || '/logo.png',
+        companyName: settings.company_name || 'ASLENIX TECH & SOLUTION',
+      };
+    }
+  } catch {
+    // Use the default brand if saved settings are unavailable or invalid.
+  }
+
+  return { logoUrl: '/logo.png', companyName: 'ASLENIX TECH & SOLUTION' };
+};
+
 const Layout = () => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [branding, setBranding] = useState<SidebarBranding>(getSidebarBranding);
+
+  useEffect(() => {
+    const updateBranding = (event: Event) => {
+      const detail = (event as CustomEvent<Partial<{ logo_url: string; company_name: string }>>).detail;
+      if (detail) {
+        setBranding({
+          logoUrl: detail.logo_url || '/logo.png',
+          companyName: detail.company_name || 'ASLENIX TECH & SOLUTION',
+        });
+      } else {
+        setBranding(getSidebarBranding());
+      }
+    };
+
+    window.addEventListener('company_settings_updated', updateBranding);
+    window.addEventListener('storage', updateBranding);
+    return () => {
+      window.removeEventListener('company_settings_updated', updateBranding);
+      window.removeEventListener('storage', updateBranding);
+    };
+  }, []);
 
   useEffect(() => {
     // Get current session
@@ -76,7 +120,22 @@ const Layout = () => {
     <div className="flex h-screen bg-background font-sans overflow-hidden print:h-auto print:block print:overflow-visible print:bg-white">
       {/* Sidebar */}
       <aside className="w-64 shrink-0 bg-white border-r border-slate-200/80 flex flex-col z-10 relative print:hidden">
-        
+        <div className="flex h-[76px] shrink-0 items-center gap-3 border-b border-slate-200/80 px-5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rose-100 bg-gradient-to-br from-rose-50 via-fuchsia-50 to-amber-50 p-1.5 shadow-sm">
+            <img src={branding.logoUrl} alt="Company logo" className="h-full w-full object-contain" />
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-black uppercase tracking-[0.16em] text-slate-900">
+              {branding.companyName.split(' ')[0]}
+            </span>
+            <span className="truncate text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              {branding.companyName.includes(' ')
+                ? branding.companyName.substring(branding.companyName.indexOf(' ') + 1)
+                : 'TECH & SOLUTION'}
+            </span>
+          </div>
+        </div>
+
         <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-4 px-3 space-y-1.5">
           {navItems.map((item) => (
             <NavLink
@@ -85,8 +144,8 @@ const Layout = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors duration-150 text-[15px] font-medium ${
                   isActive 
-                    ? 'bg-slate-900 text-white shadow-sm font-semibold' 
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                    ? 'bg-gradient-to-r from-fuchsia-600 to-rose-500 text-white shadow-sm font-semibold' 
+                    : 'text-slate-600 hover:bg-gradient-to-r hover:from-rose-50 hover:to-amber-50 hover:text-slate-950'
                 }`
               }
             >

@@ -390,13 +390,13 @@ const InvoiceCreate = () => {
                 </div>
 
                 {/* Right: Official logo and reference number */}
-                <div className="header-right flex flex-col items-start sm:items-end justify-center shrink-0 pr-1">
+                <div className="header-right flex flex-col items-start sm:h-full sm:items-end sm:justify-between shrink-0 pr-1">
                   <img
                     src={companySettings.logo_url || '/logo.png'}
                     alt="ASLENIX Logo"
                     className="h-16 sm:h-20 w-auto object-contain print:h-16 drop-shadow-xs"
                   />
-                  <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-950">
+                  <div className="header-reference mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-950 sm:mt-auto sm:mb-1">
                     <span className="text-slate-500 font-semibold uppercase text-[11px]">Ref No:</span>
                     <input
                       type="text"
