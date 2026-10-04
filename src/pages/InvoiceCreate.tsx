@@ -381,7 +381,7 @@ const InvoiceCreate = () => {
 
                 {/* Center: Company name */}
                 <div className="header-center flex flex-col items-center justify-center text-center py-1">
-                  <h1 className="text-3xl sm:text-4xl font-black tracking-[0.28em] text-slate-950 font-sans uppercase leading-none">
+                  <h1 className="whitespace-nowrap text-3xl sm:text-4xl font-black tracking-[0.28em] text-slate-950 font-sans uppercase leading-none">
                     A S L E N I X
                   </h1>
                   <p className="text-[11px] sm:text-xs font-black tracking-[0.36em] text-slate-950 uppercase mt-2 leading-none">

@@ -349,13 +349,14 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   }
 
   #printable-invoice .print-header .header-center h1 {
-    font-size: 24px !important;
-    letter-spacing: 0.2em !important;
+    font-size: 34px !important;
+    letter-spacing: 0.24em !important;
   }
 
   #printable-invoice .print-header .header-center p {
-    font-size: 8px !important;
-    letter-spacing: 0.28em !important;
+    font-size: 11px !important;
+    letter-spacing: 0.32em !important;
+    margin-top: 2.5mm !important;
   }
 
   #printable-invoice .print-header .invoice-title {
@@ -369,7 +370,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   }
 
   #printable-invoice .print-header img {
-    height: 58px !important;
+    height: 78px !important;
     width: auto !important;
     object-fit: contain !important;
   }
