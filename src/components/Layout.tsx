@@ -20,52 +20,6 @@ import { formatNepaliDate, getCurrentFiscalYear } from '../lib/nepaliDate';
 const Layout = () => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [companyLogo, setCompanyLogo] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem('aslenix_company_settings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.logo_url || '/logo.png';
-      }
-    } catch (e) {}
-    return '/logo.png';
-  });
-
-  const [companyName, setCompanyName] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem('aslenix_company_settings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.company_name || 'ASLENIX TECH & SOLUTION';
-      }
-    } catch (e) {}
-    return 'ASLENIX TECH & SOLUTION';
-  });
-
-  useEffect(() => {
-    const handleSettingsUpdate = (e?: any) => {
-      try {
-        const detail = e?.detail;
-        if (detail) {
-          setCompanyLogo(detail.logo_url || '/logo.png');
-          setCompanyName(detail.company_name || 'ASLENIX TECH & SOLUTION');
-          return;
-        }
-        const saved = localStorage.getItem('aslenix_company_settings');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setCompanyLogo(parsed.logo_url || '/logo.png');
-          setCompanyName(parsed.company_name || 'ASLENIX TECH & SOLUTION');
-        }
-      } catch (err) {}
-    };
-    window.addEventListener('company_settings_updated', handleSettingsUpdate);
-    window.addEventListener('storage', handleSettingsUpdate);
-    return () => {
-      window.removeEventListener('company_settings_updated', handleSettingsUpdate);
-      window.removeEventListener('storage', handleSettingsUpdate);
-    };
-  }, []);
 
   useEffect(() => {
     // Get current session
@@ -121,50 +75,30 @@ const Layout = () => {
   return (
     <div className="flex h-screen bg-background font-sans overflow-hidden print:h-auto print:block print:overflow-visible print:bg-white">
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar border-r border-slate-200 flex flex-col shadow-xs z-10 relative print:hidden">
-        {/* Sidebar Header Brand with Logo + ASLENIX TECH & SOLUTION */}
-        <div className="p-4 border-b border-slate-200/80 bg-white/70">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-center p-1.5 shrink-0">
-              <img 
-                src={companyLogo || '/logo.png'} 
-                alt="Logo" 
-                className="w-full h-full object-contain" 
-              />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-black text-sm tracking-wider text-slate-900 font-sans uppercase truncate leading-tight">
-                {companyName.includes(' ') ? companyName.split(' ')[0] : companyName}
-              </span>
-              <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase truncate">
-                {companyName.includes(' ') ? companyName.substring(companyName.indexOf(' ') + 1) : 'TECH & SOLUTION'}
-              </span>
-            </div>
-          </div>
-        </div>
+      <aside className="w-64 shrink-0 bg-white border-r border-slate-200/80 flex flex-col z-10 relative print:hidden">
         
-        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+        <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-4 px-3 space-y-1.5">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${
+                `flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors duration-150 text-[15px] font-medium ${
                   isActive 
-                    ? 'bg-slate-900 text-white shadow-xs font-semibold' 
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-slate-900 text-white shadow-sm font-semibold' 
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
                 }`
               }
             >
-              {item.icon}
+              <span className="flex w-5 shrink-0 items-center justify-center [&>svg]:stroke-[2]">{item.icon}</span>
               <span className="truncate">{item.name}</span>
             </NavLink>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-200/80 bg-white/50">
-          <div className="flex items-center gap-3 mb-3.5 px-1">
-            <div className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+        <div className="p-3 pb-4 border-t border-slate-200/80 bg-white">
+          <div className="flex items-center gap-3 mb-3 px-1.5 py-1">
+            <div className="w-11 h-11 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
               {userEmail ? userEmail[0].toUpperCase() : 'U'}
             </div>
             <div className="overflow-hidden min-w-0">
@@ -174,7 +108,7 @@ const Layout = () => {
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 justify-center px-3 py-2 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2 justify-center px-3 py-2.5 text-sm font-medium text-rose-600 bg-rose-50/80 border border-rose-100 rounded-2xl hover:bg-rose-100 transition-colors cursor-pointer"
           >
             <LogOut size={14} />
             Logout

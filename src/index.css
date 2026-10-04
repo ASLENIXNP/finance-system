@@ -278,6 +278,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
     align-items: flex-start !important;
+    min-height: 38mm !important;
     gap: 8px !important;
     width: 100% !important;
   }
@@ -287,7 +288,8 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     flex-direction: column !important;
     align-items: flex-start !important;
     justify-self: start !important;
-    align-self: start !important;
+    align-self: end !important;
+    margin-bottom: 1mm !important;
     text-align: left !important;
   }
 

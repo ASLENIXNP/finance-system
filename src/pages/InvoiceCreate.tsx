@@ -354,9 +354,9 @@ const InvoiceCreate = () => {
         <div className="invoice-content-wrapper relative z-10 p-8 sm:p-10 print:p-0 text-slate-800 flex flex-col">
           {/* 1. OFFICIAL ASLENIX LETTERHEAD HEADER (Exact match to sample & user layout) */}
             <div className="print-header pb-1 mb-3">
-              <div className="header-row relative grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-start gap-4 w-full">
+              <div className="header-row relative grid grid-cols-1 sm:min-h-[150px] sm:grid-cols-[1fr_auto_1fr] items-start gap-4 w-full">
                 {/* Left: Registration details */}
-                <div className="header-left flex flex-col text-left">
+                <div className="header-left flex flex-col text-left sm:self-end sm:mb-1">
                   <div className="registration-details grid min-w-[205px] grid-cols-[58px_1fr] items-center gap-x-2 gap-y-1 rounded-md border border-slate-300/80 bg-white/20 px-2 py-1.5 text-[13px] font-bold text-slate-950">
                     <span className="font-bold whitespace-nowrap">Reg No:</span>
                       <input
