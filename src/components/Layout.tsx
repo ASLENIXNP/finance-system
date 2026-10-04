@@ -44,6 +44,15 @@ const Layout = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [branding, setBranding] = useState<SidebarBranding>(getSidebarBranding);
 
+  const userDisplayName = userEmail
+    ? userEmail
+        .split('@')[0]
+        .split(/[._-]+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ')
+    : 'Aslenix Admin';
+
   useEffect(() => {
     const updateBranding = (event: Event) => {
       const detail = (event as CustomEvent<Partial<{ logo_url: string; company_name: string }>>).detail;
@@ -121,7 +130,7 @@ const Layout = () => {
       {/* Sidebar */}
       <aside className="w-64 shrink-0 bg-white border-r border-slate-200/80 flex flex-col z-10 relative print:hidden">
         <div className="flex h-[76px] shrink-0 items-center gap-3 border-b border-slate-200/80 px-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rose-100 bg-gradient-to-br from-rose-50 via-fuchsia-50 to-amber-50 p-1.5 shadow-sm">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-transparent p-0 shadow-none">
             <img src={branding.logoUrl} alt="Company logo" className="h-full w-full object-contain" />
           </div>
           <div className="flex min-w-0 flex-col">
@@ -158,10 +167,10 @@ const Layout = () => {
         <div className="p-3 pb-4 border-t border-slate-200/80 bg-white">
           <div className="flex items-center gap-3 mb-3 px-1.5 py-1">
             <div className="w-11 h-11 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-              {userEmail ? userEmail[0].toUpperCase() : 'U'}
+              {userDisplayName.charAt(0).toUpperCase()}
             </div>
             <div className="overflow-hidden min-w-0">
-              <p className="text-xs font-bold text-slate-900 truncate">System User</p>
+              <p className="text-xs font-bold text-slate-900 truncate">{userDisplayName}</p>
               <p className="text-[11px] text-slate-500 truncate">{userEmail || 'Loading...'}</p>
             </div>
           </div>
