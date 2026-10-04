@@ -2903,49 +2903,49 @@ const Payroll = () => {
               </div>
 
               {/* Real-time Calculation Summary Card according to exact rules */}
-              <div className="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white p-5 rounded-2xl space-y-3 shadow-lg shadow-indigo-950/15 ring-1 ring-indigo-900/30">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="bg-gradient-to-br from-blue-50 via-white to-emerald-50 text-slate-800 p-4 rounded-2xl space-y-3 border border-blue-100 shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
                   <div>
-                    <span className="text-xs uppercase tracking-wider text-slate-400">Fixed Monthly Base</span>
-                    <p className="text-lg font-bold">{formatNPR(calculatedSalaryDetails.fixed_salary)}</p>
+                    <span className="text-xs uppercase tracking-wider text-slate-500">Fixed Monthly Base</span>
+                    <p className="text-lg font-bold text-slate-900">{formatNPR(calculatedSalaryDetails.fixed_salary)}</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs uppercase tracking-wider text-slate-400">
+                    <span className="text-xs uppercase tracking-wider text-slate-500">
                       Daily Salary Rate (Fixed ÷ {calculatedSalaryDetails.total_working_days})
                     </span>
-                    <p className="text-lg font-bold font-mono text-blue-300">{formatNPR(calculatedSalaryDetails.per_day_rate)}</p>
+                    <p className="text-lg font-bold font-mono text-blue-700">{formatNPR(calculatedSalaryDetails.per_day_rate)}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
                   <div>
-                    <span className="text-slate-400">Effective Days:</span>
-                    <p className="text-sm font-bold text-emerald-400">{calculatedSalaryDetails.effective_days} Days</p>
+                    <span className="text-slate-500">Effective Days:</span>
+                    <p className="text-sm font-bold text-emerald-700">{calculatedSalaryDetails.effective_days} Days</p>
                     <span className="text-[10px] text-slate-500">{calculatedSalaryDetails.present_days} Pres + {calculatedSalaryDetails.half_days} Half</span>
                   </div>
                   <div>
-                    <span className="text-slate-400">Gross Attendance:</span>
-                    <p className="text-sm font-bold text-slate-200">{formatNPR(calculatedSalaryDetails.attendance_salary)}</p>
+                    <span className="text-slate-500">Gross Attendance:</span>
+                    <p className="text-sm font-bold text-slate-800">{formatNPR(calculatedSalaryDetails.attendance_salary)}</p>
                     <span className="text-[10px] text-slate-500">Daily × {calculatedSalaryDetails.effective_days}d</span>
                   </div>
                   <div>
-                    <span className="text-slate-400">Net Before TDS:</span>
-                    <p className="text-sm font-bold text-amber-300">{formatNPR(calculatedSalaryDetails.net_before_tds)}</p>
+                    <span className="text-slate-500">Net Before TDS:</span>
+                    <p className="text-sm font-bold text-amber-700">{formatNPR(calculatedSalaryDetails.net_before_tds)}</p>
                     <span className="text-[10px] text-slate-500">+{calculatedSalaryDetails.bonus_allowance} -{calculatedSalaryDetails.deductions}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400">1% TDS Deduction:</span>
-                    <p className="text-sm font-bold text-red-400">-{formatNPR(calculatedSalaryDetails.tds_amount)}</p>
+                    <span className="text-slate-500">1% TDS Deduction:</span>
+                    <p className="text-sm font-bold text-rose-600">-{formatNPR(calculatedSalaryDetails.tds_amount)}</p>
                     <span className="text-[10px] text-slate-500">1% of Net Before TDS</span>
                   </div>
                 </div>
 
-                <div className="border-t border-white/10 pt-3 flex items-center justify-between">
+                <div className="border-t border-slate-200/80 pt-3 flex items-center justify-between">
                   <div>
-                    <span className="text-sm font-semibold text-slate-300">Final Net Pay (After 1% TDS):</span>
-                    <span className="text-xs text-slate-400 block">Net Before TDS - 1% TDS</span>
+                    <span className="text-sm font-semibold text-slate-700">Final Net Pay (After 1% TDS):</span>
+                    <span className="text-xs text-slate-500 block">Net Before TDS - 1% TDS</span>
                   </div>
-                  <span className="text-2xl font-extrabold text-emerald-400 font-mono">
+                  <span className="text-2xl font-extrabold text-emerald-700 font-mono">
                     {formatNPR(calculatedSalaryDetails.net_salary)}
                   </span>
                 </div>
@@ -2965,25 +2965,25 @@ const Payroll = () => {
             </form>
 
             {/* Action Buttons Footer */}
-            <div className="px-7 py-4 bg-slate-50/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-between gap-3">
-              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium">
-                <CheckCircle2 size={16} className="text-emerald-600" />
+            <div className="px-5 py-2.5 bg-slate-50/90 border-t border-slate-100 flex items-center justify-between gap-2">
+              <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                <CheckCircle2 size={14} className="text-emerald-600" />
                 <span>Statutory 1% TDS & Working Day Calculation Verified</span>
               </div>
-              <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-2 ml-auto">
                 <button
                   type="button"
                   onClick={() => setIsSalaryModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 hover:border-slate-300 font-semibold text-sm transition-all duration-150 shadow-sm active:scale-[0.98] cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 hover:border-slate-300 font-semibold text-xs transition-all duration-150 shadow-sm active:scale-[0.98] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   onClick={handleSaveSalaryRecord}
-                  className="btn-gradient px-6 py-2.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
+                  className="btn-gradient px-5 py-2 rounded-xl font-bold text-xs active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  <Banknote size={16} className="text-black" />
+                  <Banknote size={14} className="text-black" />
                   <span>{editingPayrollId ? 'Update Salary Record' : 'Save & Calculate Salary'}</span>
                 </button>
               </div>
