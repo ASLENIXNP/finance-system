@@ -88,12 +88,8 @@ const Layout = () => {
       if (session?.user) {
         setUserEmail(session.user.email || null);
       } else {
-        const demo = localStorage.getItem('demo_user');
-        if (demo) {
-          setUserEmail(demo);
-        } else {
-          navigate('/login');
-        }
+        localStorage.removeItem('demo_user');
+        navigate('/login');
       }
     });
 
@@ -102,12 +98,8 @@ const Layout = () => {
       if (session?.user) {
         setUserEmail(session.user.email || null);
       } else {
-        const demo = localStorage.getItem('demo_user');
-        if (demo) {
-          setUserEmail(demo);
-        } else {
-          navigate('/login');
-        }
+        localStorage.removeItem('demo_user');
+        navigate('/login');
       }
     });
 
