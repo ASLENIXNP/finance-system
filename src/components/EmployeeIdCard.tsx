@@ -5,7 +5,6 @@ import {
   CreditCard, 
   Edit3, 
   Trash2, 
-  Sparkles, 
   Camera, 
   QrCode, 
   ChevronDown, 
@@ -23,7 +22,6 @@ interface EmployeeIdCardProps {
   onDelete?: (emp: Employee) => void;
   onViewBadge?: (emp: Employee) => void;
   onUploadPhoto?: (empId: string, file: File) => void;
-  onEnhancePhoto?: (empId: string, photoSrc: string) => void;
   onZoomPhoto?: (emp: Employee, photoSrc: string) => void;
   isPrintOnly?: boolean;
 }
@@ -36,7 +34,6 @@ export const EmployeeIdCard: React.FC<EmployeeIdCardProps> = ({
   onDelete,
   onViewBadge,
   onUploadPhoto,
-  onEnhancePhoto,
   onZoomPhoto,
   isPrintOnly = false,
 }) => {
@@ -152,16 +149,6 @@ export const EmployeeIdCard: React.FC<EmployeeIdCardProps> = ({
                     className="p-1 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors"
                   >
                     <ZoomIn size={11} />
-                  </button>
-                )}
-                {photoSrc && onEnhancePhoto && (
-                  <button
-                    type="button"
-                    onClick={() => onEnhancePhoto(employee.id, photoSrc)}
-                    title="Sharpen Clarity"
-                    className="p-1 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-colors"
-                  >
-                    <Sparkles size={11} />
                   </button>
                 )}
                 {onUploadPhoto && (

@@ -24,7 +24,6 @@ import {
   Phone,
   Landmark,
   ShieldCheck,
-  Sparkles,
   X,
   Briefcase,
   Hash,
@@ -166,104 +165,39 @@ export const calculatePayrollValues = (
   };
 };
 
-/**
- * Processes an uploaded image to deliver ultra-crisp, high-definition,
- * perfectly centered square avatar photos.
- * - Auto center-crops (1:1 aspect ratio) so faces are never stretched or distorted
- * - Resizes onto a 600x600 px high-res canvas with bicubic smoothing for Retina clarity
-/**
- * Takes any image (File or base64 / URL) and applies:
- * 1. Face-aware portrait framing (centers on upper 22% where human faces sit in portrait shots)
- * 2. Ultra-high-resolution canvas resampling (800x800 px)
- * 3. 3x3 unsharp convolution filter (sharpens eyes, contours, facial edges, removes camera blur)
- * 4. Micro-contrast & tone enhancement (contrast +6%, brightness +2%, saturation +4%)
- * 5. Clean, high-fidelity JPEG compression (0.94)
- */
-export const enhanceAndSharpenImage = (imageSource: string | HTMLImageElement): Promise<string> => {
-  return new Promise((resolve) => {
-    const processImg = (img: HTMLImageElement) => {
-      const canvas = document.createElement('canvas');
-      const targetSize = 800; // 800x800 for crystal-clear profile quality
-      canvas.width = targetSize;
-      canvas.height = targetSize;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        resolve(typeof imageSource === 'string' ? imageSource : '');
-        return;
-      }
-
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      const minDim = Math.min(img.width, img.height);
-      const sx = (img.width - minDim) / 2;
-      // In portrait photos, human faces sit in the upper 20-25% of the frame
-      const sy = img.height > img.width 
-        ? Math.max(0, (img.height - minDim) * 0.22) 
-        : (img.height - minDim) / 2;
-
-      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
-
-      // Apply unsharp sharpening mask to crisp up facial details and remove camera softness
-      try {
-        const imgData = ctx.getImageData(0, 0, targetSize, targetSize);
-        const data = imgData.data;
-        const copy = new Uint8ClampedArray(data);
-        const w = targetSize;
-        const h = targetSize;
-        const amount = 0.35; // optimal sharpness without halo
-        const center = 1 + 4 * amount;
-
-        for (let y = 1; y < h - 1; y++) {
-          for (let x = 1; x < w - 1; x++) {
-            const idx = (y * w + x) * 4;
-            for (let c = 0; c < 3; c++) {
-              const top = copy[((y - 1) * w + x) * 4 + c];
-              const bottom = copy[((y + 1) * w + x) * 4 + c];
-              const left = copy[(y * w + (x - 1)) * 4 + c];
-              const right = copy[(y * w + (x + 1)) * 4 + c];
-              const curr = copy[idx + c];
-
-              // Unsharp high-pass
-              let val = curr * center - (top + bottom + left + right) * amount;
-              // Subtle tone and contrast curve for vivid crispness
-              val = ((val - 128) * 1.05) + 128 + 2;
-              data[idx + c] = Math.min(255, Math.max(0, val));
-            }
-          }
-        }
-        ctx.putImageData(imgData, 0, 0);
-      } catch (e) {
-        console.warn('Canvas pixel manipulation skipped:', e);
-      }
-
-      resolve(canvas.toDataURL('image/jpeg', 0.94));
-    };
-
-    if (typeof imageSource === 'string') {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => processImg(img);
-      img.onerror = () => resolve(imageSource);
-      img.src = imageSource;
-    } else {
-      processImg(imageSource);
-    }
-  });
-};
-
-export const optimizeProfilePhoto = (file: File): Promise<string> => {
-  return new Promise((resolve) => {
+const optimizeProfilePhoto = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (readerEvent) => {
-      const dataUrl = readerEvent.target?.result as string;
-      if (!dataUrl) {
-        resolve('');
+    reader.onerror = () => reject(new Error('Could not read the selected profile photo.'));
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        reject(new Error('The selected profile photo could not be loaded.'));
         return;
       }
-      enhanceAndSharpenImage(dataUrl).then(resolve);
+
+      const image = new Image();
+      image.onerror = () => reject(new Error('The selected file is not a valid image.'));
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        const size = 600;
+        canvas.width = size;
+        canvas.height = size;
+        const context = canvas.getContext('2d');
+        if (!context) {
+          reject(new Error('Could not prepare the selected profile photo.'));
+          return;
+        }
+
+        const cropSize = Math.min(image.naturalWidth, image.naturalHeight);
+        const cropX = (image.naturalWidth - cropSize) / 2;
+        const cropY = (image.naturalHeight - cropSize) / 2;
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = 'high';
+        context.drawImage(image, cropX, cropY, cropSize, cropSize, 0, 0, size, size);
+        resolve(canvas.toDataURL('image/jpeg', 0.9));
+      };
+      image.src = reader.result;
     };
-    reader.onerror = () => resolve('');
     reader.readAsDataURL(file);
   });
 };
@@ -1228,47 +1162,6 @@ const Payroll = () => {
     }
   };
 
-  // One-click AI sharpening and clarity enhancement for existing photo
-  const handleEnhanceExistingPhoto = async (employeeId: string, currentPhotoUrl: string) => {
-    if (!currentPhotoUrl) return;
-    try {
-      setPhotoOptimizingId(employeeId);
-      const sharpened = await enhanceAndSharpenImage(currentPhotoUrl);
-      if (sharpened) {
-        const updated = employees.map(emp => {
-          if (emp.id === employeeId) {
-            return { ...emp, photo_url: sharpened };
-          }
-          return emp;
-        });
-        saveEmployees(updated);
-        if (lightboxPhoto.isOpen && lightboxPhoto.emp?.id === employeeId) {
-          setLightboxPhoto(prev => ({ ...prev, photoSrc: sharpened }));
-        }
-      }
-    } catch (err) {
-      console.error('Failed to enhance photo:', err);
-    } finally {
-      setPhotoOptimizingId(null);
-    }
-  };
-
-  // Enhance photo inside the modal
-  const handleModalEnhancePhoto = async () => {
-    if (!employeeFormData.photo_url) return;
-    try {
-      setModalPhotoOptimizing(true);
-      const sharpened = await enhanceAndSharpenImage(employeeFormData.photo_url);
-      if (sharpened) {
-        setEmployeeFormData(prev => ({ ...prev, photo_url: sharpened }));
-      }
-    } catch (err) {
-      console.error('Failed to enhance modal photo:', err);
-    } finally {
-      setModalPhotoOptimizing(false);
-    }
-  };
-
   // Remove photo by Admin
   const handleRemoveEmployeePhoto = (employeeId: string) => {
     const updated = employees.map(emp => {
@@ -2219,7 +2112,6 @@ const Payroll = () => {
                       onDelete={() => handleDeleteClick(emp.id, 'employee')}
                       onViewBadge={() => setIdCardModalEmp(emp)}
                       onUploadPhoto={(id, file) => handleDirectPhotoUpload(id, file)}
-                      onEnhancePhoto={(id, src) => handleEnhanceExistingPhoto(id, src)}
                       onZoomPhoto={(e, src) => setLightboxPhoto({ isOpen: true, emp: e, photoSrc: src })}
                     />
                   ))}
@@ -2290,14 +2182,6 @@ const Payroll = () => {
                                     >
                                       <ZoomIn size={12} />
                                     </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleEnhanceExistingPhoto(emp.id, photoSrc)}
-                                      title="✨ Enhance Clarity & Sharpen Face"
-                                      className="p-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-colors cursor-pointer shadow-xs"
-                                    >
-                                      <Sparkles size={12} />
-                                    </button>
                                     <label
                                       title="Change employee photo (HD Auto-Crop)"
                                       className="p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full cursor-pointer transition-colors shadow-xs"
@@ -2327,7 +2211,7 @@ const Payroll = () => {
                                   {photoOptimizingId === emp.id && (
                                     <div className="absolute inset-0 bg-slate-950/75 rounded-full flex flex-col items-center justify-center text-white gap-0.5 backdrop-blur-xs">
                                       <Loader2 size={16} className="animate-spin text-indigo-400" />
-                                      <span className="text-[8px] font-bold tracking-wider">SHARPENING</span>
+                                      <span className="text-[8px] font-bold tracking-wider">PREPARING</span>
                                     </div>
                                   )}
 
@@ -2374,7 +2258,7 @@ const Payroll = () => {
                                   {photoOptimizingId === emp.id && (
                                     <div className="absolute inset-0 bg-slate-950/75 rounded-full flex flex-col items-center justify-center text-white gap-0.5 backdrop-blur-xs">
                                       <Loader2 size={16} className="animate-spin text-indigo-400" />
-                                      <span className="text-[8px] font-bold tracking-wider">SHARPENING</span>
+                                      <span className="text-[8px] font-bold tracking-wider">PREPARING</span>
                                     </div>
                                   )}
 
@@ -2438,7 +2322,7 @@ const Payroll = () => {
                           <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-500/15 border border-emerald-500/25 shadow-xs relative overflow-hidden group/salary">
                             <div className="flex items-center justify-between text-xs mb-1.5">
                               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
-                                <Sparkles size={12} className="text-emerald-600" />
+                                <Banknote size={12} className="text-emerald-600" />
                                 Fixed Monthly Salary
                               </span>
                               <span className="text-[10px] font-semibold text-emerald-800 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md border border-emerald-200/80 shadow-2xs">
@@ -2831,14 +2715,9 @@ const Payroll = () => {
                 {calculatedSalaryDetails.selectedEmp && (
                   <div className="p-3 bg-gradient-to-r from-slate-50 via-blue-50/30 to-indigo-50/20 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={getEmployeePhoto(calculatedSalaryDetails.selectedEmp)}
-                        alt={calculatedSalaryDetails.selectedEmp.name}
-                        className="w-11 h-11 rounded-xl object-cover ring-2 ring-white shadow-xs border border-slate-200"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(calculatedSalaryDetails.selectedEmp?.name || 'User')}&background=0284c7&color=fff&size=80`;
-                        }}
-                      />
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-white">
+                        {calculatedSalaryDetails.selectedEmp.name.split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase()}
+                      </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-xs text-slate-900">{calculatedSalaryDetails.selectedEmp.name}</span>
@@ -3162,29 +3041,25 @@ const Payroll = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                  {/* Avatar Preview: Circular Profile Picture with Double Ring */}
+                  {/* Profile photo preview or employee initials */}
                   <div className="relative group shrink-0">
                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full ring-4 ring-white shadow-xl border-2 border-indigo-100 overflow-hidden bg-slate-100 flex items-center justify-center">
-                      <img
-                        src={
-                          employeeFormData.photo_url ||
-                          getEmployeePhoto({ name: employeeFormData.name || 'Employee', photo_url: '' })
-                        }
-                        alt={employeeFormData.name || 'Preview'}
-                        style={{ 
-                          imageRendering: '-webkit-optimize-contrast',
-                          filter: 'contrast(1.07) brightness(1.02) saturate(1.04)'
-                        }}
-                        className="w-full h-full object-cover object-center"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(employeeFormData.name || 'User')}&background=0284c7&color=fff&size=200`;
-                        }}
-                      />
+                      {employeeFormData.photo_url ? (
+                        <img
+                          src={employeeFormData.photo_url}
+                          alt={employeeFormData.name || 'Employee profile'}
+                          className="w-full h-full object-cover object-center"
+                        />
+                      ) : (
+                        <span className="w-full h-full bg-gradient-to-br from-indigo-100 to-slate-200 flex items-center justify-center text-indigo-700 font-bold text-2xl">
+                          {(employeeFormData.name || 'Employee').split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase()}
+                        </span>
+                      )}
                     </div>
                     {modalPhotoOptimizing && (
                       <div className="absolute inset-0 bg-slate-950/75 rounded-full flex flex-col items-center justify-center text-white gap-1 backdrop-blur-xs">
                         <Loader2 size={20} className="animate-spin text-indigo-400" />
-                        <span className="text-[9px] font-bold tracking-wider">SHARPENING...</span>
+                        <span className="text-[9px] font-bold tracking-wider">PREPARING...</span>
                       </div>
                     )}
                     <label 
@@ -3221,18 +3096,6 @@ const Payroll = () => {
                         />
                       </label>
 
-                      {employeeFormData.photo_url && (
-                        <button
-                          type="button"
-                          onClick={handleModalEnhancePhoto}
-                          disabled={modalPhotoOptimizing}
-                          className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-95"
-                          title="Apply AI sharpening and micro-contrast enhancement to the photo"
-                        >
-                          <Sparkles size={13} className="text-amber-600" />
-                          <span>✨ Sharpen & Enhance Clarity</span>
-                        </button>
-                      )}
                     </div>
 
                     {employeeFormData.photo_url && employeeFormData.photo_url.startsWith('data:image/') ? (
@@ -3240,8 +3103,8 @@ const Payroll = () => {
                         <div className="flex items-center gap-2 min-w-0">
                           <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
                           <div className="min-w-0">
-                            <p className="font-semibold text-emerald-950 truncate">Custom HD Profile Photo Active</p>
-                            <span className="text-[10px] text-emerald-700">800×800 px Ultra HD circular profile framing</span>
+                            <p className="font-semibold text-emerald-950 truncate">Profile Photo Selected</p>
+                            <span className="text-[10px] text-emerald-700">Cropped to a square for a consistent profile display</span>
                           </div>
                         </div>
                         <button
@@ -3265,7 +3128,7 @@ const Payroll = () => {
                       </div>
                     )}
                     <p className="text-[11px] text-slate-400">
-                      Face is automatically framed and sharpened on high-resolution canvas for a clear, crisp circular profile avatar.
+                      Upload a profile photo or use the employee initials shown when no photo is available.
                     </p>
                   </div>
                 </div>
@@ -3372,7 +3235,7 @@ const Payroll = () => {
               <div className="relative overflow-hidden rounded-2xl border border-emerald-300/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/40 p-5 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                   <label className="flex items-center gap-1.5 text-xs font-bold text-emerald-950 uppercase tracking-wide">
-                    <Sparkles size={15} className="text-emerald-600" />
+                    <Banknote size={15} className="text-emerald-600" />
                     <span>Fixed Monthly Base Salary (रु.)</span>
                     <span className="text-rose-500">*</span>
                   </label>
@@ -4020,19 +3883,6 @@ const Payroll = () => {
                   <span>Download</span>
                 </a>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (lightboxPhoto.emp) {
-                      handleEnhanceExistingPhoto(lightboxPhoto.emp.id, lightboxPhoto.photoSrc);
-                    }
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors cursor-pointer border border-amber-200"
-                  title="Apply AI sharpening and clarity enhancement to this photo"
-                >
-                  <Sparkles size={13} className="text-amber-600" />
-                  <span>Enhance</span>
-                </button>
               </div>
 
               <div className="flex items-center gap-2">
