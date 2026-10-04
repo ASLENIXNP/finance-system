@@ -683,6 +683,54 @@ const Payroll = () => {
     localStorage.setItem('aslenix_payroll_records', JSON.stringify(cleanList));
   };
 
+  const handleRefreshPayrollTable = () => {
+    try {
+      const storedEmployees = localStorage.getItem('aslenix_employees');
+      if (storedEmployees !== null) {
+        const parsedEmployees: unknown = JSON.parse(storedEmployees);
+        if (!Array.isArray(parsedEmployees)) {
+          throw new Error('Saved employee data is not a list.');
+        }
+        setEmployees(parsedEmployees as Employee[]);
+      }
+
+      const storedPayroll = localStorage.getItem('aslenix_payroll_records');
+      if (storedPayroll !== null) {
+        const parsedPayroll: unknown = JSON.parse(storedPayroll);
+        if (!Array.isArray(parsedPayroll)) {
+          throw new Error('Saved payroll data is not a list.');
+        }
+
+        const mapped = (parsedPayroll as PayrollRecord[]).map(record => {
+          const attendanceSalary = record.attendance_salary ?? record.earned_salary ??
+            ((record.fixed_salary / (record.total_working_days || DEFAULT_WORKING_DAYS)) * (record.effective_days || 0));
+          const netBeforeTds = record.net_before_tds ??
+            (attendanceSalary + (record.bonus_allowance || 0) - (record.deductions || 0));
+          const tdsRate = record.tds_rate ?? 1;
+          const tdsAmount = record.tds_amount ?? Number((netBeforeTds * (tdsRate / 100)).toFixed(2));
+
+          return {
+            ...record,
+            employee_id: (record.employee_id || '').replace(/^EMP-/i, 'ASL-'),
+            employee_code: (record.employee_code || '').replace(/^EMP-/i, 'ASL-'),
+            attendance_salary: Number(attendanceSalary.toFixed(2)),
+            earned_salary: Number(attendanceSalary.toFixed(2)),
+            net_before_tds: Number(netBeforeTds.toFixed(2)),
+            tds_rate: tdsRate,
+            tds_amount: tdsAmount,
+            net_salary: record.tds_amount !== undefined
+              ? record.net_salary
+              : Math.max(0, Number((netBeforeTds - tdsAmount).toFixed(2)))
+          };
+        });
+        setPayrollRecords(deduplicatePayrollRecords(mapped));
+      }
+    } catch (error) {
+      console.error('Failed to refresh payroll table data:', error);
+      alert('Could not refresh payroll data. Please check the saved employee and payroll records.');
+    }
+  };
+
   // Filtered Payroll Records for Selected Period: guaranteed strictly 1 row per employee
   const periodPayrollRecords = useMemo(() => {
     const periodList = payrollRecords.filter(record => 
@@ -1092,7 +1140,11 @@ const Payroll = () => {
           employeeIds.has(record.employee_code) ||
           employeeNameKeys.has(record.employee_name.trim().toLowerCase());
 
-        if (!belongsToEmployee || record.payment_status === 'Paid') return record;
+        const isSelectedPayrollPeriod =
+          record.month === selectedMonth &&
+          record.year === selectedYear;
+
+        if (!belongsToEmployee || !isSelectedPayrollPeriod || record.payment_status === 'Paid') return record;
 
         const calc = calculatePayrollValues(
           updatedEmployee.fixed_salary,
@@ -1625,9 +1677,9 @@ const Payroll = () => {
             <div className="flex flex-wrap items-center gap-2.5">
               <button
                 type="button"
-                onClick={() => window.location.reload()}
-                title="Refresh payroll data"
-                aria-label="Refresh payroll data"
+                onClick={handleRefreshPayrollTable}
+                title="Refresh payroll table data"
+                aria-label="Refresh payroll table data"
                 className="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:shadow-md active:scale-[0.98] cursor-pointer"
               >
                 <RefreshCw size={16} className="transition-transform duration-500 group-hover:rotate-180" />
