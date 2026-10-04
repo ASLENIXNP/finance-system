@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -12,7 +12,9 @@ import {
   LogOut,
   Building2,
   Banknote,
-  Calendar
+  Calendar,
+  Menu,
+  X
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { formatNepaliDate, getCurrentFiscalYear } from '../lib/nepaliDate';
@@ -41,8 +43,10 @@ const getSidebarBranding = (): SidebarBranding => {
 
 const Layout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [branding, setBranding] = useState<SidebarBranding>(getSidebarBranding);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const userDisplayName = userEmail
     ? userEmail
@@ -73,6 +77,10 @@ const Layout = () => {
       window.removeEventListener('storage', updateBranding);
     };
   }, []);
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     // Get current session
@@ -127,22 +135,55 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-background font-sans overflow-hidden print:h-auto print:block print:overflow-visible print:bg-white">
+      <button
+        type="button"
+        aria-label="Open navigation menu"
+        onClick={() => setMobileNavOpen(true)}
+        className="fixed left-4 top-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 text-slate-700 shadow-lg shadow-slate-200/60 transition hover:bg-slate-50 md:hidden"
+      >
+        <Menu size={20} />
+      </button>
+
+      {mobileNavOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={() => setMobileNavOpen(false)}
+          className="fixed inset-0 z-40 bg-slate-900/35 md:hidden"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 shrink-0 bg-white border-r border-slate-200/80 flex flex-col z-10 relative print:hidden">
-        <div className="flex h-[76px] shrink-0 items-center gap-3 border-b border-slate-200/80 px-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-transparent p-0 shadow-none">
-            <img src={branding.logoUrl} alt="Company logo" className="h-full w-full object-contain" />
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 shrink-0 flex-col bg-white border-r border-slate-200/80 transition-transform duration-300 ease-in-out print:hidden md:static md:flex md:w-64 md:translate-x-0 ${
+          mobileNavOpen ? 'translate-x-0 flex' : '-translate-x-full hidden md:flex'
+        }`}
+      >
+        <div className="flex h-[76px] shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 px-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-transparent p-0 shadow-none">
+              <img src={branding.logoUrl} alt="Company logo" className="h-full w-full object-contain" />
+            </div>
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-sm font-black uppercase tracking-[0.16em] text-slate-900">
+                {branding.companyName.split(' ')[0]}
+              </span>
+              <span className="truncate text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                {branding.companyName.includes(' ')
+                  ? branding.companyName.substring(branding.companyName.indexOf(' ') + 1)
+                  : 'TECH & SOLUTION'}
+              </span>
+            </div>
           </div>
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-black uppercase tracking-[0.16em] text-slate-900">
-              {branding.companyName.split(' ')[0]}
-            </span>
-            <span className="truncate text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
-              {branding.companyName.includes(' ')
-                ? branding.companyName.substring(branding.companyName.indexOf(' ') + 1)
-                : 'TECH & SOLUTION'}
-            </span>
-          </div>
+
+          <button
+            type="button"
+            aria-label="Close navigation menu"
+            onClick={() => setMobileNavOpen(false)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 md:hidden"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-4 px-3 space-y-1.5">
@@ -150,6 +191,7 @@ const Layout = () => {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={() => setMobileNavOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors duration-150 text-[15px] font-medium ${
                   isActive 
