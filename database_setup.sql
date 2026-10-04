@@ -208,6 +208,7 @@ CREATE POLICY "Allow authenticated users full access" ON expenses FOR ALL TO aut
 CREATE POLICY "Allow authenticated users full access" ON company_settings FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow authenticated users full access" ON employees FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow authenticated users full access" ON payroll_records FOR ALL TO authenticated USING (true);
+CREATE POLICY "Allow authenticated users to read profiles" ON profiles FOR SELECT TO authenticated USING (true);
 
 -- Insert Sample Employees
 INSERT INTO employees (employee_code, name, designation, department, email, phone, pan_number, fixed_salary, bank_name, bank_account_no, bank_branch, joining_date)
@@ -216,4 +217,3 @@ VALUES
 ('EMP-002', 'Pooja Shrestha', 'Lead Accountant', 'Finance', 'pooja.shrestha@aslenix.com', '9841000002', '608987654', 60000.00, 'Global IME Bank', '04501010098765', 'New Baneshwor', '2025-02-01'),
 ('EMP-003', 'Rohan Adhikari', 'UI/UX & Frontend Designer', 'Creative & Tech', 'rohan.adhikari@aslenix.com', '9841000003', '610543210', 48000.00, 'NIC Asia Bank', '12405060708090', 'Thamel', '2025-04-10'),
 ('EMP-004', 'Sneha Karki', 'Business Development Officer', 'Marketing', 'sneha.karki@aslenix.com', '9841000004', '611223344', 38000.00, 'Sanima Bank', '08901234567890', 'Lalitpur', '2025-06-01');
-
