@@ -338,17 +338,10 @@ const InvoiceCreate = () => {
         <div className="invoice-content-wrapper relative z-10 p-8 sm:p-10 print:p-0 text-slate-800 flex flex-col">
           {/* 1. OFFICIAL ASLENIX LETTERHEAD HEADER (Exact match to sample & user layout) */}
             <div className="print-header pb-1 mb-3">
-              <div className="header-row relative flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 w-full">
-                {/* Top-Left: Brand Name & Registrations */}
+              <div className="header-row relative grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-end gap-4 w-full">
+                {/* Left: Registration details */}
                 <div className="header-left flex flex-col text-left">
-                  <h1 className="text-3xl sm:text-4xl font-black tracking-[0.28em] text-slate-950 font-sans uppercase leading-none">
-                    A S L E N I X
-                  </h1>
-                  <p className="text-[11px] sm:text-xs font-black tracking-[0.36em] text-slate-950 uppercase mt-2 leading-none">
-                    T E C H & S O L U T I O N
-                  </p>
-                  
-                  <div className="mt-5 text-[13px] font-bold text-slate-950 space-y-1">
+                  <div className="text-[13px] font-bold text-slate-950 space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold">Reg No:</span>
                       <input
@@ -374,14 +367,20 @@ const InvoiceCreate = () => {
                   </div>
                 </div>
 
-                {/* Center: TAX INVOICE Badge (Positioned in Center above line per diagram) */}
-                <div className="header-center sm:absolute sm:left-1/2 sm:-translate-x-1/2 sm:bottom-1 print:absolute print:left-1/2 print:-translate-x-1/2 print:bottom-1 self-center sm:self-auto py-1">
-                  <span className="px-4 py-1.5 bg-slate-950 text-white text-xs sm:text-sm font-black tracking-[0.25em] uppercase rounded shadow-xs text-center inline-block">
+                {/* Center: Company name and invoice title */}
+                <div className="header-center flex flex-col items-center justify-center text-center py-1">
+                  <h1 className="text-3xl sm:text-4xl font-black tracking-[0.28em] text-slate-950 font-sans uppercase leading-none">
+                    A S L E N I X
+                  </h1>
+                  <p className="text-[11px] sm:text-xs font-black tracking-[0.36em] text-slate-950 uppercase mt-2 leading-none">
+                    T E C H & S O L U T I O N
+                  </p>
+                  <span className="mt-3 text-xs sm:text-sm font-black tracking-[0.25em] text-slate-950 uppercase text-center inline-block">
                     TAX INVOICE
                   </span>
                 </div>
 
-                {/* Top-Right: Clean Official Aslenix Logo & Ref No (Box 1 per diagram) */}
+                {/* Right: Official logo and reference number */}
                 <div className="header-right flex flex-col items-start sm:items-end justify-center shrink-0 pr-1">
                   <img
                     src={companySettings.logo_url || '/logo.png'}

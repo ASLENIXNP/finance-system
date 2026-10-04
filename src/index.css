@@ -275,10 +275,10 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   }
 
   #printable-invoice .print-header .header-row {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: flex-start !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    align-items: flex-end !important;
+    gap: 8px !important;
     width: 100% !important;
   }
 
@@ -294,6 +294,33 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     flex-direction: column !important;
     align-items: flex-end !important;
     text-align: right !important;
+  }
+
+  #printable-invoice .print-header .header-center {
+    position: static !important;
+    transform: none !important;
+    justify-self: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  #printable-invoice .print-header .header-center h1 {
+    font-size: 24px !important;
+    letter-spacing: 0.2em !important;
+  }
+
+  #printable-invoice .print-header .header-center p {
+    font-size: 8px !important;
+    letter-spacing: 0.28em !important;
+  }
+
+  #printable-invoice .print-header .header-center span {
+    margin-top: 5px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
   }
 
   #printable-invoice .print-header img {
