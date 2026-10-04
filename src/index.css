@@ -286,14 +286,14 @@
     flex-direction: row !important;
     justify-content: space-between !important;
     align-items: flex-end !important;
-    margin-top: 2mm !important;
-    padding-top: 1.5mm !important;
+    margin-top: 6mm !important;
+    padding-top: 18mm !important;
     border-top: 1px solid #e2e8f0 !important;
   }
 
   #printable-invoice .print-footer {
-    margin-top: auto !important;
-    padding-top: 1.5mm !important;
+    margin-top: 14mm !important;
+    padding-top: 3.5mm !important;
     padding-bottom: 0 !important;
     border-top: 1px solid #0f172a !important;
     font-size: 9.5px !important;
