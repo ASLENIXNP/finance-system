@@ -315,11 +315,13 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     letter-spacing: 0.28em !important;
   }
 
-  #printable-invoice .print-header .header-center span {
-    margin-top: 5px !important;
+  #printable-invoice .print-header .invoice-title {
+    margin-top: 2mm !important;
+    margin-bottom: 3mm !important;
     padding: 0 !important;
     background: transparent !important;
     color: #0f172a !important;
+    text-align: center !important;
     box-shadow: none !important;
   }
 

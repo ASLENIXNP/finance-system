@@ -363,7 +363,7 @@ const InvoiceCreate = () => {
                   </div>
                 </div>
 
-                {/* Center: Company name and invoice title */}
+                {/* Center: Company name */}
                 <div className="header-center flex flex-col items-center justify-center text-center py-1">
                   <h1 className="text-3xl sm:text-4xl font-black tracking-[0.28em] text-slate-950 font-sans uppercase leading-none">
                     A S L E N I X
@@ -371,9 +371,6 @@ const InvoiceCreate = () => {
                   <p className="text-[11px] sm:text-xs font-black tracking-[0.36em] text-slate-950 uppercase mt-2 leading-none">
                     T E C H & S O L U T I O N
                   </p>
-                  <span className="mt-3 text-xs sm:text-sm font-black tracking-[0.25em] text-slate-950 uppercase text-center inline-block">
-                    TAX INVOICE
-                  </span>
                 </div>
 
                 {/* Right: Official logo and reference number */}
@@ -398,7 +395,10 @@ const InvoiceCreate = () => {
               </div>
 
               {/* Solid Horizontal Dividing Line matching template */}
-              <div className="w-full h-[2px] bg-slate-900 mt-4 mb-3"></div>
+              <div className="w-full h-[2px] bg-slate-900 mt-4"></div>
+              <div className="invoice-title mt-2 mb-3 text-center text-xs sm:text-sm font-black tracking-[0.25em] text-slate-950 uppercase">
+                TAX INVOICE
+              </div>
             </div>
 
             {/* 2. SUB-HEADER METADATA BAR (Payment Due / Fiscal Year on Left, DATE on Right per diagram Box 2) */}
