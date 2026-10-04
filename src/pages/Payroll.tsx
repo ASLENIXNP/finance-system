@@ -2715,9 +2715,17 @@ const Payroll = () => {
                 {calculatedSalaryDetails.selectedEmp && (
                   <div className="p-3 bg-gradient-to-r from-slate-50 via-blue-50/30 to-indigo-50/20 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-white">
-                        {calculatedSalaryDetails.selectedEmp.name.split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase()}
-                      </div>
+                      {getEmployeePhoto(calculatedSalaryDetails.selectedEmp) ? (
+                        <img
+                          src={getEmployeePhoto(calculatedSalaryDetails.selectedEmp)}
+                          alt={calculatedSalaryDetails.selectedEmp.name}
+                          className="w-11 h-11 rounded-xl object-cover ring-2 ring-white shadow-xs border border-slate-200"
+                        />
+                      ) : (
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-white">
+                          {calculatedSalaryDetails.selectedEmp.name.split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase()}
+                        </div>
+                      )}
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-xs text-slate-900">{calculatedSalaryDetails.selectedEmp.name}</span>
@@ -2895,8 +2903,8 @@ const Payroll = () => {
               </div>
 
               {/* Real-time Calculation Summary Card according to exact rules */}
-              <div className="bg-slate-900 text-white p-5 rounded-2xl space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white p-5 rounded-2xl space-y-3 shadow-lg shadow-indigo-950/15 ring-1 ring-indigo-900/30">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <div>
                     <span className="text-xs uppercase tracking-wider text-slate-400">Fixed Monthly Base</span>
                     <p className="text-lg font-bold">{formatNPR(calculatedSalaryDetails.fixed_salary)}</p>
@@ -2932,7 +2940,7 @@ const Payroll = () => {
                   </div>
                 </div>
 
-                <div className="border-t border-slate-800 pt-3 flex items-center justify-between">
+                <div className="border-t border-white/10 pt-3 flex items-center justify-between">
                   <div>
                     <span className="text-sm font-semibold text-slate-300">Final Net Pay (After 1% TDS):</span>
                     <span className="text-xs text-slate-400 block">Net Before TDS - 1% TDS</span>
