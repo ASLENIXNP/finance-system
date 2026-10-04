@@ -338,7 +338,7 @@ const InvoiceCreate = () => {
         <div className="invoice-content-wrapper relative z-10 p-8 sm:p-10 print:p-0 text-slate-800 flex flex-col">
           {/* 1. OFFICIAL ASLENIX LETTERHEAD HEADER (Exact match to sample & user layout) */}
             <div className="print-header pb-1 mb-3">
-              <div className="header-row relative grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-end gap-4 w-full">
+              <div className="header-row relative grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-4 w-full">
                 {/* Left: Registration details */}
                 <div className="header-left flex flex-col text-left">
                   <div className="text-[13px] font-bold text-slate-950 space-y-1">

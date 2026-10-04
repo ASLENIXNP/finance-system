@@ -277,7 +277,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-invoice .print-header .header-row {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
-    align-items: flex-end !important;
+    align-items: center !important;
     gap: 8px !important;
     width: 100% !important;
   }
@@ -324,7 +324,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   }
 
   #printable-invoice .print-header img {
-    height: 48px !important;
+    height: 58px !important;
     width: auto !important;
     object-fit: contain !important;
   }
