@@ -1435,6 +1435,14 @@ const Payroll = () => {
     setIsPayslipModalOpen(true);
   };
 
+  const handlePrintPayslip = () => {
+    window.addEventListener('afterprint', () => {
+      setIsPayslipModalOpen(false);
+      setActivePayslip(null);
+    }, { once: true });
+    window.print();
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Top Header */}
@@ -3669,14 +3677,17 @@ const Payroll = () => {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => window.print()}
+                  type="button"
+                  onClick={handlePrintPayslip}
                   className="btn-gradient flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
                 >
                   <Printer size={15} className="text-black" />
                   <span>Print Salary Slip</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => setIsPayslipModalOpen(false)}
+                  aria-label="Close salary slip preview"
                   className="p-1.5 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer"
                 >
                   ✕
