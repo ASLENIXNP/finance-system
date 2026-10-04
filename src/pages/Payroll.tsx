@@ -61,6 +61,8 @@ export interface Employee {
   notes?: string;
 }
 
+const DEFAULT_WORKING_DAYS = 30;
+
 export interface PayrollRecord {
   id: string;
   payroll_ref: string;
@@ -71,7 +73,7 @@ export interface PayrollRecord {
   department: string;
   month: string;
   year: number;
-  total_working_days: number; // Default 26, admin editable
+  total_working_days: number; // Default 30, admin editable
   present_days: number;       // 1 full day each
   half_days: number;          // 0.5 day each; 2 half days = 1 full day
   absent_days: number;        // total_working_days - present_days - (half_days * 0.5)
@@ -96,7 +98,7 @@ export interface PayrollRecord {
 
 /**
  * Exact Salary & Attendance Calculation Engine
- * 1. Working Days: Default 26, admin can adjust
+ * 1. Working Days: Default 30, admin can adjust
  * 2. Effective Days = Present + (Half Days × 0.5)
  * 3. Absent Days = Total Working Days - Present - (Half Days × 0.5)
  * 4. Daily Rate = Fixed Salary ÷ Total Working Days
@@ -115,7 +117,7 @@ export const calculatePayrollValues = (
   applyTds: boolean = true,
   tdsPercent: number = 1
 ) => {
-  const total_working_days = Math.max(1, Number(workingDaysInput) || 26);
+  const total_working_days = Math.max(1, Number(workingDaysInput) || DEFAULT_WORKING_DAYS);
   const present_days = Math.max(0, Number(presentInput) || 0);
   const half_days = Math.max(0, Number(halfDaysInput) || 0);
 
@@ -373,7 +375,7 @@ const initialPayrollRecords: PayrollRecord[] = [
     department: 'Technology',
     month: 'Ashwin',
     year: 2083,
-    total_working_days: 26,
+    total_working_days: 30,
     present_days: 24,
     half_days: 2,
     absent_days: 1,
@@ -404,7 +406,7 @@ const initialPayrollRecords: PayrollRecord[] = [
     department: 'Finance',
     month: 'Ashwin',
     year: 2083,
-    total_working_days: 26,
+    total_working_days: 30,
     present_days: 25,
     half_days: 1,
     absent_days: 0.5,
@@ -435,21 +437,21 @@ const initialPayrollRecords: PayrollRecord[] = [
     department: 'Creative & Tech',
     month: 'Ashwin',
     year: 2083,
-    total_working_days: 26,
+    total_working_days: 30,
     present_days: 23,
     half_days: 2,
     absent_days: 2,
     effective_days: 24.0,
     fixed_salary: 48000,
-    per_day_rate: 1846.15,
-    attendance_salary: 44307.69,
-    earned_salary: 44307.69,
+    per_day_rate: 1600.00,
+    attendance_salary: 38400.00,
+    earned_salary: 38400.00,
     bonus_allowance: 1000,
     deductions: 2000,
-    net_before_tds: 43307.69,
+    net_before_tds: 39400.00,
     tds_rate: 1,
-    tds_amount: 433.08,
-    net_salary: 42874.61,
+    tds_amount: 394.00,
+    net_salary: 39006.00,
     payment_status: 'Unpaid',
     notes: 'Advance salary deduction Rs. 2,000. 1% TDS applied.'
   },
@@ -463,11 +465,11 @@ const initialPayrollRecords: PayrollRecord[] = [
     department: 'Marketing',
     month: 'Ashwin',
     year: 2083,
-    total_working_days: 26,
-    present_days: 26,
+    total_working_days: 30,
+    present_days: 30,
     half_days: 0,
     absent_days: 0,
-    effective_days: 26.0,
+    effective_days: 30.0,
     fixed_salary: 38000,
     per_day_rate: 1461.54,
     attendance_salary: 38000.00,
@@ -594,7 +596,7 @@ const Payroll = () => {
       try {
         const parsed = JSON.parse(saved);
         const mapped = parsed.map((r: any) => {
-          const attendance_salary = r.attendance_salary ?? r.earned_salary ?? ((r.fixed_salary / (r.total_working_days || 26)) * (r.effective_days || 0));
+          const attendance_salary = r.attendance_salary ?? r.earned_salary ?? ((r.fixed_salary / (r.total_working_days || DEFAULT_WORKING_DAYS)) * (r.effective_days || 0));
           const net_before_tds = r.net_before_tds ?? (attendance_salary + (r.bonus_allowance || 0) - (r.deductions || 0));
           const tds_rate = r.tds_rate ?? 1;
           const tds_amount = r.tds_amount ?? Number((net_before_tds * (tds_rate / 100)).toFixed(2));
@@ -628,7 +630,7 @@ const Payroll = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [defaultWorkingDays, setDefaultWorkingDays] = useState(26);
+  const [defaultWorkingDays, setDefaultWorkingDays] = useState(DEFAULT_WORKING_DAYS);
 
   // Modals
   const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
@@ -1657,7 +1659,7 @@ const Payroll = () => {
                   min="1"
                   max="31"
                   value={defaultWorkingDays}
-                  onChange={(e) => setDefaultWorkingDays(Number(e.target.value) || 26)}
+                  onChange={(e) => setDefaultWorkingDays(Number(e.target.value) || DEFAULT_WORKING_DAYS)}
                   className="w-12 bg-white border border-slate-300 text-center font-bold text-slate-900 rounded-lg py-1 outline-none focus:border-accent focus:ring-2 focus:ring-accent/10"
                 />
               </div>
@@ -2439,7 +2441,7 @@ const Payroll = () => {
                                 {formatNPR(emp.fixed_salary)}
                               </p>
                               <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md border border-emerald-200/60 font-mono">
-                                ≈ {formatNPR(emp.fixed_salary / 26)}/day
+                                ≈ {formatNPR(emp.fixed_salary / DEFAULT_WORKING_DAYS)}/day
                               </span>
                             </div>
                           </div>
@@ -2887,7 +2889,7 @@ const Payroll = () => {
                       onChange={(e) => setSalaryFormData({ ...salaryFormData, total_working_days: Number(e.target.value) })}
                       className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                     />
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">Default = 26</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">Default = {DEFAULT_WORKING_DAYS}</span>
                   </div>
 
                   {/* Present Days */}
@@ -3408,7 +3410,7 @@ const Payroll = () => {
                 <div className="flex items-center gap-2 text-[11px] text-emerald-800/80 bg-white/70 px-3 py-1.5 rounded-lg border border-emerald-100">
                   <span className="font-semibold text-emerald-900">Per-Day Salary Rate:</span>
                   <span>
-                    रु. {employeeFormData.fixed_salary ? (Number(employeeFormData.fixed_salary) / 26).toFixed(2) : '0.00'} / day (based on standard 26 working days)
+                    रु. {employeeFormData.fixed_salary ? (Number(employeeFormData.fixed_salary) / DEFAULT_WORKING_DAYS).toFixed(2) : '0.00'} / day (based on standard {DEFAULT_WORKING_DAYS} working days)
                   </span>
                 </div>
               </div>
