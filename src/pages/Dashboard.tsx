@@ -446,27 +446,10 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Date Filter Bar */}
-      <div className="bg-white/90 border border-slate-200/80 rounded-[22px] shadow-[0_8px_24px_rgba(15,23,42,0.04)] px-5 py-3 flex flex-wrap items-center justify-center gap-3">
-        <div className="flex items-center gap-3 bg-slate-50/80 border border-slate-200 rounded-2xl px-4 py-2.5 shadow-inner shadow-slate-100 min-w-[260px]">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
-            <Calendar size={16} />
-          </div>
-          <div className="text-sm font-semibold text-slate-700">
-            <span className="text-[15px] font-bold text-slate-800">{formatNepaliDate(todayBs, 'withDay')}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 bg-slate-50/80 border border-slate-200 rounded-2xl px-4 py-2.5 shadow-inner shadow-slate-100">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 inline-block shadow-[0_0_0_3px_rgba(16,185,129,0.2)]" />
-          <span className="text-sm font-semibold text-slate-700">Fiscal Year:</span>
-          <span className="text-sm font-bold text-slate-900">{currentFiscalYearStr}</span>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-[22px] border border-slate-200/80 shadow-[0_8px_24px_rgba(15,23,42,0.04)] px-5 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      {/* Financial Overview and date-range controls */}
+      <div className="bg-gradient-to-r from-sky-50 via-white to-violet-50 rounded-[22px] border border-sky-100 shadow-[0_8px_24px_rgba(15,23,42,0.06)] px-5 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-md shadow-blue-200/70">
             <Calendar size={19} />
           </div>
           <div className="min-w-0">
@@ -481,7 +464,7 @@ const Dashboard = () => {
         </div>
 
         <div className="flex items-center gap-3 md:ml-auto">
-          <div className="flex items-center gap-2 bg-slate-50/80 border border-slate-200 rounded-2xl px-3 py-2 shadow-inner shadow-slate-100">
+          <div className="flex items-center gap-2 bg-white/80 border border-slate-200/80 rounded-2xl px-3 py-2 shadow-sm">
             <Filter size={15} className="text-slate-500" />
             <select 
               value={filterOption}
