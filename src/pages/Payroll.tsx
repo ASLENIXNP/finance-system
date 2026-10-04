@@ -34,7 +34,8 @@ import {
   ZoomIn,
   Download,
   Loader2,
-  QrCode
+  QrCode,
+  RefreshCw
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
@@ -1506,7 +1507,7 @@ const Payroll = () => {
       {activeTab === 'payroll' && (
         <div className="space-y-4">
           {/* Controls & Batch Actions */}
-          <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-white/95 p-4 rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+          <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-gradient-to-r from-sky-50/90 via-white to-indigo-50/80 p-4 rounded-2xl border border-sky-100 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
             <div className="flex flex-wrap items-center gap-3">
               {/* Search */}
               <div className="relative min-w-[260px]">
@@ -1553,6 +1554,17 @@ const Payroll = () => {
 
             {/* Quick Batch Actions & Admin Working Days Input */}
             <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                title="Refresh payroll data"
+                aria-label="Refresh payroll data"
+                className="group flex items-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-semibold rounded-xl border border-blue-500/30 transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98]"
+              >
+                <RefreshCw size={14} className="transition-transform duration-500 group-hover:rotate-180" />
+                <span>Refresh</span>
+              </button>
+
               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs shadow-sm">
                 <span className="text-slate-600 font-semibold">Working Days</span>
                 <input
@@ -1632,7 +1644,7 @@ const Payroll = () => {
                       const isOptimizing = photoOptimizingId === empId;
 
                       return (
-                        <tr key={record.id} className="hover:bg-slate-50/70 transition-colors">
+                        <tr key={record.id} className="odd:bg-white even:bg-gradient-to-r even:from-white even:to-sky-50/50 hover:from-blue-50/70 hover:to-indigo-50/60 transition-colors">
                           {/* 1. Employee with Profile Photo */}
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-3">
@@ -3026,9 +3038,9 @@ const Payroll = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSaveEmployee} className="p-7 overflow-y-auto space-y-6 custom-scrollbar flex-1 bg-white">
+            <form onSubmit={handleSaveEmployee} className="p-6 overflow-y-auto space-y-5 custom-scrollbar flex-1 bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/30">
               {/* Employee Photo / Avatar Upload Section */}
-              <div className="p-4.5 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/25 to-blue-50/30 border border-slate-200/90 space-y-3.5 shadow-2xs">
+              <div className="p-4.5 rounded-2xl bg-gradient-to-br from-blue-50 via-white to-indigo-50/80 border border-blue-100 space-y-3.5 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wide">
                     <Camera size={15} className="text-indigo-600" />
@@ -3240,7 +3252,7 @@ const Payroll = () => {
               </div>
 
               {/* Section 2: Highlighted Fixed Monthly Salary Card with Quick Presets */}
-              <div className="relative overflow-hidden rounded-2xl border border-emerald-300/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/40 p-5 shadow-sm">
+              <div className="relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-4 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                   <label className="flex items-center gap-1.5 text-xs font-bold text-emerald-950 uppercase tracking-wide">
                     <Banknote size={15} className="text-emerald-600" />
@@ -3400,27 +3412,27 @@ const Payroll = () => {
               </div>
             </form>
 
-            {/* Footer with Classy, Executive Buttons */}
-            <div className="px-7 py-4 bg-slate-50/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-between gap-3">
-              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium">
-                <ShieldCheck size={16} className="text-emerald-600" />
+            {/* Compact action footer */}
+            <div className="px-5 py-2.5 bg-gradient-to-r from-slate-50 via-white to-blue-50/70 border-t border-slate-100 flex items-center justify-between gap-2">
+              <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                <ShieldCheck size={14} className="text-emerald-600" />
                 <span>Encrypted Staff Profile</span>
               </div>
 
-              <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-2 ml-auto">
                 <button
                   type="button"
                   onClick={() => setIsEmployeeModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 hover:border-slate-300 font-semibold text-sm transition-all duration-150 shadow-sm active:scale-[0.98] cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 hover:border-slate-300 font-semibold text-xs transition-all duration-150 shadow-sm active:scale-[0.98] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveEmployee}
-                  className="btn-gradient px-6 py-2.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all flex items-center gap-2.5 cursor-pointer"
+                  className="btn-gradient px-5 py-2 rounded-xl font-bold text-xs active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  <UserCheck size={16} className="text-black" />
+                  <UserCheck size={14} className="text-black" />
                   <span>{editingEmployeeId ? 'Save Profile Changes' : 'Create Employee Profile'}</span>
                 </button>
               </div>
