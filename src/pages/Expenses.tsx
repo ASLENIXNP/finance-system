@@ -660,9 +660,9 @@ const Expenses = () => {
           </button>
           <button 
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="flex items-center justify-center gap-2 px-5 py-2 bg-rose-600 text-white rounded-xl font-semibold hover:bg-rose-700 transition-all shadow-sm shadow-rose-600/20 cursor-pointer flex-1 md:flex-none"
+            className="btn-gradient flex items-center justify-center gap-2 px-5 py-2 rounded-xl font-bold transition-all cursor-pointer flex-1 md:flex-none text-xs"
           >
-            <Plus size={18} />
+            <Plus size={18} className="text-black" />
             <span>Add Expense</span>
           </button>
         </div>
@@ -1326,9 +1326,9 @@ const Expenses = () => {
                 </button>
                 <button 
                   type="submit"
-                  className="px-6 py-2.5 bg-rose-600 text-white rounded-xl hover:bg-rose-700 font-semibold text-xs transition-all shadow-sm shadow-rose-600/30 cursor-pointer flex items-center gap-1.5"
+                  className="btn-gradient px-6 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  <CreditCard size={15} />
+                  <CreditCard size={15} className="text-black" />
                   <span>{editingId ? 'Save Changes' : 'Save Expense'}</span>
                 </button>
               </div>

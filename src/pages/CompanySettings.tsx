@@ -325,10 +325,10 @@ const CompanySettings: React.FC = () => {
             type="button"
             onClick={() => handleSave()}
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white rounded-2xl text-sm font-semibold hover:bg-slate-800 active:scale-98 transition-all shadow-xs cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+            className="btn-gradient flex items-center gap-2 px-6 py-2.5 rounded-2xl text-sm font-bold active:scale-98 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-            {isSaving ? 'Saving...' : 'Save Settings'}
+            {isSaving ? <RefreshCw size={16} className="animate-spin text-black" /> : <Save size={16} className="text-black" />}
+            <span>{isSaving ? 'Saving...' : 'Save Settings'}</span>
           </button>
         </div>
       </div>
@@ -871,10 +871,10 @@ const CompanySettings: React.FC = () => {
             <button 
               type="submit"
               disabled={isSaving}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-2.5 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-slate-800 transition-all shadow-xs active:scale-98 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+              className="btn-gradient flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-2.5 rounded-2xl text-sm font-bold transition-all active:scale-98 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-              {isSaving ? 'Saving Changes...' : 'Save Settings'}
+              {isSaving ? <RefreshCw size={16} className="animate-spin text-black" /> : <Save size={16} className="text-black" />}
+              <span>{isSaving ? 'Saving Changes...' : 'Save Settings'}</span>
             </button>
           </div>
         </div>

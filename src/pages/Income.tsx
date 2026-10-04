@@ -723,9 +723,9 @@ const Income = () => {
           </button>
           <button 
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="flex items-center justify-center gap-2 px-5 py-2 bg-accent text-white rounded-xl font-semibold hover:bg-accent-hover transition-all shadow-sm shadow-accent/20 cursor-pointer flex-1 md:flex-none"
+            className="btn-gradient flex items-center justify-center gap-2 px-5 py-2 rounded-xl font-bold transition-all cursor-pointer flex-1 md:flex-none text-xs"
           >
-            <Plus size={18} />
+            <Plus size={18} className="text-black" />
             <span>Record Income</span>
           </button>
         </div>
@@ -1017,7 +1017,7 @@ const Income = () => {
                         <div className="flex items-center gap-2 mt-4">
                           <button
                             onClick={() => { resetForm(); setIsModalOpen(true); }}
-                            className="px-4 py-2 bg-accent text-white rounded-xl text-xs font-semibold hover:bg-accent-hover transition-colors shadow-sm cursor-pointer"
+                            className="btn-gradient px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
                           >
                             + Record Income
                           </button>
@@ -1473,9 +1473,9 @@ const Income = () => {
                 </button>
                 <button 
                   type="submit"
-                  className="px-6 py-2.5 bg-accent text-white rounded-xl font-bold text-xs hover:bg-accent-hover transition-all shadow-md shadow-accent/20 cursor-pointer flex items-center gap-1.5"
+                  className="btn-gradient px-6 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  <Check size={14} />
+                  <Check size={14} className="text-black" />
                   <span>{editingId ? 'Save Income Changes' : 'Record Income'}</span>
                 </button>
               </div>

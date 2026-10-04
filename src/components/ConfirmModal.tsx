@@ -75,13 +75,13 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 onConfirm();
                 onClose();
               }}
-              className={`px-6 py-2.5 text-white font-bold text-xs rounded-2xl transition-all shadow-xs active:scale-98 cursor-pointer ${
+              className={`px-6 py-2.5 font-bold text-xs rounded-2xl transition-all active:scale-98 cursor-pointer ${
                 isDanger 
-                  ? 'bg-rose-600 hover:bg-rose-700' 
-                  : 'bg-slate-900 hover:bg-slate-800'
+                  ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs' 
+                  : 'btn-gradient'
               }`}
             >
-              {confirmText}
+              <span>{confirmText}</span>
             </button>
           </div>
         </div>

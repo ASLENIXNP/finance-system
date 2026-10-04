@@ -18,6 +18,76 @@
   }
 }
 
+/* ========================================================
+   GLOBAL SYSTEM BUTTON GRADIENT:
+   Soft Sky-to-Lavender-to-Lilac with Solid Black Text & Icons
+   As requested: "MAKE THIS COLOR BUTTON FOPR ALL BUTOON USE IN THIS SYSTEM AND TEXT IN BLAKCK COLOR"
+   ======================================================== */
+.btn-gradient,
+button.btn-gradient,
+a.btn-gradient,
+button.bg-accent,
+a.bg-accent,
+.btn-primary,
+button.btn-primary,
+button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):not([class*="bg-transparent"]):not([class*="bg-slate-100"]):not([class*="bg-slate-50"]):not([class*="bg-rose-"]):not([class*="border-rose"]) {
+  background: linear-gradient(90deg, #c2d8ff 0%, #d6d0fe 50%, #eed4ff 100%) !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(199, 210, 254, 0.95) !important;
+  box-shadow: 0 4px 14px -2px rgba(199, 210, 254, 0.8) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn-gradient:hover,
+button.btn-gradient:hover,
+a.btn-gradient:hover,
+button.bg-accent:hover,
+a.bg-accent:hover,
+.btn-primary:hover,
+button.btn-primary:hover,
+button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):not([class*="bg-transparent"]):not([class*="bg-slate-100"]):not([class*="bg-slate-50"]):not([class*="bg-rose-"]):not([class*="border-rose"]):hover {
+  background: linear-gradient(90deg, #b0cdff 0%, #c9c0fe 50%, #e8c6ff 100%) !important;
+  color: #000000 !important;
+  box-shadow: 0 6px 20px -2px rgba(199, 210, 254, 0.95), 0 2px 8px -1px rgba(165, 180, 252, 0.6) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-gradient:active,
+button.btn-gradient:active,
+a.btn-gradient:active,
+button.bg-accent:active,
+a.bg-accent:active,
+.btn-primary:active,
+button.btn-primary:active,
+button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):active {
+  transform: scale(0.97) !important;
+}
+
+/* Force solid black text and stroke for all children, spans, and icons inside gradient buttons */
+.btn-gradient *,
+button.btn-gradient *,
+a.btn-gradient *,
+button.bg-accent *,
+a.bg-accent *,
+.btn-primary *,
+button.btn-primary *,
+button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):not([class*="bg-transparent"]):not([class*="bg-slate-100"]):not([class*="bg-slate-50"]):not([class*="bg-rose-"]):not([class*="border-rose"]) * {
+  color: #000000 !important;
+}
+
+.btn-gradient svg,
+button.btn-gradient svg,
+a.btn-gradient svg,
+button.bg-accent svg,
+a.bg-accent svg,
+.btn-primary svg,
+button.btn-primary svg,
+button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):not([class*="bg-transparent"]):not([class*="bg-slate-100"]):not([class*="bg-slate-50"]):not([class*="bg-rose-"]):not([class*="border-rose"]) svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
 @media print {
   @page {
     size: A4 portrait;

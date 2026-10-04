@@ -378,9 +378,9 @@ const Products = () => {
           </button>
           <button 
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="flex items-center justify-center gap-2 px-5 py-2 bg-accent text-white rounded-xl font-semibold hover:bg-accent-hover transition-all shadow-sm shadow-accent/20 cursor-pointer flex-1 md:flex-none text-xs"
+            className="btn-gradient flex items-center justify-center gap-2 px-5 py-2 rounded-xl font-bold transition-all cursor-pointer flex-1 md:flex-none text-xs"
           >
-            <Plus size={16} />
+            <Plus size={16} className="text-black" />
             <span>Add Offering</span>
           </button>
         </div>
@@ -609,9 +609,9 @@ const Products = () => {
                       ) : (
                         <button 
                           onClick={() => { resetForm(); setIsModalOpen(true); }}
-                          className="mt-4 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                          className="btn-gradient mt-4 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
                         >
-                          <Plus size={14} />
+                          <Plus size={14} className="text-black" />
                           <span>+ Add First Item</span>
                         </button>
                       )}
@@ -862,9 +862,9 @@ const Products = () => {
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-7 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs transition-all shadow-xs active:scale-98 cursor-pointer flex items-center gap-2 disabled:opacity-70"
+                  className="btn-gradient px-7 py-2.5 rounded-2xl font-bold text-xs transition-all active:scale-98 cursor-pointer flex items-center gap-2 disabled:opacity-70"
                 >
-                  {isSubmitting && <Loader2 size={14} className="animate-spin" />}
+                  {isSubmitting && <Loader2 size={14} className="animate-spin text-black" />}
                   <span>{isSubmitting ? 'Saving...' : (editingId ? 'Save Offering Changes' : 'Save Offering')}</span>
                 </button>
               </div>

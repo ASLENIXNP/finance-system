@@ -242,10 +242,10 @@ const Users = () => {
           </button>
           <button 
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-accent text-white rounded-xl font-semibold text-sm hover:bg-accent-hover transition-all shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/30 cursor-pointer flex-1 sm:flex-none"
+            className="btn-gradient flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer flex-1 sm:flex-none"
           >
-            <Plus size={18} />
-            Invite User
+            <Plus size={18} className="text-black" />
+            <span>Invite User</span>
           </button>
         </div>
       </div>
@@ -641,9 +641,9 @@ const Users = () => {
                 </button>
                 <button 
                   type="submit"
-                  className="px-7 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs transition-all shadow-xs active:scale-98 cursor-pointer"
+                  className="btn-gradient px-7 py-2.5 rounded-2xl font-bold text-xs transition-all active:scale-98 cursor-pointer"
                 >
-                  {editingId ? 'Save Changes' : 'Send Invite'}
+                  <span>{editingId ? 'Save Changes' : 'Send Invite'}</span>
                 </button>
               </div>
             </form>

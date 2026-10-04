@@ -1477,9 +1477,9 @@ const Payroll = () => {
 
           <button
             onClick={() => handleOpenSalaryModal()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.98] cursor-pointer border border-blue-500/20"
+            className="btn-gradient flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98] cursor-pointer"
           >
-            <Plus size={18} />
+            <Plus size={18} className="text-black" />
             <span>Add / Calculate Salary</span>
           </button>
         </div>
@@ -1706,7 +1706,7 @@ const Payroll = () => {
                           <p className="text-xs text-slate-400">Click "+ Add / Calculate Salary" or "Auto-Fill All Employees" to generate records.</p>
                           <button
                             onClick={handleGenerateAllForMonth}
-                            className="mt-2 px-4 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg hover:bg-accent-hover transition-colors"
+                            className="btn-gradient mt-2 px-4 py-1.5 text-xs font-bold rounded-lg transition-all"
                           >
                             Populate Active Employees
                           </button>
@@ -2079,9 +2079,9 @@ const Payroll = () => {
                 {/* Add New Employee Button */}
                 <button
                   onClick={() => handleOpenEmployeeModal()}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-slate-800 hover:to-slate-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/30 active:scale-[0.98] cursor-pointer border border-slate-700/60 ml-auto lg:ml-0"
+                  className="btn-gradient flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98] cursor-pointer ml-auto lg:ml-0"
                 >
-                  <UserPlus size={17} className="text-blue-400" />
+                  <UserPlus size={17} className="text-black" />
                   <span>Add New Employee</span>
                 </button>
               </div>
@@ -3079,9 +3079,9 @@ const Payroll = () => {
                 <button
                   type="submit"
                   onClick={handleSaveSalaryRecord}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-sm shadow-md hover:shadow-xl hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-200 flex items-center gap-2 group cursor-pointer border border-blue-500/30"
+                  className="btn-gradient px-6 py-2.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  <Banknote size={16} className="text-blue-200 group-hover:scale-110 transition-transform" />
+                  <Banknote size={16} className="text-black" />
                   <span>{editingPayrollId ? 'Update Salary Record' : 'Save & Calculate Salary'}</span>
                 </button>
               </div>
@@ -3532,9 +3532,9 @@ const Payroll = () => {
                 <button
                   type="button"
                   onClick={handleSaveEmployee}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-slate-800 hover:to-slate-700 text-white font-semibold text-sm shadow-md hover:shadow-xl hover:shadow-slate-900/20 active:scale-[0.98] transition-all duration-200 flex items-center gap-2.5 border border-slate-700/60 group cursor-pointer"
+                  className="btn-gradient px-6 py-2.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all flex items-center gap-2.5 cursor-pointer"
                 >
-                  <UserCheck size={16} className="text-blue-400 group-hover:scale-110 transition-transform" />
+                  <UserCheck size={16} className="text-black" />
                   <span>{editingEmployeeId ? 'Save Profile Changes' : 'Create Employee Profile'}</span>
                 </button>
               </div>
@@ -3663,9 +3663,9 @@ const Payroll = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => window.print()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-hover text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                  className="btn-gradient flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
                 >
-                  <Printer size={15} />
+                  <Printer size={15} className="text-black" />
                   <span>Print Payslip</span>
                 </button>
                 <button

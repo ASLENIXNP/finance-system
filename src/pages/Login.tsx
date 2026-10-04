@@ -96,10 +96,10 @@ const Login = () => {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all hover:shadow-lg hover:shadow-accent/30 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                className="btn-gradient w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
-                {loading ? 'Authenticating...' : 'Sign in to Dashboard'}
-                {!loading && <ArrowRight size={18} />}
+                <span>{loading ? 'Authenticating...' : 'Sign in to Dashboard'}</span>
+                {!loading && <ArrowRight size={18} className="text-black" />}
               </button>
             </div>
 

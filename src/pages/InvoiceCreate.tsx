@@ -229,9 +229,9 @@ const InvoiceCreate = () => {
           </button>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl font-medium hover:bg-accent-hover transition-colors shadow-sm shadow-accent/20 cursor-pointer"
+            className="btn-gradient flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all cursor-pointer"
           >
-            <Printer size={18} />
+            <Printer size={18} className="text-black" />
             <span>Print / Save PDF</span>
           </button>
         </div>
