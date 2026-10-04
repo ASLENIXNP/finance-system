@@ -22,6 +22,29 @@ const initialPaymentsData: PaymentItem[] = [
   { id: 'PAY-004', date: '2083-06-13', invoice: 'ASL-2083-0008', customer: 'Individual Client', amount: 12000, method: 'Cash', ref: 'CASH-REC-11', status: 'Verified' },
 ];
 
+const DELETED_PAYMENTS_KEY = 'aslenix_deleted_payments';
+
+const getDeletedPaymentIds = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(DELETED_PAYMENTS_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const recordDeletedPaymentId = (id: string) => {
+  try {
+    const set = getDeletedPaymentIds();
+    if (id) set.add(id);
+    localStorage.setItem(DELETED_PAYMENTS_KEY, JSON.stringify(Array.from(set)));
+  } catch (e) {
+    console.error('Failed to record deleted payment id:', e);
+  }
+};
+
 const Payments = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [methodFilter, setMethodFilter] = useState('All');
@@ -29,7 +52,17 @@ const Payments = () => {
 
   const [paymentsData, setPaymentsData] = useState<PaymentItem[]>(() => {
     const saved = localStorage.getItem('aslenix_payments');
-    return saved ? JSON.parse(saved) : initialPaymentsData;
+    if (saved !== null) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const deletedIds = getDeletedPaymentIds();
+          return parsed.filter(item => !deletedIds.has(item.id));
+        }
+      } catch (e) {}
+    }
+    const deletedIds = getDeletedPaymentIds();
+    return initialPaymentsData.filter(item => !deletedIds.has(item.id));
   });
 
   const savePaymentsData = (data: PaymentItem[]) => {
@@ -84,6 +117,7 @@ const Payments = () => {
 
   const confirmDelete = () => {
     if (paymentToDelete) {
+      recordDeletedPaymentId(paymentToDelete);
       const updated = paymentsData.filter(item => item.id !== paymentToDelete);
       savePaymentsData(updated);
       setDeleteModalOpen(false);

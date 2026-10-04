@@ -21,6 +21,30 @@ const defaultProducts: Product[] = [
   { id: 'p4', item_code: 'PRD-001', name: 'Cloud Server VPS (1 Year)', type: 'Product', description: 'High performance hosting', default_rate: 20000, tax_rate: 13, is_active: true },
 ];
 
+const DELETED_PRODUCTS_KEY = 'aslenix_deleted_products';
+
+const getDeletedProductIds = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(DELETED_PRODUCTS_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const recordDeletedProductId = (id: string, code?: string) => {
+  try {
+    const set = getDeletedProductIds();
+    if (id) set.add(id);
+    if (code) set.add(code);
+    localStorage.setItem(DELETED_PRODUCTS_KEY, JSON.stringify(Array.from(set)));
+  } catch (e) {
+    console.error('Failed to record deleted product id:', e);
+  }
+};
+
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
@@ -28,7 +52,17 @@ const Products = () => {
 
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('aslenix_products');
-    return saved ? JSON.parse(saved) : defaultProducts;
+    if (saved !== null) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const deletedIds = getDeletedProductIds();
+          return parsed.filter(item => !deletedIds.has(item.id) && !deletedIds.has(item.item_code));
+        }
+      } catch (e) {}
+    }
+    const deletedIds = getDeletedProductIds();
+    return defaultProducts.filter(item => !deletedIds.has(item.id) && !deletedIds.has(item.item_code));
   });
   const [loading, setLoading] = useState(false);
 
@@ -83,7 +117,24 @@ const Products = () => {
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        saveProducts(data);
+        const deletedIds = getDeletedProductIds();
+        const validServerProducts = data.filter((p: any) => 
+          !deletedIds.has(p.id) && !deletedIds.has(p.item_code)
+        );
+
+        setProducts(prev => {
+          const serverIds = new Set(validServerProducts.map((p: any) => p.id));
+          const serverCodes = new Set(validServerProducts.map((p: any) => p.item_code));
+          const localOnly = prev.filter(p => 
+            !deletedIds.has(p.id) && 
+            !deletedIds.has(p.item_code) && 
+            !serverIds.has(p.id) && 
+            !serverCodes.has(p.item_code)
+          );
+          const combined = [...validServerProducts, ...localOnly];
+          saveProducts(combined);
+          return combined;
+        });
       }
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -131,12 +182,16 @@ const Products = () => {
         saveProducts([newProduct, ...products]);
 
         try {
-          await supabase.from('products').insert([
+          const { data: insertedData } = await supabase.from('products').insert([
             {
               item_code: newCode,
               ...formData
             }
-          ]);
+          ]).select();
+
+          if (insertedData?.[0]?.id) {
+            setProducts(prev => prev.map(p => p.id === newProduct.id ? { ...p, id: insertedData[0].id } : p));
+          }
         } catch (dbErr) {
           console.error('DB insert err:', dbErr);
         }
@@ -186,8 +241,10 @@ const Products = () => {
   const confirmDelete = async () => {
     if (!productToDelete) return;
     
-    // Always remove from local state & localStorage immediately so it never returns on reload!
-    const updated = products.filter(p => p.id !== productToDelete);
+    const target = products.find(p => p.id === productToDelete || p.item_code === productToDelete);
+    recordDeletedProductId(productToDelete, target?.item_code);
+
+    const updated = products.filter(p => p.id !== productToDelete && p.item_code !== productToDelete);
     saveProducts(updated);
     setDeleteModalOpen(false);
 
@@ -195,7 +252,7 @@ const Products = () => {
       await supabase
         .from('products')
         .delete()
-        .eq('id', productToDelete);
+        .or(`id.eq.${productToDelete},item_code.eq.${target?.item_code || productToDelete}`);
     } catch (error: any) {
       console.error('Error deleting product from DB:', error);
     } finally {

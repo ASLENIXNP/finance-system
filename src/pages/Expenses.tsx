@@ -25,6 +25,7 @@ import { supabase } from '../lib/supabase';
 
 export interface ExpenseItem {
   id: string;
+  db_id?: string;
   date: string; // BS date YYYY-MM-DD
   vendor: string;
   category: string;
@@ -153,19 +154,53 @@ const getCategoryColor = (category: string) => {
   return 'bg-slate-100 text-slate-700 border-slate-200';
 };
 
+const DELETED_EXPENSES_KEY = 'aslenix_deleted_expenses';
+
+const getDeletedExpenseIds = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(DELETED_EXPENSES_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const recordDeletedExpenseId = (id: string, extraId?: string) => {
+  try {
+    const set = getDeletedExpenseIds();
+    if (id) set.add(id);
+    if (extraId) set.add(extraId);
+    localStorage.setItem(DELETED_EXPENSES_KEY, JSON.stringify(Array.from(set)));
+  } catch (e) {
+    console.error('Failed to record deleted expense id:', e);
+  }
+};
+
+const clearDeletedExpenseIds = () => {
+  try {
+    localStorage.removeItem(DELETED_EXPENSES_KEY);
+  } catch {}
+};
+
 const Expenses = () => {
   // Expense Data State
   const [expenseData, setExpenseData] = useState<ExpenseItem[]>(() => {
     const saved = localStorage.getItem('aslenix_expenses');
-    if (saved) {
+    if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          const deletedIds = getDeletedExpenseIds();
+          return parsed.filter(item => !deletedIds.has(item.id) && (!item.db_id || !deletedIds.has(item.db_id)));
+        }
       } catch (e) {
         console.error('Failed to parse saved expenses:', e);
       }
     }
-    return initialExpenseData;
+    const deletedIds = getDeletedExpenseIds();
+    return initialExpenseData.filter(item => !deletedIds.has(item.id));
   });
 
   // Filters State
@@ -203,10 +238,23 @@ const Expenses = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
 
-  // Persistence Helper
+  // Persistence Helper with quota safety
   const saveExpenseData = (data: ExpenseItem[]) => {
     setExpenseData(data);
-    localStorage.setItem('aslenix_expenses', JSON.stringify(data));
+    try {
+      localStorage.setItem('aslenix_expenses', JSON.stringify(data));
+    } catch (e) {
+      console.warn('localStorage write failed, saving without large attachments:', e);
+      try {
+        const stripped = data.map(item => ({
+          ...item,
+          receipt_photo: item.receipt_photo && item.receipt_photo.length > 1000 ? '' : item.receipt_photo
+        }));
+        localStorage.setItem('aslenix_expenses', JSON.stringify(stripped));
+      } catch (err) {
+        console.error('Failed to save expenses to localStorage:', err);
+      }
+    }
   };
 
   // Sync with Supabase on mount
@@ -219,19 +267,42 @@ const Expenses = () => {
           .order('date', { ascending: false });
 
         if (!error && data && data.length > 0) {
-          const mapped: ExpenseItem[] = data.map((d: any) => ({
-            id: d.expense_ref || d.id || `EXP-${d.id?.slice(0, 4)}`,
-            date: d.date || getTodayBsDate(),
-            vendor: d.vendor_name || 'Vendor',
-            category: d.category || 'General',
-            amount: Number(d.amount || d.total_amount || 0),
-            method: d.method || 'Bank Transfer',
-            receipt: d.receipt_no || '',
-            description: d.description || '',
-            vendor_pan: d.vendor_pan || '',
-            receipt_photo: d.attachment_url || ''
-          }));
-          saveExpenseData(mapped);
+          const deletedIds = getDeletedExpenseIds();
+          const mapped: ExpenseItem[] = data
+            .filter((d: any) => {
+              const refId = d.expense_ref || d.id;
+              const dbId = d.id;
+              return !deletedIds.has(refId) && !deletedIds.has(dbId);
+            })
+            .map((d: any) => ({
+              id: d.expense_ref || d.id || `EXP-${d.id?.slice(0, 4)}`,
+              db_id: d.id,
+              date: d.date || getTodayBsDate(),
+              vendor: d.vendor_name || 'Vendor',
+              category: d.category || 'General',
+              amount: Number(d.amount || d.total_amount || 0),
+              method: d.method || 'Bank Transfer',
+              receipt: d.receipt_no || '',
+              description: d.description || '',
+              vendor_pan: d.vendor_pan || '',
+              receipt_photo: d.attachment_url || ''
+            }));
+
+          setExpenseData(prev => {
+            const serverRefs = new Set(mapped.map(m => m.id));
+            const serverDbIds = new Set(mapped.map(m => m.db_id).filter(Boolean));
+            const localOnly = prev.filter(p => 
+              !deletedIds.has(p.id) && 
+              (!p.db_id || !deletedIds.has(p.db_id)) &&
+              !serverRefs.has(p.id) && 
+              (!p.db_id || !serverDbIds.has(p.db_id))
+            );
+            const combined = [...mapped, ...localOnly];
+            try {
+              localStorage.setItem('aslenix_expenses', JSON.stringify(combined));
+            } catch {}
+            return combined;
+          });
         }
       } catch (err) {
         // Supabase offline / table absent fallback to localStorage
@@ -425,15 +496,32 @@ const Expenses = () => {
 
   const confirmDelete = async () => {
     if (expenseToDelete) {
-      const updated = expenseData.filter(item => item.id !== expenseToDelete);
-      saveExpenseData(updated);
+      const target = expenseData.find(item => item.id === expenseToDelete || item.db_id === expenseToDelete);
+      const targetDbId = target?.db_id;
+      const targetRef = target?.id || expenseToDelete;
 
-      try {
-        await supabase.from('expenses').delete().eq('expense_ref', expenseToDelete);
-      } catch (err) {}
+      // 1. Immediately record in persistent deleted tombstone list
+      recordDeletedExpenseId(targetRef, targetDbId);
+
+      // 2. Immediately remove from local state & update localStorage
+      const updated = expenseData.filter(item => item.id !== expenseToDelete && (!targetDbId || item.db_id !== targetDbId));
+      saveExpenseData(updated);
 
       setDeleteModalOpen(false);
       setExpenseToDelete(null);
+
+      // 3. Attempt database deletion by both id (UUID) and expense_ref
+      try {
+        if (targetDbId) {
+          await supabase.from('expenses').delete().eq('id', targetDbId);
+        }
+        await supabase
+          .from('expenses')
+          .delete()
+          .or(`expense_ref.eq.${targetRef},id.eq.${targetRef}`);
+      } catch (err) {
+        console.error('Supabase expense delete error:', err);
+      }
     }
   };
 
@@ -497,7 +585,7 @@ const Expenses = () => {
       saveExpenseData(updated);
 
       try {
-        await supabase.from('expenses').insert([{
+        const { data: insertedData } = await supabase.from('expenses').insert([{
           expense_ref: nextId,
           date: formData.date,
           vendor_name: formData.vendor.trim(),
@@ -509,7 +597,11 @@ const Expenses = () => {
           description: formData.description.trim(),
           vendor_pan: formData.vendor_pan.trim(),
           attachment_url: formData.receipt_photo
-        }]);
+        }]).select();
+
+        if (insertedData?.[0]?.id) {
+          setExpenseData(prev => prev.map(item => item.id === nextId ? { ...item, db_id: insertedData[0].id } : item));
+        }
       } catch (err) {}
     }
 
@@ -568,7 +660,10 @@ const Expenses = () => {
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
           {expenseData.length === 0 && (
             <button
-              onClick={() => saveExpenseData(initialExpenseData)}
+              onClick={() => {
+                clearDeletedExpenseIds();
+                saveExpenseData(initialExpenseData);
+              }}
               className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
               title="Populate sample expenses"
             >

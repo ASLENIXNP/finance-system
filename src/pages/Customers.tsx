@@ -22,6 +22,30 @@ const defaultCustomers: Customer[] = [
   { id: 'c3', customer_id: 'CUST-1003', name: 'Vertex Media', company_name: 'Vertex Media Group', pan_number: '603456789', phone: '9851000003', email: 'hello@vertexmedia.com', type: 'Company', is_active: true },
 ];
 
+const DELETED_CUSTOMERS_KEY = 'aslenix_deleted_customers';
+
+const getDeletedCustomerIds = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(DELETED_CUSTOMERS_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const recordDeletedCustomerId = (id: string, code?: string) => {
+  try {
+    const set = getDeletedCustomerIds();
+    if (id) set.add(id);
+    if (code) set.add(code);
+    localStorage.setItem(DELETED_CUSTOMERS_KEY, JSON.stringify(Array.from(set)));
+  } catch (e) {
+    console.error('Failed to record deleted customer id:', e);
+  }
+};
+
 const Customers = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,7 +54,17 @@ const Customers = () => {
 
   const [customers, setCustomers] = useState<Customer[]>(() => {
     const saved = localStorage.getItem('aslenix_customers');
-    return saved ? JSON.parse(saved) : defaultCustomers;
+    if (saved !== null) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const deletedIds = getDeletedCustomerIds();
+          return parsed.filter(c => !deletedIds.has(c.id) && !deletedIds.has(c.customer_id));
+        }
+      } catch (e) {}
+    }
+    const deletedIds = getDeletedCustomerIds();
+    return defaultCustomers.filter(c => !deletedIds.has(c.id) && !deletedIds.has(c.customer_id));
   });
   const [loading, setLoading] = useState(false);
 
@@ -90,7 +124,24 @@ const Customers = () => {
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        saveCustomers(data);
+        const deletedIds = getDeletedCustomerIds();
+        const validServerCustomers = data.filter((c: any) => 
+          !deletedIds.has(c.id) && !deletedIds.has(c.customer_id)
+        );
+
+        setCustomers(prev => {
+          const serverIds = new Set(validServerCustomers.map((c: any) => c.id));
+          const serverCodes = new Set(validServerCustomers.map((c: any) => c.customer_id));
+          const localOnly = prev.filter(c => 
+            !deletedIds.has(c.id) && 
+            !deletedIds.has(c.customer_id) && 
+            !serverIds.has(c.id) && 
+            !serverCodes.has(c.customer_id)
+          );
+          const combined = [...validServerCustomers, ...localOnly];
+          saveCustomers(combined);
+          return combined;
+        });
       }
     } catch (error) {
       console.error('Error fetching customers:', error);
@@ -141,12 +192,16 @@ const Customers = () => {
         saveCustomers([newCustomer, ...customers]);
 
         try {
-          await supabase.from('customers').insert([
+          const { data: insertedData } = await supabase.from('customers').insert([
             {
               customer_id: newId,
               ...formData
             }
-          ]);
+          ]).select();
+
+          if (insertedData?.[0]?.id) {
+            setCustomers(prev => prev.map(c => c.id === newCustomer.id ? { ...c, id: insertedData[0].id } : c));
+          }
         } catch (dbErr) {
           console.error('DB insert error:', dbErr);
         }
@@ -202,8 +257,10 @@ const Customers = () => {
   const confirmDelete = async () => {
     if (!customerToDelete) return;
     
-    // Always remove from local state & localStorage immediately so it never returns on reload!
-    const updated = customers.filter(c => c.id !== customerToDelete);
+    const target = customers.find(c => c.id === customerToDelete || c.customer_id === customerToDelete);
+    recordDeletedCustomerId(customerToDelete, target?.customer_id);
+
+    const updated = customers.filter(c => c.id !== customerToDelete && c.customer_id !== customerToDelete);
     saveCustomers(updated);
     setDeleteModalOpen(false);
 
@@ -211,7 +268,7 @@ const Customers = () => {
       await supabase
         .from('customers')
         .delete()
-        .eq('id', customerToDelete);
+        .or(`id.eq.${customerToDelete},customer_id.eq.${target?.customer_id || customerToDelete}`);
     } catch (error: any) {
       console.error('Error deleting customer from DB:', error);
     } finally {
