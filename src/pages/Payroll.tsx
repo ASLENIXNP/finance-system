@@ -3899,15 +3899,15 @@ const Payroll = () => {
               </div>
 
               {/* Net Payable Highlight Banner */}
-              <div className="p-4 bg-slate-900 text-white rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3 mb-6">
+              <div className="p-4 bg-gradient-to-r from-emerald-50 via-white to-teal-50 rounded-xl border border-emerald-100 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3 mb-6">
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-slate-300 font-bold">Net Salary Payable to {activePayslip.employee_name}</span>
-                  <p className="text-xs text-slate-300 italic mt-0.5">
+                  <span className="text-xs uppercase tracking-wider text-slate-600 font-bold">Net Salary Payable to {activePayslip.employee_name}</span>
+                  <p className="text-xs text-slate-500 italic mt-0.5">
                     {numberToWordsNepali(activePayslip.net_salary)}
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xl font-black text-emerald-400 font-mono tracking-tight">
+                  <span className="text-2xl font-black text-emerald-700 font-mono tracking-tight">
                     {formatNPR(activePayslip.net_salary)}
                   </span>
                 </div>
