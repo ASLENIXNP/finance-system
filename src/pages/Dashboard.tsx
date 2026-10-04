@@ -447,32 +447,46 @@ const Dashboard = () => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Date Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
-            <Calendar size={18} />
+      <div className="bg-white/90 border border-slate-200/80 rounded-[22px] shadow-[0_8px_24px_rgba(15,23,42,0.04)] px-5 py-3 flex flex-wrap items-center justify-center gap-3">
+        <div className="flex items-center gap-3 bg-slate-50/80 border border-slate-200 rounded-2xl px-4 py-2.5 shadow-inner shadow-slate-100 min-w-[260px]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
+            <Calendar size={16} />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-primary">Financial Overview</h2>
-              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
-                {dateRange.label}
-              </span>
+          <div className="text-sm font-semibold text-slate-700">
+            <span className="text-[15px] font-bold text-slate-800">{formatNepaliDate(todayBs, 'withDay')}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 bg-slate-50/80 border border-slate-200 rounded-2xl px-4 py-2.5 shadow-inner shadow-slate-100">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 inline-block shadow-[0_0_0_3px_rgba(16,185,129,0.2)]" />
+          <span className="text-sm font-semibold text-slate-700">Fiscal Year:</span>
+          <span className="text-sm font-bold text-slate-900">{currentFiscalYearStr}</span>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[22px] border border-slate-200/80 shadow-[0_8px_24px_rgba(15,23,42,0.04)] px-5 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+            <Calendar size={19} />
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-black tracking-tight text-slate-800">Financial Overview</h2>
+              <span className="text-base font-semibold text-slate-600">{dateRange.label}</span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              मिति अवधि: <span className="font-mono text-slate-700 font-medium">{dateRange.start}</span> देखि <span className="font-mono text-slate-700 font-medium">{dateRange.end}</span>
+            <p className="text-xs text-slate-500 mt-1">
+              मिति अवधि: <span className="font-mono text-slate-700 font-semibold">{dateRange.start}</span> देखि <span className="font-mono text-slate-700 font-semibold">{dateRange.end}</span>
             </p>
           </div>
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
-            <Filter size={15} className="text-slate-400" />
+        <div className="flex items-center gap-3 md:ml-auto">
+          <div className="flex items-center gap-2 bg-slate-50/80 border border-slate-200 rounded-2xl px-3 py-2 shadow-inner shadow-slate-100">
+            <Filter size={15} className="text-slate-500" />
             <select 
               value={filterOption}
               onChange={(e) => setFilterOption(e.target.value as DateFilterOption)}
-              className="bg-transparent text-slate-700 text-sm font-medium outline-none cursor-pointer pr-1"
+              className="bg-transparent text-sm font-semibold text-slate-700 outline-none cursor-pointer pr-1"
             >
               <option value="today">आज (Today)</option>
               <option value="this_week">यो हप्ता (This Week)</option>
@@ -485,7 +499,7 @@ const Dashboard = () => {
           {filterOption !== 'this_month' && (
             <button 
               onClick={() => setFilterOption('this_month')}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors border border-slate-200"
               title="Reset to this month"
             >
               <RotateCcw size={13} />
