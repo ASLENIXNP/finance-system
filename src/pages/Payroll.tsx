@@ -1603,28 +1603,28 @@ const Payroll = () => {
       {activeTab === 'payroll' && (
         <div className="space-y-4">
           {/* Controls & Batch Actions */}
-          <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+          <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-white/95 p-4 rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(15,23,42,0.04)] backdrop-blur-sm">
             <div className="flex flex-wrap items-center gap-3">
               {/* Search */}
-              <div className="relative min-w-[240px]">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <div className="relative min-w-[260px]">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search employee, ID, role..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none transition-all focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/10"
                 />
               </div>
 
               {/* Department Filter */}
-              <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+              <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 shadow-sm">
                 <Filter size={14} className="text-slate-400" />
-                <span className="font-medium">Dept:</span>
+                <span className="font-semibold text-slate-500">Dept:</span>
                 <select
                   value={departmentFilter}
                   onChange={(e) => setDepartmentFilter(e.target.value)}
-                  className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+                  className="bg-transparent font-semibold text-slate-800 outline-none cursor-pointer text-xs"
                 >
                   {departments.map(d => (
                     <option key={d} value={d}>{d}</option>
@@ -1633,12 +1633,12 @@ const Payroll = () => {
               </div>
 
               {/* Status Filter */}
-              <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
-                <span className="font-medium">Status:</span>
+              <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 shadow-sm">
+                <span className="font-semibold text-slate-500">Status:</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-transparent font-medium text-slate-800 outline-none cursor-pointer text-xs"
+                  className="bg-transparent font-semibold text-slate-800 outline-none cursor-pointer text-xs"
                 >
                   <option value="All">All</option>
                   <option value="Paid">Paid</option>
@@ -1649,23 +1649,23 @@ const Payroll = () => {
             </div>
 
             {/* Quick Batch Actions & Admin Working Days Input */}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs">
-                <span className="text-slate-600 font-semibold">Working Days (Default 26):</span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs shadow-sm">
+                <span className="text-slate-600 font-semibold">Working Days</span>
                 <input
                   type="number"
                   min="1"
                   max="31"
                   value={defaultWorkingDays}
                   onChange={(e) => setDefaultWorkingDays(Number(e.target.value) || 26)}
-                  className="w-12 bg-white border border-slate-300 text-center font-bold text-slate-900 rounded py-0.5 outline-none focus:border-accent"
+                  className="w-12 bg-white border border-slate-300 text-center font-bold text-slate-900 rounded-lg py-1 outline-none focus:border-accent focus:ring-2 focus:ring-accent/10"
                 />
               </div>
 
               <button
                 onClick={handleGenerateAllForMonth}
                 title="Generates salary record with 100% full present for all active employees not yet recorded"
-                className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition-all cursor-pointer shadow-sm hover:shadow-md"
               >
                 <UserCheck size={14} className="text-emerald-600" />
                 <span>Auto-Fill All Employees</span>
@@ -1674,10 +1674,10 @@ const Payroll = () => {
           </div>
 
           {/* Payroll Table displaying all requested columns */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-[0_12px_30px_rgba(15,23,42,0.06)] border border-slate-200/80 overflow-hidden ring-1 ring-slate-200/60">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-slate-500 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-100">
+                <thead className="bg-gradient-to-r from-slate-50 via-slate-50 to-slate-100 text-slate-500 uppercase text-[11px] font-semibold tracking-[0.12em] border-b border-slate-200">
                   <tr>
                     <th className="px-4 py-3.5 whitespace-nowrap">Employee</th>
                     <th className="px-3 py-3.5 text-right whitespace-nowrap">Fixed Salary</th>
@@ -1691,22 +1691,26 @@ const Payroll = () => {
                     <th className="px-2 py-3.5 text-right whitespace-nowrap">Allowances</th>
                     <th className="px-2 py-3.5 text-right whitespace-nowrap">Other Deductions</th>
                     <th className="px-3 py-3.5 text-right text-red-600 whitespace-nowrap">TDS (1%)</th>
-                    <th className="px-4 py-3.5 text-right font-bold text-slate-900 whitespace-nowrap">Net Payable</th>
+                    <th className="px-4 py-3.5 text-right font-bold text-slate-800 whitespace-nowrap">Net Payable</th>
                     <th className="px-2 py-3.5 text-center whitespace-nowrap">Status</th>
                     <th className="px-3 py-3.5 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 bg-white">
                   {displayedPayroll.length === 0 ? (
                     <tr>
-                      <td colSpan={15} className="py-12 text-center text-slate-400">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <Banknote size={36} className="text-slate-300" />
-                          <p className="font-medium text-slate-600">No payroll records found for {selectedMonth} {selectedYear}.</p>
-                          <p className="text-xs text-slate-400">Click "+ Add / Calculate Salary" or "Auto-Fill All Employees" to generate records.</p>
+                      <td colSpan={15} className="py-14 text-center text-slate-400">
+                        <div className="flex flex-col items-center justify-center gap-3 px-6">
+                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400 shadow-inner">
+                            <Banknote size={32} />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-base font-semibold text-slate-700">No payroll records found for {selectedMonth} {selectedYear}.</p>
+                            <p className="text-sm text-slate-500">Click "+ Add / Calculate Salary" or "Auto-Fill All Employees" to generate records.</p>
+                          </div>
                           <button
                             onClick={handleGenerateAllForMonth}
-                            className="btn-gradient mt-2 px-4 py-1.5 text-xs font-bold rounded-lg transition-all"
+                            className="btn-gradient mt-2 px-5 py-2 text-xs font-bold rounded-xl shadow-md transition-all"
                           >
                             Populate Active Employees
                           </button>
