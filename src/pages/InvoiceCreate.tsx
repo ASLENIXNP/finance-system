@@ -722,23 +722,23 @@ const InvoiceCreate = () => {
               </div>
             </div>
 
-            {/* 8. SIGNATURE AREA */}
-            <div className="print-signatures pt-4 border-t border-slate-200 flex justify-between items-end mb-4 print:pt-2 print:mb-1">
+            {/* 8. SIGNATURE AREA - with ample vertical gap for signing and stamping */}
+            <div className="print-signatures mt-6 pt-16 sm:pt-20 border-t border-slate-200 flex justify-between items-end print:mt-4 print:pt-14">
               <div className="text-left w-52">
-                <div className="border-t border-slate-400 w-44 mb-1.5"></div>
+                <div className="border-t border-slate-400 w-44 mb-2"></div>
                 <p className="text-xs font-bold text-slate-900">Authorized Signature</p>
                 <p className="text-[10px] text-slate-500">For {companySettings.company_name || 'ASLENIX TECH & SOLUTION'}</p>
               </div>
 
               <div className="text-right w-52">
-                <div className="border-t border-slate-400 w-44 ml-auto mb-1.5"></div>
+                <div className="border-t border-slate-400 w-44 ml-auto mb-2"></div>
                 <p className="text-xs font-bold text-slate-900">Customer Signature</p>
                 <p className="text-[10px] text-slate-500">Received in good condition</p>
               </div>
             </div>
 
-            {/* 9. OFFICIAL ASLENIX LETTERHEAD FOOTER (Matches template exactly) */}
-            <div className="print-footer mt-6 pt-3 border-t border-slate-900 print:mt-4 print:pt-2">
+            {/* 9. OFFICIAL ASLENIX LETTERHEAD FOOTER (Lowered with generous spacing) */}
+            <div className="print-footer mt-12 sm:mt-16 pt-3.5 border-t border-slate-900 print:mt-12 print:pt-2.5">
             <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-800 font-medium px-1">
               <div className="flex items-center gap-1.5">
                 <Phone size={12} className="text-slate-950 shrink-0" />
