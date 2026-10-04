@@ -88,6 +88,61 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   stroke: #000000 !important;
 }
 
+@media (max-width: 640px) {
+  .login-shell {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
+  }
+
+  .login-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 0 !important;
+  }
+
+  .login-card > div {
+    border-radius: 1.5rem !important;
+    padding: 1.5rem 0.9rem !important;
+    box-shadow: 0 18px 42px -24px rgba(15, 23, 42, 0.2) !important;
+  }
+
+  .login-logo {
+    height: 5.5rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .login-form {
+    gap: 1rem !important;
+  }
+
+  .login-label {
+    font-size: 0.95rem !important;
+  }
+
+  .login-input {
+    padding-top: 0.82rem !important;
+    padding-bottom: 0.82rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  .login-link {
+    font-size: 0.82rem !important;
+  }
+
+  .login-submit {
+    padding-top: 0.9rem !important;
+    padding-bottom: 0.9rem !important;
+    font-size: 1rem !important;
+  }
+
+  .login-note {
+    font-size: 0.7rem !important;
+    line-height: 1.5 !important;
+  }
+}
+
 @media print {
   @page {
     size: A4 portrait;
