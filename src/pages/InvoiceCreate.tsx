@@ -43,6 +43,20 @@ const formatCurrency = (amount: number): string => {
   return `Rs. ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+const formatInvoiceDate = (value: string): string => {
+  const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
+  return match
+    ? `${match[2].padStart(2, '0')}/${match[3].padStart(2, '0')}/${match[1]}`
+    : value;
+};
+
+const storeInvoiceDate = (value: string): string => {
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value);
+  return match
+    ? `${match[3]}-${match[1].padStart(2, '0')}-${match[2].padStart(2, '0')}`
+    : value;
+};
+
 const generateInvoiceNumber = (prefix = 'ASL-') => {
   const currentYear = 2026;
   const serial = Math.floor(100 + Math.random() * 900);
@@ -277,7 +291,7 @@ const InvoiceCreate = () => {
                   }`}
                   title="Use Sample Date from template"
                 >
-                  Sample 2083-06-12
+                  Sample 06/12/2083
                 </button>
                 <button
                   type="button"
@@ -315,7 +329,7 @@ const InvoiceCreate = () => {
             </span>
           </div>
           <span className="font-mono text-[11px] bg-slate-50 px-2 py-0.5 rounded border border-slate-200 text-slate-600">
-            Current Date: {invoiceDate}
+            Current Date: {formatInvoiceDate(invoiceDate)}
           </span>
         </div>
       </div>
@@ -341,13 +355,13 @@ const InvoiceCreate = () => {
               <div className="header-row relative grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-4 w-full">
                 {/* Left: Registration details */}
                 <div className="header-left flex flex-col text-left">
-                  <div className="grid min-w-[175px] grid-cols-[52px_minmax(0,1fr)] items-center gap-x-2 gap-y-1 text-[13px] font-bold text-slate-950">
+                  <div className="registration-details grid min-w-[205px] grid-cols-[58px_1fr] items-center gap-x-2 gap-y-1 text-[13px] font-bold text-slate-950">
                     <span className="font-bold whitespace-nowrap">Reg No:</span>
                       <input
                         type="text"
                         value={registrationNo}
                         onChange={(e) => setRegistrationNo(e.target.value)}
-                        className="w-full min-w-0 whitespace-nowrap font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none hover:bg-slate-200/50 focus:bg-white rounded px-1"
+                        className="w-[130px] min-w-0 whitespace-nowrap font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none hover:bg-slate-200/50 focus:bg-white rounded px-1"
                         placeholder="391840/82/83"
                         title="Registration Number (click to edit)"
                       />
@@ -356,7 +370,7 @@ const InvoiceCreate = () => {
                         type="text"
                         value={panNo}
                         onChange={(e) => setPanNo(e.target.value)}
-                        className="w-full min-w-0 whitespace-nowrap font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none hover:bg-slate-200/50 focus:bg-white rounded px-1 font-mono"
+                        className="w-[130px] min-w-0 whitespace-nowrap font-bold text-slate-950 bg-transparent border-none p-0 focus:ring-0 outline-none hover:bg-slate-200/50 focus:bg-white rounded px-1 font-mono"
                         placeholder="623611557"
                         title="PAN Number (click to edit)"
                       />
@@ -405,7 +419,7 @@ const InvoiceCreate = () => {
             <div className="flex flex-wrap justify-between items-center gap-3 mb-4 pt-0.5 text-xs font-medium">
               <div className="flex items-center gap-3 text-slate-600">
                 <span>
-                  Payment Due: <span className="font-semibold text-slate-900">{dueDate}</span>
+                  Payment Due: <span className="font-semibold text-slate-900">{formatInvoiceDate(dueDate)}</span>
                 </span>
                 <span className="text-slate-300">|</span>
                 <span className="text-slate-500">
@@ -417,10 +431,10 @@ const InvoiceCreate = () => {
                 <span className="text-slate-500 font-semibold uppercase text-[11px]">DATE:</span>
                 <input
                   type="text"
-                  value={invoiceDate}
-                  onChange={(e) => setInvoiceDate(e.target.value)}
+                  value={formatInvoiceDate(invoiceDate)}
+                  onChange={(e) => setInvoiceDate(storeInvoiceDate(e.target.value))}
                   className="font-bold text-slate-950 bg-transparent border-b border-transparent hover:border-slate-400 focus:border-slate-950 p-0 focus:ring-0 outline-none text-right font-mono w-28 hover:bg-slate-200/50 focus:bg-white rounded px-1 transition-all"
-                  placeholder="2083-06-12"
+                  placeholder="MM/DD/YYYY"
                   title="Invoice Date (BS)"
                 />
               </div>

@@ -286,7 +286,19 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important;
+    justify-self: start !important;
     text-align: left !important;
+  }
+
+  #printable-invoice .print-header .registration-details {
+    grid-template-columns: 58px 1fr !important;
+    min-width: 205px !important;
+    align-items: center !important;
+  }
+
+  #printable-invoice .print-header .registration-details input {
+    width: 130px !important;
+    white-space: nowrap !important;
   }
 
   #printable-invoice .print-header .header-right {
