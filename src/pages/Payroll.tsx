@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Search, 
   Plus, 
@@ -41,6 +41,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
 import { formatNepaliDate, getTodayBsDate } from '../lib/nepaliDate';
 import { EmployeeIdCard } from '../components/EmployeeIdCard';
+import { supabase } from '../lib/supabase';
 
 export interface Employee {
   id: string;
@@ -59,6 +60,24 @@ export interface Employee {
   is_active: boolean;
   photo_url?: string;
   notes?: string;
+}
+
+interface EmployeeDatabaseRow {
+  employee_code: string;
+  name: string;
+  designation: string;
+  department: string | null;
+  email: string | null;
+  phone: string | null;
+  pan_number: string | null;
+  fixed_salary: number | string;
+  bank_name: string | null;
+  bank_account_no: string | null;
+  bank_branch: string | null;
+  joining_date: string | null;
+  is_active: boolean | null;
+  photo_url: string | null;
+  notes: string | null;
 }
 
 const DEFAULT_WORKING_DAYS = 30;
@@ -209,94 +228,6 @@ export const getEmployeePhoto = (emp: { name: string; photo_url?: string }) => {
   }
   return '';
 };
-
-const initialEmployees: Employee[] = [
-  {
-    id: 'ASL-001',
-    employee_code: 'ASL-001',
-    name: 'Aarav Sharma',
-    designation: 'Senior Full Stack Engineer',
-    department: 'Technology',
-    email: 'aarav.sharma@aslenix.com',
-    phone: '9841000001',
-    pan_number: '609123456',
-    fixed_salary: 75000,
-    bank_name: 'Nabil Bank',
-    bank_account_no: '01901017500123',
-    bank_branch: 'Putalisadak',
-    joining_date: '2081-10-01',
-    is_active: true,
-    photo_url: '',
-  },
-  {
-    id: 'ASL-002',
-    employee_code: 'ASL-002',
-    name: 'Pooja Shrestha',
-    designation: 'Lead Accountant',
-    department: 'Finance',
-    email: 'pooja.shrestha@aslenix.com',
-    phone: '9841000002',
-    pan_number: '608987654',
-    fixed_salary: 60000,
-    bank_name: 'Global IME Bank',
-    bank_account_no: '04501010098765',
-    bank_branch: 'New Baneshwor',
-    joining_date: '2081-11-15',
-    is_active: true,
-    photo_url: '',
-  },
-  {
-    id: 'ASL-003',
-    employee_code: 'ASL-003',
-    name: 'Rohan Adhikari',
-    designation: 'UI/UX & Frontend Designer',
-    department: 'Creative & Tech',
-    email: 'rohan.adhikari@aslenix.com',
-    phone: '9841000003',
-    pan_number: '610543210',
-    fixed_salary: 48000,
-    bank_name: 'NIC Asia Bank',
-    bank_account_no: '12405060708090',
-    bank_branch: 'Thamel',
-    joining_date: '2082-01-01',
-    is_active: true,
-    photo_url: '',
-  },
-  {
-    id: 'ASL-004',
-    employee_code: 'ASL-004',
-    name: 'Sneha Karki',
-    designation: 'Business Development Officer',
-    department: 'Marketing',
-    email: 'sneha.karki@aslenix.com',
-    phone: '9841000004',
-    pan_number: '611223344',
-    fixed_salary: 38000,
-    bank_name: 'Sanima Bank',
-    bank_account_no: '08901234567890',
-    bank_branch: 'Lalitpur',
-    joining_date: '2082-03-01',
-    is_active: true,
-    photo_url: '',
-  },
-  {
-    id: 'ASL-005',
-    employee_code: 'ASL-005',
-    name: 'Manish KC',
-    designation: 'QA & Support Engineer',
-    department: 'Technology',
-    email: 'manish.kc@aslenix.com',
-    phone: '9841000005',
-    pan_number: '612345678',
-    fixed_salary: 42000,
-    bank_name: 'Everest Bank',
-    bank_account_no: '00109988776655',
-    bank_branch: 'Lazimpat',
-    joining_date: '2082-05-15',
-    is_active: true,
-    photo_url: '',
-  }
-];
 
 // Initial demo records calculated using the exact salary and 1% TDS rules
 const initialPayrollRecords: PayrollRecord[] = [
@@ -509,8 +440,11 @@ const Payroll = () => {
         console.error('Error loading employees:', err);
       }
     }
-    return initialEmployees;
+    return [];
   });
+  const [employeeSyncError, setEmployeeSyncError] = useState<string | null>(null);
+  const [employeeSyncLoading, setEmployeeSyncLoading] = useState(true);
+  const employeeSyncReady = useRef(false);
 
   // Strict deduplication helper: guarantees exactly 1 row per employee per (month + year)
   const deduplicatePayrollRecords = (records: PayrollRecord[]): PayrollRecord[] => {
@@ -671,10 +605,143 @@ const Payroll = () => {
     });
   }, [employees, employeeSearchTerm, employeeDeptFilter]);
 
-  // Save to localStorage
+  const employeeToDatabaseRow = (employee: Employee) => ({
+    employee_code: employee.employee_code,
+    name: employee.name,
+    designation: employee.designation,
+    department: employee.department,
+    email: employee.email || null,
+    phone: employee.phone || null,
+    pan_number: employee.pan_number || null,
+    fixed_salary: Number(employee.fixed_salary) || 0,
+    bank_name: employee.bank_name || null,
+    bank_account_no: employee.bank_account_no || null,
+    bank_branch: employee.bank_branch || null,
+    joining_date: employee.joining_date || null,
+    is_active: employee.is_active,
+    notes: employee.notes || null,
+    photo_url: employee.photo_url || null,
+  });
+
+  const employeeFromDatabaseRow = (row: EmployeeDatabaseRow): Employee => ({
+    id: row.employee_code,
+    employee_code: row.employee_code,
+    name: row.name,
+    designation: row.designation,
+    department: row.department || 'General',
+    email: row.email || '',
+    phone: row.phone || '',
+    pan_number: row.pan_number || '',
+    fixed_salary: Number(row.fixed_salary) || 0,
+    bank_name: row.bank_name || '',
+    bank_account_no: row.bank_account_no || '',
+    bank_branch: row.bank_branch || '',
+    joining_date: row.joining_date || '',
+    is_active: row.is_active ?? true,
+    photo_url: row.photo_url || '',
+    notes: row.notes || '',
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSharedEmployees = async () => {
+      setEmployeeSyncLoading(true);
+      setEmployeeSyncError(null);
+
+      try {
+        const savedEmployees = localStorage.getItem('aslenix_employees');
+        const hasMigratedEmployees = localStorage.getItem('aslenix_employees_synced_to_supabase') === 'true';
+
+        if (!savedEmployees) {
+          setEmployees([]);
+        } else if (!hasMigratedEmployees) {
+          const parsed: unknown = JSON.parse(savedEmployees);
+          if (!Array.isArray(parsed)) {
+            throw new Error('Saved employee data is not a list and could not be synced.');
+          }
+
+          const legacyEmployees = parsed as Employee[];
+          if (legacyEmployees.length > 0) {
+            const { error } = await supabase
+              .from('employees')
+              .upsert(legacyEmployees.map(employeeToDatabaseRow), { onConflict: 'employee_code' });
+            if (error) throw error;
+          }
+          localStorage.setItem('aslenix_employees_synced_to_supabase', 'true');
+        }
+
+        const { data, error } = await supabase
+          .from('employees')
+          .select('*')
+          .order('created_at', { ascending: true });
+        if (error) throw error;
+        if (cancelled) return;
+
+        const sharedEmployees = (data ?? []).map((row) => employeeFromDatabaseRow(row));
+        setEmployees(sharedEmployees);
+        localStorage.setItem('aslenix_employees', JSON.stringify(sharedEmployees));
+        localStorage.setItem('aslenix_employees_synced_to_supabase', 'true');
+        employeeSyncReady.current = true;
+      } catch (error) {
+        console.error('Failed to load shared employee records:', error);
+        if (!cancelled) {
+          const localEmployees = localStorage.getItem('aslenix_employees');
+          if (!localEmployees) setEmployees([]);
+          setEmployeeSyncError(
+            error instanceof Error
+              ? error.message
+              : 'Employee records could not be loaded from the shared database.'
+          );
+        }
+      } finally {
+        if (!cancelled) setEmployeeSyncLoading(false);
+      }
+    };
+
+    void loadSharedEmployees();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Save locally for offline resilience and sync changes to the shared database.
   const saveEmployees = (updated: Employee[]) => {
+    const removedCodes = employees
+      .filter((employee) => !updated.some((next) => next.employee_code === employee.employee_code))
+      .map((employee) => employee.employee_code);
+
     setEmployees(updated);
     localStorage.setItem('aslenix_employees', JSON.stringify(updated));
+
+    if (!employeeSyncReady.current) return;
+
+    const syncChanges = async () => {
+      setEmployeeSyncError(null);
+      if (updated.length > 0) {
+        const { error } = await supabase
+          .from('employees')
+          .upsert(updated.map(employeeToDatabaseRow), { onConflict: 'employee_code' });
+        if (error) throw error;
+      }
+      if (removedCodes.length > 0) {
+        const { error } = await supabase
+          .from('employees')
+          .delete()
+          .in('employee_code', removedCodes);
+        if (error) throw error;
+      }
+      localStorage.setItem('aslenix_employees_synced_to_supabase', 'true');
+    };
+
+    void syncChanges().catch((error: unknown) => {
+      console.error('Failed to sync employee changes:', error);
+      setEmployeeSyncError(
+        error instanceof Error
+          ? error.message
+          : 'Employee changes were saved on this device but could not sync to the database.'
+      );
+    });
   };
 
   const savePayrollRecords = (updated: PayrollRecord[]) => {
@@ -1460,6 +1527,18 @@ const Payroll = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {employeeSyncLoading && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+          Loading shared employee records...
+        </div>
+      )}
+      {employeeSyncError && (
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          <p className="font-semibold">Employee data could not sync with the shared database.</p>
+          <p>{employeeSyncError}</p>
+          <p className="mt-1 text-xs">Your current device copy is retained. Verify the employees table permissions and photo_url database migration, then refresh.</p>
+        </div>
+      )}
       {/* Top Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div>

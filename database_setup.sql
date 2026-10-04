@@ -157,6 +157,8 @@ CREATE TABLE employees (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS photo_url TEXT;
+
 -- 11. Employee Salary / Payroll Records Table
 CREATE TABLE payroll_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
