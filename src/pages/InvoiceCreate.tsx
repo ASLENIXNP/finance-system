@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
-import { toBsDateString, getTodayBsDate } from '../lib/nepaliDate';
+import { bsToAdDate, toBsDateString, getTodayBsDate } from '../lib/nepaliDate';
 import { getStoredCompanySettings, type CompanySettingsData } from './CompanySettings';
 
 interface Customer {
@@ -44,10 +44,12 @@ const formatCurrency = (amount: number): string => {
 };
 
 const formatInvoiceDate = (value: string): string => {
-  const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
-  return match
-    ? `${match[2].padStart(2, '0')}/${match[3].padStart(2, '0')}/${match[1]}`
-    : value;
+  const date = bsToAdDate(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${month}/${day}/${date.getFullYear()}`;
 };
 
 const storeInvoiceDate = (value: string): string => {
@@ -352,7 +354,7 @@ const InvoiceCreate = () => {
         <div className="invoice-content-wrapper relative z-10 p-8 sm:p-10 print:p-0 text-slate-800 flex flex-col">
           {/* 1. OFFICIAL ASLENIX LETTERHEAD HEADER (Exact match to sample & user layout) */}
             <div className="print-header pb-1 mb-3">
-              <div className="header-row relative grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-4 w-full">
+              <div className="header-row relative grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-start gap-4 w-full">
                 {/* Left: Registration details */}
                 <div className="header-left flex flex-col text-left">
                   <div className="registration-details grid min-w-[205px] grid-cols-[58px_1fr] items-center gap-x-2 gap-y-1 text-[13px] font-bold text-slate-950">
@@ -427,7 +429,7 @@ const InvoiceCreate = () => {
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 text-slate-950 font-bold ml-auto">
+              <div className="flex items-center gap-1 text-slate-950 font-bold ml-auto">
                 <span className="text-slate-500 font-semibold uppercase text-[11px]">DATE:</span>
                 <input
                   type="text"

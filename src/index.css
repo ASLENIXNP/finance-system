@@ -277,7 +277,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-invoice .print-header .header-row {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     gap: 8px !important;
     width: 100% !important;
   }
@@ -287,6 +287,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     flex-direction: column !important;
     align-items: flex-start !important;
     justify-self: start !important;
+    align-self: start !important;
     text-align: left !important;
   }
 
@@ -305,6 +306,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-end !important;
+    align-self: start !important;
     text-align: right !important;
   }
 
@@ -312,6 +314,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     position: static !important;
     transform: none !important;
     justify-self: center !important;
+    align-self: start !important;
     align-items: center !important;
     text-align: center !important;
     white-space: nowrap !important;
