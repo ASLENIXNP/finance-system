@@ -3667,15 +3667,15 @@ const Payroll = () => {
 
       {/* MODAL 4: PRINTABLE OFFICIAL SALARY SLIP (PAYSLIP) */}
       {isPayslipModalOpen && activePayslip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden relative my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-hidden relative flex flex-col">
             {/* Modal Controls Bar (hidden during print) */}
-            <div className="no-print flex justify-between items-center px-6 py-3.5 bg-slate-800 text-white">
-              <div className="flex items-center gap-2 text-sm font-semibold">
+            <div className="no-print sticky top-0 z-20 flex shrink-0 justify-between items-center gap-3 px-4 sm:px-6 py-3.5 bg-slate-800 text-white shadow-md">
+              <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
                 <FileText size={18} />
-                <span>Salary Slip Preview — {activePayslip.employee_name} ({activePayslip.month} {activePayslip.year} BS)</span>
+                <span className="truncate">Salary Slip Preview — {activePayslip.employee_name} ({activePayslip.month} {activePayslip.year} BS)</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <button
                   type="button"
                   onClick={handlePrintPayslip}
@@ -3686,17 +3686,20 @@ const Payroll = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsPayslipModalOpen(false)}
-                  aria-label="Close salary slip preview"
-                  className="p-1.5 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+                  onClick={() => {
+                    setIsPayslipModalOpen(false);
+                    setActivePayslip(null);
+                  }}
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-500 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-700 cursor-pointer"
                 >
-                  ✕
+                  <X size={15} />
+                  <span>Cancel / Close</span>
                 </button>
               </div>
             </div>
 
             {/* A4 Printable Content */}
-            <div id="printable-payslip" className="p-8 sm:p-12 text-slate-800 bg-white">
+            <div id="printable-payslip" className="min-h-0 flex-1 overflow-y-auto p-8 sm:p-12 text-slate-800 bg-white">
               {/* Company Header */}
               {(() => {
                 let comp: any = null;
