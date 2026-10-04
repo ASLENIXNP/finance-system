@@ -357,7 +357,7 @@ const InvoiceCreate = () => {
               <div className="header-row relative grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-start gap-4 w-full">
                 {/* Left: Registration details */}
                 <div className="header-left flex flex-col text-left">
-                  <div className="registration-details grid min-w-[205px] grid-cols-[58px_1fr] items-center gap-x-2 gap-y-1 text-[13px] font-bold text-slate-950">
+                  <div className="registration-details grid min-w-[205px] grid-cols-[58px_1fr] items-center gap-x-2 gap-y-1 rounded-md border border-slate-300/80 bg-white/20 px-2 py-1.5 text-[13px] font-bold text-slate-950">
                     <span className="font-bold whitespace-nowrap">Reg No:</span>
                       <input
                         type="text"
