@@ -185,17 +185,25 @@ const Layout = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#f1f0ee] print:h-auto print:block print:overflow-visible print:w-full">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-0 print:hidden">
-          <h2 className="text-xl font-semibold text-primary">Overview</h2>
-          <div className="flex items-center gap-3">
-             <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-slate-200">
-               <Calendar size={14} className="text-accent" />
-               <span>{formatNepaliDate(new Date(), 'withDay')} BS</span>
-               <span className="text-slate-400 font-normal">({formatNepaliDate(new Date(), 'devanagari')})</span>
-             </span>
-             <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-full border border-slate-200">
-               Fiscal Year: {getCurrentFiscalYear()}
-             </span>
+        <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-center px-8 z-10 relative print:hidden shadow-xs">
+          <div className="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+            {/* Date Badge */}
+            <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200/70 shadow-2xs text-xs font-semibold text-slate-800">
+              <div className="w-5 h-5 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/70">
+                <Calendar size={12} />
+              </div>
+              <span className="font-bold tracking-tight text-slate-900">{formatNepaliDate(new Date(), 'withDay')} BS</span>
+              <span className="text-slate-400 font-medium text-[11px] border-l border-slate-200 pl-2">
+                {formatNepaliDate(new Date(), 'devanagari')}
+              </span>
+            </div>
+
+            {/* Fiscal Year Badge */}
+            <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200/70 shadow-2xs text-xs font-semibold text-slate-700">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+              <span className="text-slate-400 uppercase text-[10px] font-bold tracking-wider">Fiscal Year:</span>
+              <span className="font-mono font-bold text-slate-900">{getCurrentFiscalYear()}</span>
+            </div>
           </div>
         </header>
 
