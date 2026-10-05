@@ -94,9 +94,9 @@ export interface PayrollRecord {
   year: number;
   total_working_days: number; // Default 30, admin editable
   present_days: number;       // 1 full day each
-  half_days: number;          // 0.5 day each; 2 half days = 1 full day
-  absent_days: number;        // total_working_days - present_days - (half_days * 0.5)
-  effective_days: number;     // present_days + (half_days * 0.5)
+  half_days: number;          // 2 half-day entries count as 1 absent day
+  absent_days: number;        // total_working_days - present_days, including half-day absences
+  effective_days: number;     // present_days only; half days are not paid as worked days
   fixed_salary: number;       // Fixed Monthly Salary
   per_day_rate: number;       // fixed_salary / total_working_days
   attendance_salary: number;  // per_day_rate * effective_days
@@ -118,8 +118,8 @@ export interface PayrollRecord {
 /**
  * Exact Salary & Attendance Calculation Engine
  * 1. Working Days: Default 30, admin can adjust
- * 2. Effective Days = Present + (Half Days × 0.5)
- * 3. Absent Days = Total Working Days - Present - (Half Days × 0.5)
+ * 2. Effective Days = Present Days (half days are not counted as worked days)
+ * 3. Absent Days = Total Working Days - Present Days
  * 4. Daily Rate = Fixed Salary ÷ Total Working Days
  * 5. Attendance Salary = Daily Rate × Effective Days
  * 6. Net Before TDS = Attendance Salary + Allowances - Other Deductions
@@ -140,13 +140,12 @@ export const calculatePayrollValues = (
   const present_days = Math.max(0, Number(presentInput) || 0);
   const half_days = Math.max(0, Number(halfDaysInput) || 0);
 
-  // Effective Days = Present + (Half Days × 0.5)
-  // 2 half days = 1 full working day
-  const effective_days = present_days + (half_days * 0.5);
+  // Half-day entries represent absence; they do not add paid worked days.
+  // Two half-day entries therefore make up one absent day.
+  const effective_days = present_days;
 
-  // Absent Days = Total Working Days - Present - (Half Days × 0.5)
-  // This ensures 2 half days count as 1 absent day, not 2.
-  const absent_days = Math.max(0, Number((total_working_days - present_days - (half_days * 0.5)).toFixed(2)));
+  // Total absence includes both full-day and half-day absences.
+  const absent_days = Math.max(0, Number((total_working_days - effective_days).toFixed(2)));
 
   // Daily Rate = Fixed Salary ÷ Total Working Days
   const per_day_rate = fixed_salary / total_working_days;
@@ -244,23 +243,23 @@ const initialPayrollRecords: PayrollRecord[] = [
     total_working_days: 30,
     present_days: 24,
     half_days: 2,
-    absent_days: 5,
-    effective_days: 25.0,
+    absent_days: 6,
+    effective_days: 24.0,
     fixed_salary: 75000,
-    per_day_rate: 2884.62,
-    attendance_salary: 72115.38,
-    earned_salary: 72115.38,
+    per_day_rate: 2500,
+    attendance_salary: 60000,
+    earned_salary: 60000,
     bonus_allowance: 2500,
     deductions: 1500,
-    net_before_tds: 73115.38,
+    net_before_tds: 61000,
     tds_rate: 1,
-    tds_amount: 731.15,
-    net_salary: 72384.23,
+    tds_amount: 610,
+    net_salary: 60390,
     payment_status: 'Paid',
     payment_date: '2083-06-15',
     payment_method: 'Bank Transfer',
     reference_no: 'NBL-TXN-98442',
-    notes: '24 present, 2 half days = 25 effective days. 1% TDS applied.'
+    notes: '24 present days; 2 half-day absences count as 1 absent day. 1% TDS applied.'
   },
   {
     id: 'PAY-2083-06-002',
@@ -275,18 +274,18 @@ const initialPayrollRecords: PayrollRecord[] = [
     total_working_days: 30,
     present_days: 25,
     half_days: 1,
-    absent_days: 4.5,
-    effective_days: 25.5,
+    absent_days: 5,
+    effective_days: 25,
     fixed_salary: 60000,
-    per_day_rate: 2307.69,
-    attendance_salary: 58846.15,
-    earned_salary: 58846.15,
+    per_day_rate: 2000,
+    attendance_salary: 50000,
+    earned_salary: 50000,
     bonus_allowance: 0,
     deductions: 0,
-    net_before_tds: 58846.15,
+    net_before_tds: 50000,
     tds_rate: 1,
-    tds_amount: 588.46,
-    net_salary: 58257.69,
+    tds_amount: 500,
+    net_salary: 49500,
     payment_status: 'Approved',
     payment_date: undefined,
     payment_method: undefined,
@@ -306,18 +305,18 @@ const initialPayrollRecords: PayrollRecord[] = [
     total_working_days: 30,
     present_days: 23,
     half_days: 2,
-    absent_days: 6,
-    effective_days: 24.0,
+    absent_days: 7,
+    effective_days: 23.0,
     fixed_salary: 48000,
     per_day_rate: 1600.00,
-    attendance_salary: 38400.00,
-    earned_salary: 38400.00,
+    attendance_salary: 36800.00,
+    earned_salary: 36800.00,
     bonus_allowance: 1000,
     deductions: 2000,
-    net_before_tds: 39400.00,
+    net_before_tds: 35800.00,
     tds_rate: 1,
-    tds_amount: 394.00,
-    net_salary: 39006.00,
+    tds_amount: 358.00,
+    net_salary: 35442.00,
     payment_status: 'Unpaid',
     notes: 'Advance salary deduction Rs. 2,000. 1% TDS applied.'
   },
@@ -791,25 +790,23 @@ const Payroll = () => {
         }
 
         const mapped = (parsedPayroll as PayrollRecord[]).map(record => {
-          const attendanceSalary = record.attendance_salary ?? record.earned_salary ??
-            ((record.fixed_salary / (record.total_working_days || DEFAULT_WORKING_DAYS)) * (record.effective_days || 0));
-          const netBeforeTds = record.net_before_tds ??
-            (attendanceSalary + (record.bonus_allowance || 0) - (record.deductions || 0));
           const tdsRate = record.tds_rate ?? 1;
-          const tdsAmount = record.tds_amount ?? Number((netBeforeTds * (tdsRate / 100)).toFixed(2));
+          const normalized = calculatePayrollValues(
+            record.fixed_salary,
+            record.total_working_days,
+            record.present_days,
+            record.half_days,
+            record.bonus_allowance,
+            record.deductions,
+            tdsRate > 0,
+            tdsRate
+          );
 
           return {
             ...record,
+            ...normalized,
             employee_id: (record.employee_id || '').replace(/^EMP-/i, 'ASL-'),
-            employee_code: (record.employee_code || '').replace(/^EMP-/i, 'ASL-'),
-            attendance_salary: Number(attendanceSalary.toFixed(2)),
-            earned_salary: Number(attendanceSalary.toFixed(2)),
-            net_before_tds: Number(netBeforeTds.toFixed(2)),
-            tds_rate: tdsRate,
-            tds_amount: tdsAmount,
-            net_salary: record.tds_amount !== undefined
-              ? record.net_salary
-              : Math.max(0, Number((netBeforeTds - tdsAmount).toFixed(2)))
+            employee_code: (record.employee_code || '').replace(/^EMP-/i, 'ASL-')
           };
         });
         setPayrollRecords(deduplicatePayrollRecords(mapped));
@@ -1976,7 +1973,7 @@ const Payroll = () => {
                         {/* 5. Half Day */}
                         <td className="px-2 py-3.5 text-center">
                           {record.half_days > 0 ? (
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="Each half-day = 0.5 effective day">
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="Two half-day absences = 1 absent day">
                               {record.half_days} <span className="text-[10px] ml-0.5 opacity-75">(0.5x)</span>
                             </span>
                           ) : (
@@ -2132,13 +2129,13 @@ const Payroll = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <span className="font-semibold text-slate-700">Salary Accounting Rules:</span>
                 <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
-                  Effective Days = Present + (0.5 × Half Days)
+                  Effective Days = Present Days
                 </span>
                 <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
                   Daily Rate = Fixed ÷ Working Days
                 </span>
                 <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
-                  Attendance Salary = Daily Rate × Effective Days
+                  Attendance Salary = Daily Rate × Present Days
                 </span>
                 <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-200 text-red-700">
                   TDS = Net Before TDS × 1%
@@ -3053,7 +3050,7 @@ const Payroll = () => {
                       onChange={(e) => setSalaryFormData({ ...salaryFormData, half_days: Number(e.target.value) })}
                       className="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-sm font-semibold text-amber-800 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
                     />
-                    <span className="text-[10px] text-amber-600 mt-0.5 block">2 half = 1 day worked</span>
+                    <span className="text-[10px] text-amber-600 mt-0.5 block">2 half-days = 1 absent day</span>
                   </div>
 
                   {/* Absent Days (auto-computed) */}
@@ -3067,7 +3064,7 @@ const Payroll = () => {
                       value={calculatedSalaryDetails.absent_days}
                       className="w-full px-3 py-2 bg-slate-100 border border-red-200 rounded-xl text-sm font-semibold text-red-800 outline-none cursor-not-allowed"
                     />
-                    <span className="text-[10px] text-red-500 mt-0.5 block">Auto = Work - Effective</span>
+                    <span className="text-[10px] text-red-500 mt-0.5 block">Auto = Work - Present</span>
                   </div>
                 </div>
 
@@ -3077,7 +3074,7 @@ const Payroll = () => {
                     <span className="font-bold text-emerald-700 text-sm">{calculatedSalaryDetails.effective_days} Days</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-600">Deduction (Absence/Half):</span>
+                    <span className="text-slate-600">Absent Days (incl. half-days):</span>
                     <span className="font-bold text-red-600 text-sm">
                       {(calculatedSalaryDetails.total_working_days - calculatedSalaryDetails.effective_days).toFixed(1)} Days
                     </span>
@@ -3154,7 +3151,7 @@ const Payroll = () => {
                   <div>
                     <span className="text-slate-500">Effective Days:</span>
                     <p className="text-sm font-bold text-emerald-700">{calculatedSalaryDetails.effective_days} Days</p>
-                    <span className="text-[10px] text-slate-500">{calculatedSalaryDetails.present_days} Pres + {calculatedSalaryDetails.half_days} Half</span>
+                    <span className="text-[10px] text-slate-500">{calculatedSalaryDetails.present_days} present; {calculatedSalaryDetails.half_days} half-day absences</span>
                   </div>
                   <div>
                     <span className="text-slate-500">Gross Attendance:</span>
@@ -3927,7 +3924,7 @@ const Payroll = () => {
                   </table>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-1 italic">
-                  Note: 2 Half-Days equal 1 full working day. Deductions are calculated proportionately without double-counting.
+                  Note: Two half-day absences equal one absent day; half-days are not counted as paid working days.
                 </p>
               </div>
 
