@@ -95,7 +95,7 @@ export interface PayrollRecord {
   total_working_days: number; // Default 30, admin editable
   present_days: number;       // 1 full day each
   half_days: number;          // 2 half-day entries count as 1 absent day
-  absent_days: number;        // total_working_days - present_days, including half-day absences
+  absent_days: number;        // Full absent days, excluding half-day equivalents
   effective_days: number;     // present_days only; half days are not paid as worked days
   fixed_salary: number;       // Fixed Monthly Salary
   per_day_rate: number;       // fixed_salary / total_working_days
@@ -119,7 +119,7 @@ export interface PayrollRecord {
  * Exact Salary & Attendance Calculation Engine
  * 1. Working Days: Default 30, admin can adjust
  * 2. Effective Days = Present Days (half days are not counted as worked days)
- * 3. Absent Days = Total Working Days - Present Days
+ * 3. Absent Days = Total Working Days - Present Days - (Half Days × 0.5)
  * 4. Daily Rate = Fixed Salary ÷ Total Working Days
  * 5. Attendance Salary = Daily Rate × Effective Days
  * 6. Net Before TDS = Attendance Salary + Allowances - Other Deductions
@@ -144,8 +144,8 @@ export const calculatePayrollValues = (
   // Two half-day entries therefore make up one absent day.
   const effective_days = present_days;
 
-  // Total absence includes both full-day and half-day absences.
-  const absent_days = Math.max(0, Number((total_working_days - effective_days).toFixed(2)));
+  // Keep full absent days separate; half-day entries are shown in their own field.
+  const absent_days = Math.max(0, Number((total_working_days - present_days - (half_days * 0.5)).toFixed(2)));
 
   // Daily Rate = Fixed Salary ÷ Total Working Days
   const per_day_rate = fixed_salary / total_working_days;
@@ -243,7 +243,7 @@ const initialPayrollRecords: PayrollRecord[] = [
     total_working_days: 30,
     present_days: 24,
     half_days: 2,
-    absent_days: 6,
+    absent_days: 5,
     effective_days: 24.0,
     fixed_salary: 75000,
     per_day_rate: 2500,
@@ -274,7 +274,7 @@ const initialPayrollRecords: PayrollRecord[] = [
     total_working_days: 30,
     present_days: 25,
     half_days: 1,
-    absent_days: 5,
+    absent_days: 4.5,
     effective_days: 25,
     fixed_salary: 60000,
     per_day_rate: 2000,
@@ -305,7 +305,7 @@ const initialPayrollRecords: PayrollRecord[] = [
     total_working_days: 30,
     present_days: 23,
     half_days: 2,
-    absent_days: 7,
+    absent_days: 6,
     effective_days: 23.0,
     fixed_salary: 48000,
     per_day_rate: 1600.00,
@@ -3064,7 +3064,7 @@ const Payroll = () => {
                       value={calculatedSalaryDetails.absent_days}
                       className="w-full px-3 py-2 bg-slate-100 border border-red-200 rounded-xl text-sm font-semibold text-red-800 outline-none cursor-not-allowed"
                     />
-                    <span className="text-[10px] text-red-500 mt-0.5 block">Auto = Work - Present</span>
+                    <span className="text-[10px] text-red-500 mt-0.5 block">Excludes half-day absences</span>
                   </div>
                 </div>
 
@@ -3074,7 +3074,7 @@ const Payroll = () => {
                     <span className="font-bold text-emerald-700 text-sm">{calculatedSalaryDetails.effective_days} Days</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-600">Absent Days (incl. half-days):</span>
+                    <span className="text-slate-600">Total absence deduction (days):</span>
                     <span className="font-bold text-red-600 text-sm">
                       {(calculatedSalaryDetails.total_working_days - calculatedSalaryDetails.effective_days).toFixed(1)} Days
                     </span>
@@ -3924,7 +3924,7 @@ const Payroll = () => {
                   </table>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-1 italic">
-                  Note: Two half-day absences equal one absent day; half-days are not counted as paid working days.
+                  Note: Full absent days exclude half-days. Two half-days are shown separately and add one day to the attendance deduction; half-days are not paid working days.
                 </p>
               </div>
 
