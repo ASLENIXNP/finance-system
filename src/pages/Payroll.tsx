@@ -145,8 +145,8 @@ export const calculatePayrollValues = (
   const effective_days = present_days + (half_days * 0.5);
 
   // Absent Days = Total Working Days - Present - (Half Days × 0.5)
-  // Prevents double-counting absences and half-days
-  const absent_days = Math.max(0, Number((total_working_days - effective_days).toFixed(2)));
+  // This ensures 2 half days count as 1 absent day, not 2.
+  const absent_days = Math.max(0, Number((total_working_days - present_days - (half_days * 0.5)).toFixed(2)));
 
   // Daily Rate = Fixed Salary ÷ Total Working Days
   const per_day_rate = fixed_salary / total_working_days;
@@ -244,7 +244,7 @@ const initialPayrollRecords: PayrollRecord[] = [
     total_working_days: 30,
     present_days: 24,
     half_days: 2,
-    absent_days: 1,
+    absent_days: 5,
     effective_days: 25.0,
     fixed_salary: 75000,
     per_day_rate: 2884.62,
@@ -275,7 +275,7 @@ const initialPayrollRecords: PayrollRecord[] = [
     total_working_days: 30,
     present_days: 25,
     half_days: 1,
-    absent_days: 0.5,
+    absent_days: 4.5,
     effective_days: 25.5,
     fixed_salary: 60000,
     per_day_rate: 2307.69,
@@ -306,7 +306,7 @@ const initialPayrollRecords: PayrollRecord[] = [
     total_working_days: 30,
     present_days: 23,
     half_days: 2,
-    absent_days: 2,
+    absent_days: 6,
     effective_days: 24.0,
     fixed_salary: 48000,
     per_day_rate: 1600.00,
@@ -465,23 +465,45 @@ const Payroll = () => {
       try {
         const parsed = JSON.parse(saved);
         const mapped = parsed.map((r: any) => {
-          const attendance_salary = r.attendance_salary ?? r.earned_salary ?? ((r.fixed_salary / (r.total_working_days || DEFAULT_WORKING_DAYS)) * (r.effective_days || 0));
-          const net_before_tds = r.net_before_tds ?? (attendance_salary + (r.bonus_allowance || 0) - (r.deductions || 0));
-          const tds_rate = r.tds_rate ?? 1;
-          const tds_amount = r.tds_amount ?? Number((net_before_tds * (tds_rate / 100)).toFixed(2));
-          const net_salary = r.tds_amount !== undefined ? r.net_salary : Math.max(0, Number((net_before_tds - tds_amount).toFixed(2)));
           const employee_id = (r.employee_id || '').replace(/^EMP-/i, 'ASL-');
           const employee_code = (r.employee_code || '').replace(/^EMP-/i, 'ASL-');
+          const total_working_days = Math.max(1, Number(r.total_working_days) || DEFAULT_WORKING_DAYS);
+          const present_days = Math.max(0, Number(r.present_days) || 0);
+          const half_days = Math.max(0, Number(r.half_days) || 0);
+          const bonus_allowance = Math.max(0, Number(r.bonus_allowance) || 0);
+          const deductions = Math.max(0, Number(r.deductions) || 0);
+          const tds_rate = r.tds_rate ?? 1;
+
+          const normalized = calculatePayrollValues(
+            Number(r.fixed_salary) || 0,
+            total_working_days,
+            present_days,
+            half_days,
+            bonus_allowance,
+            deductions,
+            r.tds_rate !== 0,
+            tds_rate
+          );
+
           return {
             ...r,
             employee_id,
             employee_code,
-            attendance_salary: Number(attendance_salary.toFixed(2)),
-            earned_salary: Number(attendance_salary.toFixed(2)),
-            net_before_tds: Number(net_before_tds.toFixed(2)),
+            total_working_days: normalized.total_working_days,
+            present_days: normalized.present_days,
+            half_days: normalized.half_days,
+            absent_days: normalized.absent_days,
+            effective_days: normalized.effective_days,
+            fixed_salary: normalized.fixed_salary,
+            per_day_rate: normalized.per_day_rate,
+            attendance_salary: Number(normalized.attendance_salary.toFixed(2)),
+            earned_salary: Number(normalized.attendance_salary.toFixed(2)),
+            bonus_allowance,
+            deductions,
+            net_before_tds: Number(normalized.net_before_tds.toFixed(2)),
             tds_rate,
-            tds_amount,
-            net_salary
+            tds_amount: normalized.tds_amount,
+            net_salary: Number(normalized.net_salary.toFixed(2))
           };
         });
         // Deduplicate immediately on load so any existing duplicates in user storage are cleaned up!
