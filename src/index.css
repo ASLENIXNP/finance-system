@@ -563,7 +563,8 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     min-height: 0 !important;
     max-height: none !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 2mm 0 0 !important;
+    box-sizing: border-box !important;
     overflow: visible !important;
     background: white !important;
     color: #0f172a !important;
@@ -577,18 +578,21 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
 
   #printable-payroll-register .payroll-register-letterhead {
     display: grid !important;
-    grid-template-columns: auto 1fr auto !important;
+    grid-template-columns: minmax(27mm, 1fr) minmax(0, 2fr) minmax(18mm, auto) !important;
     align-items: center !important;
-    gap: 5mm !important;
-    width: 96% !important;
+    gap: 4mm !important;
+    width: 94% !important;
+    max-width: 94% !important;
     margin: 0 auto !important;
     padding: 0 0 2mm !important;
+    box-sizing: border-box !important;
     border-bottom: 1.5px solid #334155 !important;
   }
 
   #printable-payroll-register .payroll-register-company-details,
   #printable-payroll-register .payroll-register-company-name {
     display: block !important;
+    min-width: 0 !important;
   }
 
   #printable-payroll-register .payroll-register-company-details p {
@@ -599,6 +603,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
 
   #printable-payroll-register .payroll-register-company-name {
     text-align: center !important;
+    overflow-wrap: anywhere !important;
   }
 
   #printable-payroll-register .payroll-register-company-name h1 {
@@ -607,7 +612,8 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     font-size: 16px !important;
     font-weight: 800 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.12em !important;
+    letter-spacing: 0.08em !important;
+    overflow-wrap: anywhere !important;
   }
 
   #printable-payroll-register .payroll-register-company-name p {
@@ -620,7 +626,8 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     display: block !important;
     width: auto !important;
     height: 15mm !important;
-    max-width: 20mm !important;
+    max-width: 18mm !important;
+    justify-self: end !important;
     object-fit: contain !important;
   }
 
@@ -686,6 +693,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     display: table !important;
     width: 96% !important;
     max-width: 96% !important;
+    margin-top: 1.5mm !important;
     margin-right: auto !important;
     margin-left: auto !important;
     box-sizing: border-box !important;
@@ -746,11 +754,15 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
 
   #printable-payroll-register .payroll-register-table td:first-child {
     text-align: left !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
   }
 
   #printable-payroll-register .payroll-register-table td:first-child strong,
   #printable-payroll-register .payroll-register-table td:first-child span {
     display: block !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
   }
 
   #printable-payroll-register .payroll-register-table td:first-child span {

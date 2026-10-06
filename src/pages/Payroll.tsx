@@ -842,7 +842,9 @@ const Payroll = () => {
       record.month === selectedMonth && 
       record.year === selectedYear
     );
-    return deduplicatePayrollRecords(periodList);
+    return deduplicatePayrollRecords(periodList).sort((a, b) =>
+      a.employee_name.localeCompare(b.employee_name, undefined, { sensitivity: 'base' })
+    );
   }, [payrollRecords, selectedMonth, selectedYear]);
 
   const displayedPayroll = useMemo(() => {
@@ -1574,16 +1576,16 @@ const Payroll = () => {
     netSalary: periodPayrollRecords.some(record => record.net_salary !== 0),
   };
   const payrollColumnWidths = [
-    16,
-    ...(showPayrollAmountColumns.fixedSalary ? [8] : []),
-    5, 5, 4, 5, 7,
-    ...(showPayrollAmountColumns.dailyRate ? [7] : []),
-    ...(showPayrollAmountColumns.gross ? [8] : []),
-    ...(showPayrollAmountColumns.allowance ? [6] : []),
-    ...(showPayrollAmountColumns.deductions ? [7] : []),
-    ...(showPayrollAmountColumns.tds ? [5] : []),
-    ...(showPayrollAmountColumns.netSalary ? [10] : []),
-    7,
+    22,
+    ...(showPayrollAmountColumns.fixedSalary ? [7] : []),
+    5, 5, 4, 5, 6,
+    ...(showPayrollAmountColumns.dailyRate ? [6] : []),
+    ...(showPayrollAmountColumns.gross ? [7] : []),
+    ...(showPayrollAmountColumns.allowance ? [5] : []),
+    ...(showPayrollAmountColumns.deductions ? [6] : []),
+    ...(showPayrollAmountColumns.tds ? [4] : []),
+    ...(showPayrollAmountColumns.netSalary ? [8] : []),
+    6,
   ];
   const payrollTotalLabelSpan = 1
     + Number(showPayrollAmountColumns.fixedSalary)
