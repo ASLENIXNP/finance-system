@@ -805,8 +805,8 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     align-items: flex-end !important;
     gap: 8mm !important;
     width: 96% !important;
-    margin: 3mm auto 0 !important;
-    padding-top: 2mm !important;
+    margin: 14mm auto 0 !important;
+    padding-top: 2.5mm !important;
     border-top: 1px solid #cbd5e1 !important;
   }
 
@@ -843,8 +843,8 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
 
   #printable-payroll-register .payroll-register-signatures i {
     display: block !important;
-    height: 5mm !important;
-    margin-top: 1mm !important;
+    height: 8mm !important;
+    margin-top: 1.5mm !important;
     border-bottom: 1px solid #64748b !important;
   }
 }

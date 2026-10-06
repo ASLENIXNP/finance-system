@@ -1590,8 +1590,7 @@ const Payroll = () => {
     + 5
     + Number(showPayrollAmountColumns.dailyRate);
   const totalPayrollColumnWidth = payrollColumnWidths.reduce((total, width) => total + width, 0);
-  const payrollGroupColumnCount = 2
-    + Number(showPayrollAmountColumns.dailyRate)
+  const payrollGroupColumnCount = Number(showPayrollAmountColumns.dailyRate)
     + Number(showPayrollAmountColumns.gross)
     + Number(showPayrollAmountColumns.allowance)
     + Number(showPayrollAmountColumns.deductions)
