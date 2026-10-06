@@ -643,7 +643,7 @@ const Payroll = () => {
       const matchesDept = employeeDeptFilter === 'All' || emp.department === employeeDeptFilter;
       return matchesSearch && matchesDept;
     }).sort((a, b) =>
-      a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })
+      a.name.trim().localeCompare(b.name.trim(), 'en', { sensitivity: 'base' })
     );
   }, [employees, employeeSearchTerm, employeeDeptFilter]);
 
@@ -845,7 +845,7 @@ const Payroll = () => {
       record.year === selectedYear
     );
     return deduplicatePayrollRecords(periodList).sort((a, b) =>
-      a.employee_name.localeCompare(b.employee_name, 'en', { sensitivity: 'base' })
+      a.employee_name.trim().localeCompare(b.employee_name.trim(), 'en', { sensitivity: 'base' })
     );
   }, [payrollRecords, selectedMonth, selectedYear]);
 
