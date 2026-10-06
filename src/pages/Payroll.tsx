@@ -1587,7 +1587,7 @@ const Payroll = () => {
             <p>Pay Period: {selectedMonth} {selectedYear} BS</p>
           </div>
 
-          <table className="payroll-register-table payroll-attendance-table">
+          <table className="payroll-register-table">
             <thead>
               <tr>
                 <th>Employee</th>
@@ -1597,41 +1597,6 @@ const Payroll = () => {
                 <th>Half</th>
                 <th>Absent</th>
                 <th>Effective</th>
-              </tr>
-            </thead>
-            <tbody>
-              {periodPayrollRecords.map((record) => (
-                <tr key={record.id}>
-                  <td>
-                    <strong>{record.employee_name}</strong>
-                    <span>{record.employee_code} | {record.designation}</span>
-                  </td>
-                  <td>{formatNPR(record.fixed_salary)}</td>
-                  <td>{record.total_working_days}</td>
-                  <td>{record.present_days}</td>
-                  <td>{record.half_days}</td>
-                  <td>{record.absent_days}</td>
-                  <td>{record.effective_days} ({record.total_working_days > 0 ? ((record.effective_days / record.total_working_days) * 100).toFixed(0) : 0}%)</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <th colSpan={2}>Attendance totals ({periodPayrollRecords.length} employees)</th>
-                <th>{periodPayrollRecords.reduce((sum, record) => sum + record.total_working_days, 0)}</th>
-                <th>{periodPayrollRecords.reduce((sum, record) => sum + record.present_days, 0)}</th>
-                <th>{periodPayrollRecords.reduce((sum, record) => sum + record.half_days, 0)}</th>
-                <th>{periodPayrollRecords.reduce((sum, record) => sum + record.absent_days, 0)}</th>
-                <th>{periodPayrollRecords.reduce((sum, record) => sum + record.effective_days, 0)}</th>
-              </tr>
-            </tfoot>
-          </table>
-
-          <h3 className="payroll-register-section-title">SALARY & PAYMENT DETAILS</h3>
-          <table className="payroll-register-table payroll-payment-table">
-            <thead>
-              <tr>
-                <th>Employee</th>
                 <th>Rate</th>
                 <th>Gross</th>
                 <th>Allow.</th>
@@ -1648,6 +1613,12 @@ const Payroll = () => {
                     <strong>{record.employee_name}</strong>
                     <span>{record.employee_code}</span>
                   </td>
+                  <td>{formatNPR(record.fixed_salary)}</td>
+                  <td>{record.total_working_days}</td>
+                  <td>{record.present_days}</td>
+                  <td>{record.half_days}</td>
+                  <td>{record.absent_days}</td>
+                  <td>{record.effective_days} ({record.total_working_days > 0 ? ((record.effective_days / record.total_working_days) * 100).toFixed(0) : 0}%)</td>
                   <td>{formatNPR(record.per_day_rate)}</td>
                   <td>{formatNPR(record.attendance_salary)}</td>
                   <td>{formatNPR(record.bonus_allowance)}</td>
@@ -1660,7 +1631,7 @@ const Payroll = () => {
             </tbody>
             <tfoot>
               <tr>
-                <th colSpan={2}>Payroll totals ({periodPayrollRecords.length} employees)</th>
+                <th colSpan={8}>Total ({periodPayrollRecords.length} employees)</th>
                 <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.attendance_salary, 0))}</th>
                 <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.bonus_allowance, 0))}</th>
                 <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.deductions, 0))}</th>
