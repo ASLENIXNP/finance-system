@@ -843,7 +843,7 @@ const Payroll = () => {
       record.year === selectedYear
     );
     return deduplicatePayrollRecords(periodList).sort((a, b) =>
-      a.employee_name.localeCompare(b.employee_name, undefined, { sensitivity: 'base' })
+      a.employee_name.localeCompare(b.employee_name, 'en', { sensitivity: 'base' })
     );
   }, [payrollRecords, selectedMonth, selectedYear]);
 
