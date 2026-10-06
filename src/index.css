@@ -764,21 +764,6 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     background: #f8fafc !important;
   }
 
-  #printable-payroll-register .payroll-register-table col:nth-child(1) { width: 16% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(2) { width: 8% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(3) { width: 5% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(4) { width: 5% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(5) { width: 4% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(6) { width: 5% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(7) { width: 7% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(8) { width: 7% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(9) { width: 8% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(10) { width: 6% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(11) { width: 7% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(12) { width: 5% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(13) { width: 10% !important; }
-  #printable-payroll-register .payroll-register-table col:nth-child(14) { width: 7% !important; }
-
   #printable-payroll-register .payroll-register-table tfoot th {
     background: #e2e8f0 !important;
     font-weight: 800 !important;

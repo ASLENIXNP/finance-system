@@ -1564,6 +1564,39 @@ const Payroll = () => {
   };
 
   const companySettings = getStoredCompanySettings();
+  const showPayrollAmountColumns = {
+    fixedSalary: periodPayrollRecords.some(record => record.fixed_salary !== 0),
+    dailyRate: periodPayrollRecords.some(record => record.per_day_rate !== 0),
+    gross: periodPayrollRecords.some(record => record.attendance_salary !== 0),
+    allowance: periodPayrollRecords.some(record => record.bonus_allowance !== 0),
+    deductions: periodPayrollRecords.some(record => record.deductions !== 0),
+    tds: periodPayrollRecords.some(record => record.tds_amount !== 0),
+    netSalary: periodPayrollRecords.some(record => record.net_salary !== 0),
+  };
+  const payrollColumnWidths = [
+    16,
+    ...(showPayrollAmountColumns.fixedSalary ? [8] : []),
+    5, 5, 4, 5, 7,
+    ...(showPayrollAmountColumns.dailyRate ? [7] : []),
+    ...(showPayrollAmountColumns.gross ? [8] : []),
+    ...(showPayrollAmountColumns.allowance ? [6] : []),
+    ...(showPayrollAmountColumns.deductions ? [7] : []),
+    ...(showPayrollAmountColumns.tds ? [5] : []),
+    ...(showPayrollAmountColumns.netSalary ? [10] : []),
+    7,
+  ];
+  const payrollTotalLabelSpan = 1
+    + Number(showPayrollAmountColumns.fixedSalary)
+    + 5
+    + Number(showPayrollAmountColumns.dailyRate);
+  const totalPayrollColumnWidth = payrollColumnWidths.reduce((total, width) => total + width, 0);
+  const payrollGroupColumnCount = 2
+    + Number(showPayrollAmountColumns.dailyRate)
+    + Number(showPayrollAmountColumns.gross)
+    + Number(showPayrollAmountColumns.allowance)
+    + Number(showPayrollAmountColumns.deductions)
+    + Number(showPayrollAmountColumns.tds)
+    + Number(showPayrollAmountColumns.netSalary);
 
   return (
     <div className="payroll-page-root space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1615,15 +1648,16 @@ const Payroll = () => {
 
           <table className="payroll-register-table">
             <colgroup>
-              <col /><col /><col /><col /><col /><col /><col />
-              <col /><col /><col /><col /><col /><col /><col />
+              {payrollColumnWidths.map((width, index) => (
+                <col key={index} style={{ width: `${(width / totalPayrollColumnWidth) * 100}%` }} />
+              ))}
             </colgroup>
             <thead>
               <tr>
                 <th rowSpan={2}>Employee</th>
-                <th rowSpan={2}>Fixed Salary</th>
+                {showPayrollAmountColumns.fixedSalary && <th rowSpan={2}>Fixed Salary</th>}
                 <th colSpan={5}>Attendance</th>
-                <th colSpan={6}>Payroll</th>
+                <th colSpan={payrollGroupColumnCount}>Payroll</th>
                 <th rowSpan={2}>Status</th>
               </tr>
               <tr>
@@ -1632,12 +1666,12 @@ const Payroll = () => {
                 <th>Half</th>
                 <th>Absent</th>
                 <th>Effective</th>
-                <th>Rate</th>
-                <th>Gross</th>
-                <th>Allowance</th>
-                <th>Deduction</th>
-                <th>TDS</th>
-                <th>Net Salary</th>
+                {showPayrollAmountColumns.dailyRate && <th>Rate</th>}
+                {showPayrollAmountColumns.gross && <th>Gross</th>}
+                {showPayrollAmountColumns.allowance && <th>Allowance</th>}
+                {showPayrollAmountColumns.deductions && <th>Deduction</th>}
+                {showPayrollAmountColumns.tds && <th>TDS</th>}
+                {showPayrollAmountColumns.netSalary && <th>Net Salary</th>}
               </tr>
             </thead>
             <tbody>
@@ -1647,18 +1681,18 @@ const Payroll = () => {
                     <strong>{record.employee_name}</strong>
                     <span>{record.employee_code}</span>
                   </td>
-                  <td>{formatNPR(record.fixed_salary)}</td>
+                  {showPayrollAmountColumns.fixedSalary && <td>{formatNPR(record.fixed_salary)}</td>}
                   <td>{record.total_working_days}</td>
                   <td>{record.present_days}</td>
                   <td>{record.half_days}</td>
                   <td>{record.absent_days}</td>
                   <td>{record.effective_days} ({record.total_working_days > 0 ? ((record.effective_days / record.total_working_days) * 100).toFixed(0) : 0}%)</td>
-                  <td>{formatNPR(record.per_day_rate)}</td>
-                  <td>{formatNPR(record.attendance_salary)}</td>
-                  <td>{formatNPR(record.bonus_allowance)}</td>
-                  <td>{formatNPR(record.deductions)}</td>
-                  <td>{formatNPR(record.tds_amount)}</td>
-                  <td className="payroll-register-net">{formatNPR(record.net_salary)}</td>
+                  {showPayrollAmountColumns.dailyRate && <td>{formatNPR(record.per_day_rate)}</td>}
+                  {showPayrollAmountColumns.gross && <td>{formatNPR(record.attendance_salary)}</td>}
+                  {showPayrollAmountColumns.allowance && <td>{formatNPR(record.bonus_allowance)}</td>}
+                  {showPayrollAmountColumns.deductions && <td>{formatNPR(record.deductions)}</td>}
+                  {showPayrollAmountColumns.tds && <td>{formatNPR(record.tds_amount)}</td>}
+                  {showPayrollAmountColumns.netSalary && <td className="payroll-register-net">{formatNPR(record.net_salary)}</td>}
                   <td>
                     <span className={`payroll-register-status payroll-register-status-${record.payment_status.toLowerCase()}`}>
                       {record.payment_status === 'Paid' ? '✓ PAID' : `● ${record.payment_status.toUpperCase()}`}
@@ -1669,12 +1703,12 @@ const Payroll = () => {
             </tbody>
             <tfoot>
               <tr>
-                <th colSpan={8}>Total ({periodPayrollRecords.length} employees)</th>
-                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.attendance_salary, 0))}</th>
-                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.bonus_allowance, 0))}</th>
-                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.deductions, 0))}</th>
-                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.tds_amount, 0))}</th>
-                <th className="payroll-register-net">{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.net_salary, 0))}</th>
+                <th colSpan={payrollTotalLabelSpan}>Total ({periodPayrollRecords.length} employees)</th>
+                {showPayrollAmountColumns.gross && <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.attendance_salary, 0))}</th>}
+                {showPayrollAmountColumns.allowance && <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.bonus_allowance, 0))}</th>}
+                {showPayrollAmountColumns.deductions && <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.deductions, 0))}</th>}
+                {showPayrollAmountColumns.tds && <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.tds_amount, 0))}</th>}
+                {showPayrollAmountColumns.netSalary && <th className="payroll-register-net">{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.net_salary, 0))}</th>}
                 <th></th>
               </tr>
             </tfoot>
