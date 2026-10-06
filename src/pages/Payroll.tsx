@@ -1591,18 +1591,18 @@ const Payroll = () => {
             <thead>
               <tr>
                 <th>Employee</th>
-                <th>Fixed Pay</th>
+                <th>Fixed</th>
                 <th>Work Days</th>
                 <th>Present</th>
-                <th>Half Days</th>
+                <th>Half</th>
                 <th>Absent</th>
                 <th>Effective</th>
-                <th>Daily Rate</th>
-                <th>Gross Pay</th>
-                <th>Allowance</th>
-                <th>Deductions</th>
+                <th>Rate</th>
+                <th>Gross</th>
+                <th>Allow.</th>
+                <th>Deduct.</th>
                 <th>TDS</th>
-                <th>Net Pay</th>
+                <th>Net</th>
                 <th>Status</th>
               </tr>
             </thead>
