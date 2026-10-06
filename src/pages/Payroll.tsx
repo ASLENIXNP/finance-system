@@ -642,7 +642,9 @@ const Payroll = () => {
       );
       const matchesDept = employeeDeptFilter === 'All' || emp.department === employeeDeptFilter;
       return matchesSearch && matchesDept;
-    });
+    }).sort((a, b) =>
+      a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })
+    );
   }, [employees, employeeSearchTerm, employeeDeptFilter]);
 
   const employeeToDatabaseRow = (employee: Employee) => ({
