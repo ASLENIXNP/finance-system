@@ -1584,14 +1584,49 @@ const Payroll = () => {
 
           <div className="payroll-register-title">
             <h2>MONTHLY PAYROLL REGISTER</h2>
-            <p>Pay Period: {selectedMonth} {selectedYear} BS</p>
+            <div>
+              <p>Pay Period: {selectedMonth} {selectedYear} BS</p>
+              <p>Generated: {new Date().toLocaleDateString()}</p>
+              <p>
+                Status: {periodPayrollRecords.length > 0 && periodPayrollRecords.every(record => record.payment_status === 'Paid')
+                  ? 'All Paid'
+                  : periodPayrollRecords.some(record => record.payment_status === 'Paid')
+                    ? 'Partially Paid'
+                    : 'Pending'}
+              </p>
+            </div>
+          </div>
+
+          <div className="payroll-register-summary">
+            <div><span>Total Employees</span><strong>{periodPayrollRecords.length}</strong></div>
+            <div>
+              <span>Gross Payroll</span>
+              <strong>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.attendance_salary, 0))}</strong>
+            </div>
+            <div>
+              <span>Total TDS</span>
+              <strong>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.tds_amount, 0))}</strong>
+            </div>
+            <div>
+              <span>Net Payroll</span>
+              <strong>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.net_salary, 0))}</strong>
+            </div>
           </div>
 
           <table className="payroll-register-table">
+            <colgroup>
+              <col /><col /><col /><col /><col /><col /><col />
+              <col /><col /><col /><col /><col /><col /><col />
+            </colgroup>
             <thead>
               <tr>
-                <th>Employee</th>
-                <th>Fixed</th>
+                <th rowSpan={2}>Employee</th>
+                <th rowSpan={2}>Fixed Salary</th>
+                <th colSpan={5}>Attendance</th>
+                <th colSpan={6}>Payroll</th>
+                <th rowSpan={2}>Status</th>
+              </tr>
+              <tr>
                 <th>Work Days</th>
                 <th>Present</th>
                 <th>Half</th>
@@ -1599,11 +1634,10 @@ const Payroll = () => {
                 <th>Effective</th>
                 <th>Rate</th>
                 <th>Gross</th>
-                <th>Allow.</th>
-                <th>Deduct.</th>
+                <th>Allowance</th>
+                <th>Deduction</th>
                 <th>TDS</th>
-                <th>Net</th>
-                <th>Status</th>
+                <th>Net Salary</th>
               </tr>
             </thead>
             <tbody>
@@ -1624,8 +1658,12 @@ const Payroll = () => {
                   <td>{formatNPR(record.bonus_allowance)}</td>
                   <td>{formatNPR(record.deductions)}</td>
                   <td>{formatNPR(record.tds_amount)}</td>
-                  <td>{formatNPR(record.net_salary)}</td>
-                  <td>{record.payment_status}</td>
+                  <td className="payroll-register-net">{formatNPR(record.net_salary)}</td>
+                  <td>
+                    <span className={`payroll-register-status payroll-register-status-${record.payment_status.toLowerCase()}`}>
+                      {record.payment_status === 'Paid' ? '✓ PAID' : `● ${record.payment_status.toUpperCase()}`}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1636,11 +1674,23 @@ const Payroll = () => {
                 <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.bonus_allowance, 0))}</th>
                 <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.deductions, 0))}</th>
                 <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.tds_amount, 0))}</th>
-                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.net_salary, 0))}</th>
+                <th className="payroll-register-net">{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.net_salary, 0))}</th>
                 <th></th>
               </tr>
             </tfoot>
           </table>
+
+          <footer className="payroll-register-footer">
+            <div className="payroll-register-footer-status">
+              <strong>Payment Status:</strong>
+              <span>{periodPayrollRecords.filter(record => record.payment_status === 'Paid').length} Paid</span>
+              <span>{periodPayrollRecords.filter(record => record.payment_status !== 'Paid').length} Pending</span>
+            </div>
+            <div className="payroll-register-signatures">
+              <div><strong>Prepared By</strong><span>HR / Payroll Department</span><i /></div>
+              <div><strong>Approved By</strong><span>Managing Director</span><i /></div>
+            </div>
+          </footer>
         </section>
       )}
       {employeeSyncLoading && (

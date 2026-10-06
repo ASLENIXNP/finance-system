@@ -577,13 +577,13 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
 
   #printable-payroll-register .payroll-register-letterhead {
     display: grid !important;
-    grid-template-columns: 1fr 2fr auto !important;
+    grid-template-columns: auto 1fr auto !important;
     align-items: center !important;
-    gap: 6mm !important;
+    gap: 5mm !important;
     width: 96% !important;
     margin: 0 auto !important;
-    padding: 0 0 3mm !important;
-    border-bottom: 2px solid #0f172a !important;
+    padding: 0 0 2mm !important;
+    border-bottom: 1.5px solid #334155 !important;
   }
 
   #printable-payroll-register .payroll-register-company-details,
@@ -593,8 +593,8 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
 
   #printable-payroll-register .payroll-register-company-details p {
     display: block !important;
-    margin: 1mm 0 !important;
-    font-size: 8px !important;
+    margin: 0.7mm 0 !important;
+    font-size: 7px !important;
   }
 
   #printable-payroll-register .payroll-register-company-name {
@@ -604,7 +604,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-payroll-register .payroll-register-company-name h1 {
     display: block !important;
     margin: 0 0 1mm !important;
-    font-size: 17px !important;
+    font-size: 16px !important;
     font-weight: 800 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.12em !important;
@@ -613,14 +613,14 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-payroll-register .payroll-register-company-name p {
     display: block !important;
     margin: 0.5mm 0 !important;
-    font-size: 8px !important;
+    font-size: 7px !important;
   }
 
   #printable-payroll-register .payroll-register-letterhead img {
     display: block !important;
     width: auto !important;
-    height: 16mm !important;
-    max-width: 22mm !important;
+    height: 15mm !important;
+    max-width: 20mm !important;
     object-fit: contain !important;
   }
 
@@ -629,22 +629,57 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     justify-content: space-between !important;
     align-items: center !important;
     width: 96% !important;
-    margin: 3mm auto 2.5mm !important;
+    margin: 2mm auto !important;
   }
 
   #printable-payroll-register .payroll-register-title h2 {
     display: block !important;
     margin: 0 !important;
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 800 !important;
     letter-spacing: 0.16em !important;
   }
 
   #printable-payroll-register .payroll-register-title p {
-    display: block !important;
-    margin: 0 !important;
-    font-size: 9px !important;
+    display: inline-block !important;
+    margin: 0 0 0 2mm !important;
+    font-size: 7px !important;
     font-weight: 700 !important;
+  }
+
+  #printable-payroll-register .payroll-register-summary {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 3mm !important;
+    width: 96% !important;
+    margin: 0 auto 2mm !important;
+  }
+
+  #printable-payroll-register .payroll-register-summary > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 2mm !important;
+    padding: 2mm 2.5mm !important;
+    border: 1px solid #dbe3ed !important;
+    border-left: 2px solid #315d8a !important;
+    border-radius: 1.5mm !important;
+    background: #f8fafc !important;
+  }
+
+  #printable-payroll-register .payroll-register-summary span {
+    display: block !important;
+    color: #475569 !important;
+    font-size: 7px !important;
+    font-weight: 600 !important;
+  }
+
+  #printable-payroll-register .payroll-register-summary strong {
+    display: block !important;
+    color: #0f172a !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
   }
 
   #printable-payroll-register .payroll-register-table {
@@ -656,7 +691,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     box-sizing: border-box !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
-    font-size: 8.5px !important;
+    font-size: 8px !important;
   }
 
   #printable-payroll-register .payroll-register-table thead {
@@ -680,8 +715,8 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-payroll-register .payroll-register-table th,
   #printable-payroll-register .payroll-register-table td {
     display: table-cell !important;
-    padding: 1.2mm 0.8mm !important;
-    border: 1px solid #cbd5e1 !important;
+    padding: 1.1mm 0.7mm !important;
+    border: 1px solid #d7dee8 !important;
     text-align: right !important;
     vertical-align: middle !important;
     overflow-wrap: anywhere !important;
@@ -693,8 +728,20 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     color: #0f172a !important;
     font-weight: 700 !important;
     text-align: center !important;
-    font-size: 8px !important;
+    font-size: 7.5px !important;
     white-space: normal !important;
+  }
+
+  #printable-payroll-register .payroll-register-table thead tr:first-child th {
+    background: #eaf0f7 !important;
+    color: #243b53 !important;
+    font-size: 7px !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+  }
+
+  #printable-payroll-register .payroll-register-table thead tr:first-child th[rowspan="2"] {
+    vertical-align: middle !important;
   }
 
   #printable-payroll-register .payroll-register-table td:first-child {
@@ -717,24 +764,103 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     background: #f8fafc !important;
   }
 
-  #printable-payroll-register .payroll-register-table th:nth-child(1) { width: 17% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(2) { width: 9% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(3) { width: 5% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(4),
-  #printable-payroll-register .payroll-register-table th:nth-child(5),
-  #printable-payroll-register .payroll-register-table th:nth-child(6) { width: 4% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(7) { width: 7% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(8) { width: 9% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(9) { width: 9% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(10) { width: 6% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(11) { width: 7% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(12) { width: 5% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(13) { width: 9% !important; }
-  #printable-payroll-register .payroll-register-table th:nth-child(14) { width: 5% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(1) { width: 16% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(2) { width: 8% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(3) { width: 5% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(4) { width: 5% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(5) { width: 4% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(6) { width: 5% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(7) { width: 7% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(8) { width: 7% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(9) { width: 8% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(10) { width: 6% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(11) { width: 7% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(12) { width: 5% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(13) { width: 10% !important; }
+  #printable-payroll-register .payroll-register-table col:nth-child(14) { width: 7% !important; }
 
   #printable-payroll-register .payroll-register-table tfoot th {
     background: #e2e8f0 !important;
     font-weight: 800 !important;
+  }
+
+  #printable-payroll-register .payroll-register-table .payroll-register-net {
+    background: #edf7f1 !important;
+    color: #14532d !important;
+    font-weight: 800 !important;
+  }
+
+  #printable-payroll-register .payroll-register-status {
+    display: inline-block !important;
+    padding: 0.6mm 1.2mm !important;
+    border-radius: 2mm !important;
+    font-size: 6.5px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+  }
+
+  #printable-payroll-register .payroll-register-status-paid {
+    background: #dcfce7 !important;
+    color: #166534 !important;
+  }
+
+  #printable-payroll-register .payroll-register-status-unpaid {
+    background: #fff7ed !important;
+    color: #9a3412 !important;
+  }
+
+  #printable-payroll-register .payroll-register-status-approved {
+    background: #dbeafe !important;
+    color: #1e40af !important;
+  }
+
+  #printable-payroll-register .payroll-register-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    gap: 8mm !important;
+    width: 96% !important;
+    margin: 3mm auto 0 !important;
+    padding-top: 2mm !important;
+    border-top: 1px solid #cbd5e1 !important;
+  }
+
+  #printable-payroll-register .payroll-register-footer-status {
+    display: flex !important;
+    align-items: center !important;
+    gap: 3mm !important;
+    font-size: 7px !important;
+  }
+
+  #printable-payroll-register .payroll-register-signatures {
+    display: flex !important;
+    flex: 1 !important;
+    justify-content: flex-end !important;
+    gap: 15mm !important;
+  }
+
+  #printable-payroll-register .payroll-register-signatures > div {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 38mm !important;
+    font-size: 7px !important;
+  }
+
+  #printable-payroll-register .payroll-register-signatures strong,
+  #printable-payroll-register .payroll-register-signatures span {
+    display: block !important;
+  }
+
+  #printable-payroll-register .payroll-register-signatures span {
+    margin-top: 0.5mm !important;
+    color: #64748b !important;
+  }
+
+  #printable-payroll-register .payroll-register-signatures i {
+    display: block !important;
+    height: 5mm !important;
+    margin-top: 1mm !important;
+    border-bottom: 1px solid #64748b !important;
   }
 }
 
