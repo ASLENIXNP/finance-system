@@ -42,6 +42,7 @@ import { NepaliDatePicker } from '../components/NepaliDatePicker';
 import { formatNepaliDate, getTodayBsDate } from '../lib/nepaliDate';
 import { EmployeeIdCard } from '../components/EmployeeIdCard';
 import { supabase } from '../lib/supabase';
+import { getStoredCompanySettings } from './CompanySettings';
 
 export interface Employee {
   id: string;
@@ -540,9 +541,27 @@ const Payroll = () => {
 
   const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
   const [activePayslip, setActivePayslip] = useState<PayrollRecord | null>(null);
+  const [isPayrollRegisterPrinting, setIsPayrollRegisterPrinting] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'payroll' | 'employee' } | null>(null);
+
+  useEffect(() => {
+    if (!isPayrollRegisterPrinting) return;
+
+    const exitPrintMode = () => setIsPayrollRegisterPrinting(false);
+    document.documentElement.classList.add('payroll-register-printing');
+    document.body.classList.add('payroll-register-printing');
+    window.addEventListener('afterprint', exitPrintMode);
+    const printTimeout = window.setTimeout(() => window.print(), 100);
+
+    return () => {
+      window.clearTimeout(printTimeout);
+      window.removeEventListener('afterprint', exitPrintMode);
+      document.documentElement.classList.remove('payroll-register-printing');
+      document.body.classList.remove('payroll-register-printing');
+    };
+  }, [isPayrollRegisterPrinting]);
 
   // Form states for Salary Calculation Modal
   const [salaryFormData, setSalaryFormData] = useState({
@@ -1544,8 +1563,86 @@ const Payroll = () => {
     window.print();
   };
 
+  const companySettings = getStoredCompanySettings();
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="payroll-page-root space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {isPayrollRegisterPrinting && (
+        <section id="printable-payroll-register" aria-label="Payroll register">
+          <div className="payroll-register-letterhead">
+            <div className="payroll-register-company-details">
+              <p><strong>Reg No:</strong> {companySettings.registration_no}</p>
+              <p><strong>PAN No:</strong> {companySettings.pan_vat_no}</p>
+            </div>
+            <div className="payroll-register-company-name">
+              <h1>{companySettings.company_name}</h1>
+              <p>{companySettings.address} | Phone: {companySettings.phone}</p>
+              <p>{companySettings.email} | {companySettings.website}</p>
+            </div>
+            <img src={companySettings.logo_url || '/logo.png'} alt={`${companySettings.company_name} logo`} />
+          </div>
+
+          <div className="payroll-register-title">
+            <h2>MONTHLY PAYROLL REGISTER</h2>
+            <p>Pay Period: {selectedMonth} {selectedYear} BS</p>
+          </div>
+
+          <table className="payroll-register-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Fixed Salary</th>
+                <th>Working Days</th>
+                <th>Present</th>
+                <th>Half Day</th>
+                <th>Absent</th>
+                <th>Effective Days</th>
+                <th>Daily Rate</th>
+                <th>Gross Salary</th>
+                <th>Allowances</th>
+                <th>Other Deductions</th>
+                <th>TDS</th>
+                <th>Net Payable</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {periodPayrollRecords.map((record) => (
+                <tr key={record.id}>
+                  <td>
+                    <strong>{record.employee_name}</strong>
+                    <span>{record.employee_code} | {record.designation}</span>
+                  </td>
+                  <td>{formatNPR(record.fixed_salary)}</td>
+                  <td>{record.total_working_days}</td>
+                  <td>{record.present_days}</td>
+                  <td>{record.half_days}</td>
+                  <td>{record.absent_days}</td>
+                  <td>{record.effective_days} ({record.total_working_days > 0 ? ((record.effective_days / record.total_working_days) * 100).toFixed(0) : 0}%)</td>
+                  <td>{formatNPR(record.per_day_rate)}</td>
+                  <td>{formatNPR(record.attendance_salary)}</td>
+                  <td>{formatNPR(record.bonus_allowance)}</td>
+                  <td>{formatNPR(record.deductions)}</td>
+                  <td>{formatNPR(record.tds_amount)}</td>
+                  <td>{formatNPR(record.net_salary)}</td>
+                  <td>{record.payment_status}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colSpan={8}>Total ({periodPayrollRecords.length} employees)</th>
+                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.attendance_salary, 0))}</th>
+                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.bonus_allowance, 0))}</th>
+                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.deductions, 0))}</th>
+                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.tds_amount, 0))}</th>
+                <th>{formatNPR(periodPayrollRecords.reduce((sum, record) => sum + record.net_salary, 0))}</th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </section>
+      )}
       {employeeSyncLoading && (
         <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
           Loading shared employee records...
@@ -1802,6 +1899,17 @@ const Payroll = () => {
               >
                 <UserCheck size={14} className="text-emerald-600" />
                 <span>Auto-Fill All Employees</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsPayrollRegisterPrinting(true)}
+                disabled={periodPayrollRecords.length === 0}
+                title={`Print all payroll records for ${selectedMonth} ${selectedYear}`}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl border border-indigo-700 transition-all cursor-pointer shadow-sm hover:shadow-md"
+              >
+                <Printer size={14} />
+                <span>Print Payroll Register</span>
               </button>
             </div>
           </div>
