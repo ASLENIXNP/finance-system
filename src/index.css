@@ -146,7 +146,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
 @media print {
   @page payroll-register {
     size: A4 landscape !important;
-    margin: 5mm;
+    margin: 7mm;
   }
 
   @page {
@@ -570,15 +570,17 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     box-shadow: none !important;
     border: none !important;
     font-family: Arial, sans-serif !important;
-    font-size: 11px !important;
+    font-size: 9px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   #printable-payroll-register .payroll-register-letterhead {
     display: grid !important;
     grid-template-columns: 1fr 2fr auto !important;
     align-items: center !important;
-    gap: 8mm !important;
-    padding: 0 0 6mm !important;
+    gap: 6mm !important;
+    padding: 0 0 3mm !important;
     border-bottom: 2px solid #0f172a !important;
   }
 
@@ -590,7 +592,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-payroll-register .payroll-register-company-details p {
     display: block !important;
     margin: 1mm 0 !important;
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
 
   #printable-payroll-register .payroll-register-company-name {
@@ -599,8 +601,8 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
 
   #printable-payroll-register .payroll-register-company-name h1 {
     display: block !important;
-    margin: 0 0 1.5mm !important;
-    font-size: 19px !important;
+    margin: 0 0 1mm !important;
+    font-size: 17px !important;
     font-weight: 800 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.12em !important;
@@ -609,14 +611,14 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-payroll-register .payroll-register-company-name p {
     display: block !important;
     margin: 0.5mm 0 !important;
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
 
   #printable-payroll-register .payroll-register-letterhead img {
     display: block !important;
     width: auto !important;
-    height: 22mm !important;
-    max-width: 28mm !important;
+    height: 16mm !important;
+    max-width: 22mm !important;
     object-fit: contain !important;
   }
 
@@ -624,13 +626,13 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    margin: 6mm 0 4mm !important;
+    margin: 3mm 0 2.5mm !important;
   }
 
   #printable-payroll-register .payroll-register-title h2 {
     display: block !important;
     margin: 0 !important;
-    font-size: 13px !important;
+    font-size: 11px !important;
     font-weight: 800 !important;
     letter-spacing: 0.16em !important;
   }
@@ -638,7 +640,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-payroll-register .payroll-register-title p {
     display: block !important;
     margin: 0 !important;
-    font-size: 10px !important;
+    font-size: 9px !important;
     font-weight: 700 !important;
   }
 
@@ -647,7 +649,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     width: 100% !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
-    font-size: 12px !important;
+    font-size: 9px !important;
   }
 
   #printable-payroll-register .payroll-register-table thead {
@@ -671,12 +673,12 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   #printable-payroll-register .payroll-register-table th,
   #printable-payroll-register .payroll-register-table td {
     display: table-cell !important;
-    padding: 4mm 1.5mm !important;
+    padding: 1.6mm 1mm !important;
     border: 1px solid #cbd5e1 !important;
     text-align: right !important;
     vertical-align: middle !important;
     overflow-wrap: anywhere !important;
-    line-height: 1.35 !important;
+    line-height: 1.15 !important;
   }
 
   #printable-payroll-register .payroll-register-table th {
@@ -684,7 +686,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     color: #0f172a !important;
     font-weight: 700 !important;
     text-align: center !important;
-    font-size: 11px !important;
+    font-size: 8.5px !important;
     white-space: normal !important;
   }
 
@@ -701,6 +703,11 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     margin-top: 0.5mm !important;
     color: #64748b !important;
     font-size: 7px !important;
+    white-space: nowrap !important;
+  }
+
+  #printable-payroll-register .payroll-register-table tbody tr:nth-child(even) {
+    background: #f8fafc !important;
   }
 
   #printable-payroll-register .payroll-register-table th:nth-child(1) { width: 17% !important; }
