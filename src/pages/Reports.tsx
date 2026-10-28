@@ -86,15 +86,36 @@ export const Reports: React.FC = () => {
   // Profit and Loss Calculations
   const pnl = useMemo(() => {
     const revenue = activeInvoices.reduce((a: number, b: any) => a + (Number(b.taxable_amount) || Number(b.grand_total) || 0), 0);
-    const hostingExpense = expenses.filter((e: any) => e.category === 'Server & Cloud').reduce((a: number, b: any) => a + (Number(b.amount) || 0), 0);
+    const hostingExpense = expenses.filter((e: any) => e.category === 'Server & Cloud' || e.category === 'Software & Cloud Services').reduce((a: number, b: any) => a + (Number(b.amount) || 0), 0);
     const grossProfit = revenue - hostingExpense;
 
     const rentExpense = expenses.filter((e: any) => e.category === 'Office Rent').reduce((a: number, b: any) => a + (Number(b.amount) || 0), 0);
-    const utilitiesExpense = expenses.filter((e: any) => e.category.includes('Utilities') || e.category.includes('Internet')).reduce((a: number, b: any) => a + (Number(b.amount) || 0), 0);
-    const refreshExpense = expenses.filter((e: any) => e.category.includes('Refreshments')).reduce((a: number, b: any) => a + (Number(b.amount) || 0), 0);
-    const payrollExpense = 221000; // Staff salaries
-    const totalOperatingExpenses = rentExpense + utilitiesExpense + refreshExpense + payrollExpense;
+    const utilitiesExpense = expenses.filter((e: any) => e.category?.includes('Utilities') || e.category?.includes('Internet')).reduce((a: number, b: any) => a + (Number(b.amount) || 0), 0);
+    const refreshExpense = expenses.filter((e: any) => e.category?.includes('Refreshments') || e.category?.includes('Food')).reduce((a: number, b: any) => a + (Number(b.amount) || 0), 0);
+    
+    // Compute actual staff salary outlays from real payroll records
+    let payrollExpense = 0;
+    try {
+      const payrollRaw = localStorage.getItem('aslenix_payroll_records');
+      if (payrollRaw) {
+        const pArr = JSON.parse(payrollRaw);
+        if (Array.isArray(pArr)) {
+          payrollExpense = pArr.reduce((sum: number, p: any) => sum + (Number(p.net_salary || p.fixed_salary) || 0), 0);
+        }
+      }
+    } catch {}
 
+    const otherExpenses = expenses.filter((e: any) => 
+      e.category !== 'Office Rent' && 
+      !e.category?.includes('Utilities') && 
+      !e.category?.includes('Internet') && 
+      !e.category?.includes('Refreshments') && 
+      !e.category?.includes('Food') &&
+      e.category !== 'Server & Cloud' &&
+      e.category !== 'Software & Cloud Services'
+    ).reduce((a: number, b: any) => a + (Number(b.amount) || 0), 0);
+
+    const totalOperatingExpenses = rentExpense + utilitiesExpense + refreshExpense + otherExpenses + payrollExpense;
     const netProfit = grossProfit - totalOperatingExpenses;
 
     return {
@@ -104,6 +125,7 @@ export const Reports: React.FC = () => {
       rentExpense,
       utilitiesExpense,
       refreshExpense,
+      otherExpenses,
       payrollExpense,
       totalOperatingExpenses,
       netProfit,
@@ -175,8 +197,8 @@ export const Reports: React.FC = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">Financial Reports & Nepal IRD Tax Registers</h1>
-            <span className="px-2.5 py-0.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-full border border-purple-200">
-              Tax Annex 7, 8, 10
+            <span className="px-3 py-1 bg-gradient-to-r from-[#fff3ef] to-[#f0f4fe] text-slate-800 text-xs font-bold rounded-full border border-[#ffcfdc]/70">
+              IRD Annex 7, 8, 10
             </span>
           </div>
           <p className="text-slate-500 text-sm mt-0.5">

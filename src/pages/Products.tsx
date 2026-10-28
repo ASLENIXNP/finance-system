@@ -78,14 +78,13 @@ const Products = () => {
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           const deletedIds = getDeletedProductIds();
           return parsed.filter(item => !deletedIds.has(item.id) && !deletedIds.has(item.item_code));
         }
       } catch (e) {}
     }
-    const deletedIds = getDeletedProductIds();
-    return defaultProducts.filter(item => !deletedIds.has(item.id) && !deletedIds.has(item.item_code));
+    return defaultProducts;
   });
   const [loading, setLoading] = useState(false);
 

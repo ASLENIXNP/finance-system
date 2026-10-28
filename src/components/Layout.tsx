@@ -203,10 +203,10 @@ const Layout = () => {
               to={item.path}
               onClick={() => setMobileNavOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors duration-150 text-[15px] font-medium ${
+                `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-150 text-[14px] font-medium ${
                   isActive 
-                    ? 'bg-gradient-to-r from-fuchsia-100 via-rose-100 to-amber-100 text-rose-950 shadow-sm ring-1 ring-rose-200/70 font-semibold' 
-                    : 'text-slate-600 hover:bg-gradient-to-r hover:from-rose-50 hover:to-amber-50 hover:text-slate-950'
+                    ? 'bg-gradient-to-r from-[#ffe4dc] via-[#fed8eb] to-[#e6ecfd] text-slate-950 shadow-xs ring-1 ring-rose-200/80 font-bold' 
+                    : 'text-slate-600 hover:bg-gradient-to-r hover:from-rose-50/60 hover:to-blue-50/60 hover:text-slate-950'
                 }`
               }
             >

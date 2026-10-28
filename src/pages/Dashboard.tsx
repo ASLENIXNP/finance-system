@@ -68,7 +68,6 @@ interface PaymentRecord {
   status: string;
 }
 
-// Default initial datasets for initial state & fallback
 const defaultIncomeRecords: IncomeRecord[] = [
   { id: 'INC-001', date: '2083-06-15', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', category: 'Web Development', amount: 45000, method: 'Bank Transfer', status: 'Completed' },
   { id: 'INC-002', date: '2083-06-12', invoice: 'ASL-2083-0011', customer: 'Himalayan Coffee House', category: 'UI/UX Design', amount: 15500, method: 'eSewa', status: 'Completed' },
@@ -500,9 +499,9 @@ const Dashboard = () => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Financial Overview and date-range controls */}
-      <div className="bg-gradient-to-r from-sky-50 via-white to-violet-50 rounded-[22px] border border-sky-100 shadow-[0_8px_24px_rgba(15,23,42,0.06)] px-5 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="bg-gradient-to-r from-[#fff3ef] via-white to-[#f0f4fe] rounded-[24px] border border-[#ffcfdc]/60 shadow-[0_6px_20px_rgba(255,107,74,0.06)] px-5 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-md shadow-blue-200/70">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#ff6b4a] via-[#e91e63] to-[#2563eb] text-white shadow-md shadow-rose-200/70">
             <Calendar size={19} />
           </div>
           <div className="min-w-0">
@@ -626,15 +625,15 @@ const Dashboard = () => {
       </div>
 
       {/* Nepal Tax & Compliance Quick Status Card */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-gradient-to-r from-[#fff3ef] via-white to-[#f0f4fe] p-5 rounded-3xl border border-[#ffcfdc]/60 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-purple-50 text-purple-700 rounded-2xl border border-purple-100">
+          <div className="p-3 bg-gradient-to-br from-[#ff6b4a] via-[#e91e63] to-[#2563eb] text-white rounded-2xl shadow-xs">
             <ShieldCheck size={22} />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h4 className="font-bold text-slate-900 text-sm">Nepal IRD Tax & VAT Position (१३% मू.अ.कर)</h4>
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
                 FY {currentFiscalYearStr}
               </span>
             </div>
@@ -645,12 +644,12 @@ const Dashboard = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
-          <div className="bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/80">
+          <div className="bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs">
             <span className="text-slate-400 block text-[10px] uppercase font-sans font-bold">13% Output VAT</span>
             <span className="font-bold text-purple-700">रु. {(totalIncome * 0.13).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
           </div>
 
-          <div className="bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/80">
+          <div className="bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs">
             <span className="text-slate-400 block text-[10px] uppercase font-sans font-bold">13% Input VAT Credit</span>
             <span className="font-bold text-emerald-700">रु. {(totalExpense * 0.08).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
           </div>
@@ -663,6 +662,32 @@ const Dashboard = () => {
           </a>
         </div>
       </div>
+
+      {/* Clean Slate Onboarding State when system is ready for user data */}
+      {incomeList.length === 0 && expenseList.length === 0 && (
+        <div className="bg-gradient-to-r from-[#fff5f2] via-white to-[#f0f6ff] p-7 rounded-3xl border border-rose-200/70 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-1 text-center md:text-left">
+            <h3 className="text-base font-bold text-slate-900">System Ready for Your Company Data</h3>
+            <p className="text-xs text-slate-600 max-w-xl">
+              All demo records have been cleared. You can start by issuing your first tax invoice, recording an expense, or uploading an existing data backup file in Company Settings.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2.5 shrink-0">
+            <a 
+              href="/invoices" 
+              className="btn-gradient px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs"
+            >
+              Issue Tax Invoice
+            </a>
+            <a 
+              href="/settings" 
+              className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition-colors shadow-xs"
+            >
+              Upload Data Backup
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">

@@ -84,60 +84,53 @@ const initialExpenseData: ExpenseItem[] = [
     amount: 45000, 
     method: 'Bank Transfer', 
     receipt: 'RENT-2083-06',
-    description: 'Monthly head office rent for Ashwin 2083 (Section 88 10% TDS)',
-    vendor_pan: '601928374',
-    is_vat_bill: false,
-    tds_applicable: true,
-    tds_section: 'Section 88 - House Rent',
-    tds_rate: 10,
-    tds_amount: 4500,
-    net_paid: 40500
+    description: 'Monthly head office rent for Ashwin 2083',
+    vendor_pan: '601928374'
   },
   { 
     id: 'EXP-002', 
     date: '2083-06-15', 
-    vendor: 'Vianet Communications Pvt. Ltd.', 
-    category: 'Internet & Telecom', 
-    amount: 3500, 
+    vendor: 'Vianet Communications', 
+    category: 'Internet & Communications', 
+    amount: 3200, 
     method: 'eSewa', 
     receipt: 'REC-VIA-1029',
-    description: 'Office high-speed fiber internet renewal (300 Mbps) with 13% Tax Invoice',
-    vendor_pan: '600123987',
-    is_vat_bill: true,
-    taxable_amount: 3097.35,
-    vat_amount: 402.65,
-    net_paid: 3500
+    description: 'Office Fiber Internet 200 Mbps subscription',
+    vendor_pan: '600129384'
   },
   { 
     id: 'EXP-003', 
-    date: '2083-06-14', 
-    vendor: 'Digital Ocean / AWS', 
-    category: 'Software & Cloud Services', 
-    amount: 6500, 
+    date: '2083-06-10', 
+    vendor: 'Digital Ocean LLC', 
+    category: 'Server & Cloud', 
+    amount: 14500, 
     method: 'Credit / Debit Card', 
     receipt: 'INV-DO-992',
-    description: 'Cloud VPS servers and storage hosting infrastructure'
+    description: 'Cloud VPS droplet servers and database instances',
+    vendor_pan: ''
   },
   { 
     id: 'EXP-004', 
-    date: '2083-06-11', 
-    vendor: 'Facebook Meta Ads', 
-    category: 'Marketing & Advertising', 
-    amount: 15000, 
+    date: '2083-06-08', 
+    vendor: 'Meta Platforms Inc.', 
+    category: 'Marketing & Ads', 
+    amount: 8500, 
     method: 'Credit / Debit Card', 
     receipt: 'FB-ADS-8821',
-    description: 'Digital marketing campaigns for corporate clients'
+    description: 'Digital marketing and lead acquisition campaigns',
+    vendor_pan: ''
   },
   { 
     id: 'EXP-005', 
-    date: '2083-06-08', 
+    date: '2083-06-05', 
     vendor: 'Nepal Electricity Authority', 
-    category: 'Utilities & Electricity', 
-    amount: 4800, 
-    method: 'eSewa', 
+    category: 'Electricity & Water', 
+    amount: 5400, 
+    method: 'Khalti', 
     receipt: 'NEA-83719',
-    description: 'Office electricity monthly billing'
-  },
+    description: 'Electricity bill payment for Ashwin 2083',
+    vendor_pan: '600000123'
+  }
 ];
 
 const formatNPR = (amount: number): string => {
@@ -204,7 +197,7 @@ const Expenses = () => {
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           const deletedIds = getDeletedExpenseIds();
           return parsed.filter(item => !deletedIds.has(item.id) && (!item.db_id || !deletedIds.has(item.db_id)));
         }

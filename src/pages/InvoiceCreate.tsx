@@ -112,13 +112,15 @@ const getStoredInvoices = (): StoredInvoice[] => {
     const raw = localStorage.getItem(LOCAL_STORAGE_INVOICES_KEY);
     if (raw) {
       const arr = JSON.parse(raw);
-      if (Array.isArray(arr) && arr.length > 0) return arr;
+      if (Array.isArray(arr) && arr.length > 0) {
+        return arr;
+      }
     }
   } catch (e) {
     console.warn('Failed to parse stored invoices:', e);
   }
 
-  // Initial seed invoices for demonstration & offline fallback
+  // Initial invoices for demonstration & offline fallback
   return [
     {
       id: 'inv-seed-001',
@@ -186,10 +188,10 @@ const getStoredInvoices = (): StoredInvoice[] => {
       items: [
         {
           id: 1,
-          name: 'UI/UX Design & Brand Guidelines',
-          desc: 'Mobile-responsive brand identity guidelines and social creatives',
+          name: 'Monthly Social Media Retainer & Campaign Design',
+          desc: 'Content creation, ad graphics, and audience growth management',
           qty: 1,
-          unit: 'Package',
+          unit: 'Month',
           rate: 45000,
           discount: 0,
           taxClassification: 'Taxable',
@@ -825,7 +827,7 @@ export const InvoiceCreate: React.FC = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">Invoices & Nepal Tax Billing</h1>
-            <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200">
+            <span className="px-3 py-1 bg-gradient-to-r from-[#fff3ef] to-[#f0f4fe] text-slate-800 text-xs font-bold rounded-full border border-[#ffcfdc]/70">
               IRD Compliant
             </span>
           </div>
@@ -857,11 +859,11 @@ export const InvoiceCreate: React.FC = () => {
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'create'
-                ? 'bg-slate-950 text-white shadow-sm'
+                ? 'btn-gradient shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Plus size={15} />
+            <Plus size={15} className={activeTab === 'create' ? 'text-black' : ''} />
             <span>New Tax Invoice</span>
           </button>
 

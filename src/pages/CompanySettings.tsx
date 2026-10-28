@@ -18,7 +18,6 @@ import {
   Check,
   ShieldCheck,
   Eye,
-  Sparkles,
   Download
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -250,18 +249,29 @@ const CompanySettings: React.FC = () => {
 
   const handleExportBackup = () => {
     try {
+      const getParsed = (key: string) => {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : [];
+        } catch {
+          return [];
+        }
+      };
+
       const backupData = {
         exportedAt: new Date().toISOString(),
         system: 'ASLENIX Finance & Nepal Accounting',
         version: '2.0.0',
         companySettings: formData,
-        localStorageSnapshots: {
-          customers: localStorage.getItem('aslenix_customers'),
-          income: localStorage.getItem('aslenix_income'),
-          expenses: localStorage.getItem('aslenix_expenses'),
-          payments: localStorage.getItem('aslenix_payments'),
-          invoices: localStorage.getItem('aslenix_invoices_v2'),
-        }
+        invoices: getParsed('aslenix_invoices_v2'),
+        creditNotes: getParsed('aslenix_credit_notes_v2'),
+        customers: getParsed('aslenix_customers'),
+        products: getParsed('aslenix_products'),
+        expenses: getParsed('aslenix_expenses'),
+        payments: getParsed('aslenix_payments'),
+        journals: getParsed('aslenix_journals_v2'),
+        payroll: getParsed('aslenix_payroll_records'),
+        employees: getParsed('aslenix_employees'),
       };
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -272,6 +282,79 @@ const CompanySettings: React.FC = () => {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Backup export failed:', err);
+    }
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const data = JSON.parse(text);
+
+        if (data.companySettings) {
+          localStorage.setItem('aslenix_company_settings', JSON.stringify(data.companySettings));
+          setFormData(data.companySettings);
+        }
+        if (Array.isArray(data.invoices)) {
+          localStorage.setItem('aslenix_invoices_v2', JSON.stringify(data.invoices));
+        }
+        if (Array.isArray(data.creditNotes)) {
+          localStorage.setItem('aslenix_credit_notes_v2', JSON.stringify(data.creditNotes));
+        }
+        if (Array.isArray(data.customers)) {
+          localStorage.setItem('aslenix_customers', JSON.stringify(data.customers));
+        }
+        if (Array.isArray(data.products)) {
+          localStorage.setItem('aslenix_products', JSON.stringify(data.products));
+        }
+        if (Array.isArray(data.expenses)) {
+          localStorage.setItem('aslenix_expenses', JSON.stringify(data.expenses));
+        }
+        if (Array.isArray(data.payments)) {
+          localStorage.setItem('aslenix_payments', JSON.stringify(data.payments));
+        }
+        if (Array.isArray(data.journals)) {
+          localStorage.setItem('aslenix_journals_v2', JSON.stringify(data.journals));
+        }
+        if (Array.isArray(data.payroll)) {
+          localStorage.setItem('aslenix_payroll_records', JSON.stringify(data.payroll));
+        }
+        if (Array.isArray(data.employees)) {
+          localStorage.setItem('aslenix_employees', JSON.stringify(data.employees));
+        }
+
+        alert('Backup data imported successfully! All records have been restored.');
+        window.location.reload();
+      } catch (err: any) {
+        alert('Invalid JSON file. Please upload a valid ASLENIX Finance backup file.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleClearAllData = () => {
+    if (window.confirm('Clear all local demo / sample data and start completely fresh? This will remove all local invoices, customers, products, payments, and expenses so you can upload your own clean data.')) {
+      localStorage.removeItem('aslenix_invoices_v2');
+      localStorage.removeItem('aslenix_credit_notes_v2');
+      localStorage.removeItem('aslenix_payments');
+      localStorage.removeItem('aslenix_expenses');
+      localStorage.removeItem('aslenix_customers');
+      localStorage.removeItem('aslenix_products');
+      localStorage.removeItem('aslenix_journals_v2');
+      localStorage.removeItem('aslenix_income');
+      localStorage.removeItem('aslenix_payroll_records');
+      localStorage.removeItem('aslenix_employees');
+      localStorage.removeItem('aslenix_deleted_invoices');
+      localStorage.removeItem('aslenix_deleted_payments');
+      localStorage.removeItem('aslenix_deleted_expenses');
+      localStorage.removeItem('aslenix_deleted_customers');
+      localStorage.removeItem('aslenix_deleted_products');
+      alert('All local sample data has been cleared! Your system is now 100% clean and ready for your real data.');
+      window.location.reload();
     }
   };
 
@@ -357,34 +440,48 @@ const CompanySettings: React.FC = () => {
           <p className="text-sm text-slate-500 mt-1">Configure company credentials, banking coordinates, and letterhead assets.</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <label 
+            className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200/90 rounded-2xl hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+            title="Upload and restore a JSON data file"
+          >
+            <Upload size={14} className="text-slate-500" />
+            <span>Upload Data</span>
+            <input 
+              type="file" 
+              accept=".json" 
+              onChange={handleImportBackup} 
+              className="hidden" 
+            />
+          </label>
+
           <button
             type="button"
             onClick={handleExportBackup}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200/90 rounded-2xl hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200/90 rounded-2xl hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
             title="Download full JSON backup of all company and financial data"
           >
             <Download size={14} className="text-slate-500" />
-            Backup Data
+            <span>Backup Data</span>
           </button>
 
           <button
             type="button"
-            onClick={handleResetToDefault}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200/90 rounded-2xl hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-xs cursor-pointer"
-            title="Reset to default official company configuration"
+            onClick={handleClearAllData}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold text-rose-600 bg-rose-50/70 border border-rose-200/70 rounded-2xl hover:bg-rose-100 transition-colors shadow-xs cursor-pointer"
+            title="Clear all demo/sample records to start with a 100% clean slate"
           >
-            <RefreshCw size={14} />
-            Reset Defaults
+            <Trash2 size={14} />
+            <span>Clear Sample Data</span>
           </button>
-          
+
           <button
             type="button"
             onClick={() => handleSave()}
             disabled={isSaving}
-            className="btn-gradient flex items-center gap-2 px-6 py-2.5 rounded-2xl text-sm font-bold active:scale-98 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+            className="btn-gradient flex items-center gap-2 px-6 py-2.5 rounded-2xl text-xs font-bold active:scale-98 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isSaving ? <RefreshCw size={16} className="animate-spin text-black" /> : <Save size={16} className="text-black" />}
+            {isSaving ? <RefreshCw size={15} className="animate-spin text-black" /> : <Save size={15} className="text-black" />}
             <span>{isSaving ? 'Saving...' : 'Save Settings'}</span>
           </button>
         </div>
@@ -975,7 +1072,7 @@ const CompanySettings: React.FC = () => {
         {/* Bottom Save Bar */}
         <div className="p-6 bg-white rounded-3xl shadow-xs border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5 text-xs text-slate-500">
-            <Sparkles size={16} className="text-amber-500 shrink-0" />
+            <ShieldCheck size={16} className="text-slate-700 shrink-0" />
             <span>Updates sync automatically with your invoices, PDF exports, and sidebar header.</span>
           </div>
 

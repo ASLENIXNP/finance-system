@@ -37,10 +37,10 @@ export interface PaymentItem {
 }
 
 const initialPaymentsData: PaymentItem[] = [
-  { id: 'PAY-001', date: '2083-06-19', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', amount: 45000, method: 'Bank Transfer', ref: 'NABIL123456789', status: 'Verified' },
-  { id: 'PAY-002', date: '2083-06-18', invoice: 'ASL-2083-0014', customer: 'Everest Trading', amount: 15500, method: 'eSewa', ref: 'ESEWA987654', status: 'Verified' },
-  { id: 'PAY-003', date: '2083-06-16', invoice: 'ASL-2083-0010', customer: 'Himalayan Coffee House', amount: 50000, method: 'Cheque', ref: 'CHQ-445566', status: 'Pending Clearance' },
-  { id: 'PAY-004', date: '2083-06-13', invoice: 'ASL-2083-0008', customer: 'Individual Client', amount: 12000, method: 'Cash', ref: 'CASH-REC-11', status: 'Verified' },
+  { id: 'PAY-001', date: '2083-06-18', invoice: 'ASL-2083-001', customer: 'Global Tech Nepal Pvt. Ltd.', amount: 96050, method: 'Bank Transfer', ref: 'NABIL123456789', status: 'Completed' },
+  { id: 'PAY-002', date: '2083-06-14', invoice: 'ASL-2083-002', customer: 'Himalayan Mart Pvt. Ltd.', amount: 50850, method: 'eSewa', ref: 'ESEWA987654', status: 'Completed' },
+  { id: 'PAY-003', date: '2083-06-11', invoice: 'ASL-2083-003', customer: 'Vertex Media Group', amount: 39550, method: 'Cheque', ref: 'CHQ-445566', status: 'Completed' },
+  { id: 'PAY-004', date: '2083-06-04', invoice: 'ASL-2083-004', customer: 'Everest IT Consultancy', amount: 22600, method: 'Cash', ref: 'CASH-REC-11', status: 'Completed' },
 ];
 
 const DELETED_PAYMENTS_KEY = 'aslenix_deleted_payments';
@@ -78,7 +78,7 @@ const Payments = () => {
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.filter(item => !deletedIds.has(item.id));
         }
       } catch (e) {}

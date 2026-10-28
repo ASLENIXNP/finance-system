@@ -229,6 +229,13 @@ export const getEmployeePhoto = (emp: { name: string; photo_url?: string }) => {
   return '';
 };
 
+const defaultEmployees: Employee[] = [
+  { id: 'ASL-001', employee_code: 'ASL-001', name: 'Aarav Sharma', designation: 'Senior Full Stack Engineer', department: 'Technology', email: 'aarav.sharma@aslenix.com', phone: '9841000001', pan_number: '609123456', fixed_salary: 75000.00, bank_name: 'Nabil Bank', bank_account_no: '01901017500123', bank_branch: 'Putalisadak', joining_date: '2025-01-15', is_active: true },
+  { id: 'ASL-002', employee_code: 'ASL-002', name: 'Pooja Shrestha', designation: 'Lead Accountant', department: 'Finance', email: 'pooja.shrestha@aslenix.com', phone: '9841000002', pan_number: '608987654', fixed_salary: 60000.00, bank_name: 'Global IME Bank', bank_account_no: '04501010098765', bank_branch: 'New Baneshwor', joining_date: '2025-02-01', is_active: true },
+  { id: 'ASL-003', employee_code: 'ASL-003', name: 'Rohan Adhikari', designation: 'UI/UX & Frontend Designer', department: 'Creative & Tech', email: 'rohan.adhikari@aslenix.com', phone: '9841000003', pan_number: '610543210', fixed_salary: 48000.00, bank_name: 'NIC Asia Bank', bank_account_no: '12405060708090', bank_branch: 'Thamel', joining_date: '2025-04-10', is_active: true },
+  { id: 'ASL-004', employee_code: 'ASL-004', name: 'Sneha Karki', designation: 'Business Development Officer', department: 'Marketing', email: 'sneha.karki@aslenix.com', phone: '9841000004', pan_number: '611223344', fixed_salary: 38000.00, bank_name: 'Sanima Bank', bank_account_no: '08901234567890', bank_branch: 'Lalitpur', joining_date: '2025-06-01', is_active: true }
+];
+
 // Initial demo records calculated using the exact salary and 1% TDS rules
 const initialPayrollRecords: PayrollRecord[] = [
   {
@@ -440,7 +447,7 @@ const Payroll = () => {
         console.error('Error loading employees:', err);
       }
     }
-    return [];
+    return defaultEmployees;
   });
   const [employeeSyncError, setEmployeeSyncError] = useState<string | null>(null);
   const [employeeSyncLoading, setEmployeeSyncLoading] = useState(true);
@@ -464,48 +471,49 @@ const Payroll = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        const mapped = parsed.map((r: any) => {
-          const employee_id = (r.employee_id || '').replace(/^EMP-/i, 'ASL-');
-          const employee_code = (r.employee_code || '').replace(/^EMP-/i, 'ASL-');
-          const total_working_days = Math.max(1, Number(r.total_working_days) || DEFAULT_WORKING_DAYS);
-          const present_days = Math.max(0, Number(r.present_days) || 0);
-          const half_days = Math.max(0, Number(r.half_days) || 0);
-          const bonus_allowance = Math.max(0, Number(r.bonus_allowance) || 0);
-          const deductions = Math.max(0, Number(r.deductions) || 0);
-          const tds_rate = r.tds_rate ?? 1;
+        const mapped = (Array.isArray(parsed) ? parsed : [])
+          .map((r: any) => {
+            const employee_id = (r.employee_id || '').replace(/^EMP-/i, 'ASL-');
+            const employee_code = (r.employee_code || '').replace(/^EMP-/i, 'ASL-');
+            const total_working_days = Math.max(1, Number(r.total_working_days) || DEFAULT_WORKING_DAYS);
+            const present_days = Math.max(0, Number(r.present_days) || 0);
+            const half_days = Math.max(0, Number(r.half_days) || 0);
+            const bonus_allowance = Math.max(0, Number(r.bonus_allowance) || 0);
+            const deductions = Math.max(0, Number(r.deductions) || 0);
+            const tds_rate = r.tds_rate ?? 1;
 
-          const normalized = calculatePayrollValues(
-            Number(r.fixed_salary) || 0,
-            total_working_days,
-            present_days,
-            half_days,
-            bonus_allowance,
-            deductions,
-            r.tds_rate !== 0,
-            tds_rate
-          );
+            const normalized = calculatePayrollValues(
+              Number(r.fixed_salary) || 0,
+              total_working_days,
+              present_days,
+              half_days,
+              bonus_allowance,
+              deductions,
+              r.tds_rate !== 0,
+              tds_rate
+            );
 
-          return {
-            ...r,
-            employee_id,
-            employee_code,
-            total_working_days: normalized.total_working_days,
-            present_days: normalized.present_days,
-            half_days: normalized.half_days,
-            absent_days: normalized.absent_days,
-            effective_days: normalized.effective_days,
-            fixed_salary: normalized.fixed_salary,
-            per_day_rate: normalized.per_day_rate,
-            attendance_salary: Number(normalized.attendance_salary.toFixed(2)),
-            earned_salary: Number(normalized.attendance_salary.toFixed(2)),
-            bonus_allowance,
-            deductions,
-            net_before_tds: Number(normalized.net_before_tds.toFixed(2)),
-            tds_rate,
-            tds_amount: normalized.tds_amount,
-            net_salary: Number(normalized.net_salary.toFixed(2))
-          };
-        });
+            return {
+              ...r,
+              employee_id,
+              employee_code,
+              total_working_days: normalized.total_working_days,
+              present_days: normalized.present_days,
+              half_days: normalized.half_days,
+              absent_days: normalized.absent_days,
+              effective_days: normalized.effective_days,
+              fixed_salary: normalized.fixed_salary,
+              per_day_rate: normalized.per_day_rate,
+              attendance_salary: Number(normalized.attendance_salary.toFixed(2)),
+              earned_salary: Number(normalized.attendance_salary.toFixed(2)),
+              bonus_allowance,
+              deductions,
+              net_before_tds: Number(normalized.net_before_tds.toFixed(2)),
+              tds_rate,
+              tds_amount: normalized.tds_amount,
+              net_salary: Number(normalized.net_salary.toFixed(2))
+            };
+          });
         // Deduplicate immediately on load so any existing duplicates in user storage are cleaned up!
         return deduplicatePayrollRecords(mapped);
       } catch (e) {
@@ -3065,17 +3073,17 @@ const Payroll = () => {
       {isSalaryModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-md animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col ring-1 ring-slate-900/5">
-            <div className="flex justify-between items-center px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-blue-50/40">
+            <div className="flex justify-between items-center px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-orange-50/50 via-pink-50/30 to-blue-50/40">
               <div className="flex items-center gap-3.5">
-                <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-blue-700 text-white shadow-lg shadow-indigo-500/25 ring-4 ring-blue-50 shrink-0">
-                  <Banknote size={22} className="drop-shadow-sm" />
+                <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FFC5B4] via-[#FFB6DB] to-[#BED8FD] text-slate-900 shadow-md ring-4 ring-orange-50/50 shrink-0">
+                  <Banknote size={22} className="drop-shadow-xs" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-xl font-bold tracking-tight text-slate-900">
                       {editingPayrollId ? 'Edit Attendance & Calculate Salary' : 'Calculate Employee Salary'}
                     </h3>
-                    <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 rounded-full border border-blue-200/60">
+                    <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-white/80 text-slate-700 rounded-full border border-pink-200/60 shadow-2xs">
                       Monthly Payroll
                     </span>
                   </div>
@@ -3422,17 +3430,17 @@ const Payroll = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-md animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col ring-1 ring-slate-900/5">
             {/* Executive Header */}
-            <div className="flex justify-between items-center px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-indigo-50/40">
+            <div className="flex justify-between items-center px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-orange-50/50 via-pink-50/30 to-blue-50/40">
               <div className="flex items-center gap-3.5">
-                <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-500/25 ring-4 ring-indigo-50 shrink-0">
-                  <UserPlus size={22} className="drop-shadow-sm" />
+                <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FFC5B4] via-[#FFB6DB] to-[#BED8FD] text-slate-900 shadow-md ring-4 ring-pink-50/50 shrink-0">
+                  <UserPlus size={22} className="drop-shadow-xs" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-xl font-bold tracking-tight text-slate-900">
                       {editingEmployeeId ? 'Edit Employee Profile' : 'Add New Employee'}
                     </h3>
-                    <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200/60">
+                    <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-white/80 text-slate-700 rounded-full border border-pink-200/60 shadow-2xs">
                       Staff Directory
                     </span>
                   </div>

@@ -489,8 +489,8 @@ export const Accounting: React.FC = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">General Ledger & Double-Entry Accounting</h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-              <Scale size={12} /> Balanced Ledger
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-[#fff3ef] to-[#f0f4fe] text-slate-800 border border-[#ffcfdc]/70">
+              <Scale size={12} className="text-rose-600" /> Balanced Ledger
             </span>
             {loading && <span className="text-xs text-slate-400 font-medium animate-pulse">Syncing...</span>}
           </div>

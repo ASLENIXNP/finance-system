@@ -20,8 +20,9 @@
 
 /* ========================================================
    GLOBAL SYSTEM BUTTON GRADIENT:
-   Soft Sky-to-Lavender-to-Lilac with Solid Black Text & Icons
-   As requested: "MAKE THIS COLOR BUTTON FOPR ALL BUTOON USE IN THIS SYSTEM AND TEXT IN BLAKCK COLOR"
+   Authentic ASLENIX Logo Gradient (Coral-to-Pink-to-Violet-to-Blue in Light Colors)
+   Matching the official Aslenix logo palette with solid black text & icons.
+   No generic AI purple/lilac styles.
    ======================================================== */
 .btn-gradient,
 button.btn-gradient,
@@ -31,11 +32,11 @@ a.bg-accent,
 .btn-primary,
 button.btn-primary,
 button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):not([class*="bg-transparent"]):not([class*="bg-slate-100"]):not([class*="bg-slate-50"]):not([class*="bg-rose-"]):not([class*="border-rose"]) {
-  background: linear-gradient(90deg, #c2d8ff 0%, #d6d0fe 50%, #eed4ff 100%) !important;
+  background: linear-gradient(100deg, #FFC5B4 0%, #FFB6DB 34%, #D9C2FC 68%, #BED8FD 100%) !important;
   color: #000000 !important;
   font-weight: 700 !important;
-  border: 1px solid rgba(199, 210, 254, 0.95) !important;
-  box-shadow: 0 4px 14px -2px rgba(199, 210, 254, 0.8) !important;
+  border: 1px solid rgba(255, 182, 219, 0.75) !important;
+  box-shadow: 0 4px 14px -2px rgba(255, 150, 180, 0.35) !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -47,9 +48,9 @@ a.bg-accent:hover,
 .btn-primary:hover,
 button.btn-primary:hover,
 button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):not([class*="bg-transparent"]):not([class*="bg-slate-100"]):not([class*="bg-slate-50"]):not([class*="bg-rose-"]):not([class*="border-rose"]):hover {
-  background: linear-gradient(90deg, #b0cdff 0%, #c9c0fe 50%, #e8c6ff 100%) !important;
+  background: linear-gradient(100deg, #FFB29E 0%, #FFA2CE 34%, #CCAFFB 68%, #A9CBFD 100%) !important;
   color: #000000 !important;
-  box-shadow: 0 6px 20px -2px rgba(199, 210, 254, 0.95), 0 2px 8px -1px rgba(165, 180, 252, 0.6) !important;
+  box-shadow: 0 6px 20px -2px rgba(255, 130, 165, 0.45), 0 2px 8px -1px rgba(217, 194, 252, 0.4) !important;
   transform: translateY(-1px) !important;
 }
 
@@ -86,6 +87,17 @@ button.btn-primary svg,
 button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):not([class*="bg-transparent"]):not([class*="bg-slate-100"]):not([class*="bg-slate-50"]):not([class*="bg-rose-"]):not([class*="border-rose"]) svg {
   color: #000000 !important;
   stroke: #000000 !important;
+}
+
+/* Aslenix Brand Subtle Accent Gradients */
+.aslenix-bg-subtle {
+  background: linear-gradient(135deg, rgba(255, 87, 34, 0.07) 0%, rgba(233, 30, 99, 0.05) 35%, rgba(121, 40, 202, 0.05) 70%, rgba(37, 99, 235, 0.07) 100%);
+}
+
+.aslenix-badge-light {
+  background: linear-gradient(95deg, #FFF1EE 0%, #FFF0F6 50%, #F1F6FE 100%);
+  border: 1px solid rgba(255, 182, 219, 0.6);
+  color: #0f172a;
 }
 
 @media (max-width: 640px) {

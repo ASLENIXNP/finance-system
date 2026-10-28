@@ -67,54 +67,50 @@ const PAYMENT_METHODS = [
 ];
 
 const initialIncomeData: IncomeItem[] = [
-  { 
-    id: 'INC-001', 
-    date: '2083-06-15', 
-    invoice: 'ASL-2083-0012', 
-    customer: 'Tech Innovations Pvt. Ltd.', 
-    category: 'Custom Web Application Development', 
-    amount: 45000, 
-    method: 'Bank Transfer', 
+  {
+    id: 'INC-001',
+    date: '2083-06-18',
+    customer: 'Global Tech Nepal Pvt. Ltd.',
+    category: 'Custom Web Application Development',
+    amount: 96050,
+    method: 'Bank Transfer',
     status: 'Completed',
-    description: 'Web application milestone 2 delivery payment via Nabil Bank',
-    customer_pan: '601234567'
+    description: 'First milestone payment for ERP customization (Ref: NABIL-TXN-88192)',
+    invoice: 'ASL-2083-001'
   },
-  { 
-    id: 'INC-002', 
-    date: '2083-06-12', 
-    invoice: 'ASL-2083-0011', 
-    customer: 'Himalayan Coffee House', 
-    category: 'UI/UX Design & Prototyping', 
-    amount: 15500, 
-    method: 'eSewa', 
+  {
+    id: 'INC-002',
+    date: '2083-06-14',
+    customer: 'Himalayan Mart Pvt. Ltd.',
+    category: 'UI/UX Design & Prototyping',
+    amount: 50850,
+    method: 'ConnectIPS',
     status: 'Completed',
-    description: 'Brand identity, mobile ordering UI prototype design',
-    customer_pan: '602345678'
+    description: 'Final payment for E-commerce mobile app UI design (Ref: CIPS-992182)',
+    invoice: 'ASL-2083-002'
   },
-  { 
-    id: 'INC-003', 
-    date: '2083-06-09', 
-    invoice: 'ASL-2083-0009', 
-    customer: 'Retail Solutions', 
-    category: 'Software Licensing & SaaS', 
-    amount: 85000, 
-    method: 'Cheque', 
-    status: 'Pending',
-    description: 'Enterprise ERP inventory module annual license (CHQ-445566)',
-    customer_pan: '603456789'
-  },
-  { 
-    id: 'INC-004', 
-    date: '2083-06-04', 
-    invoice: 'REC-2083-004', 
-    customer: 'Global Tech Nepal', 
-    category: 'IT Consulting & Advisory', 
-    amount: 12000, 
-    method: 'Cash', 
+  {
+    id: 'INC-003',
+    date: '2083-06-11',
+    customer: 'Vertex Media Group',
+    category: 'Annual Software Maintenance (AMC)',
+    amount: 39550,
+    method: 'Bank Transfer',
     status: 'Completed',
-    description: 'Technical cloud architecture review and advisory',
-    customer_pan: '601234567'
+    description: 'Q2 Software maintenance and SLA support retainer (Ref: PRB-TXN-10293)',
+    invoice: 'ASL-2083-003'
   },
+  {
+    id: 'INC-004',
+    date: '2083-06-04',
+    customer: 'Everest IT Consultancy',
+    category: 'Cloud Server VPS & Hosting',
+    amount: 22600,
+    method: 'eSewa',
+    status: 'Completed',
+    description: 'Annual Cloud VPS server hosting deployment (Ref: ESW-8819234)',
+    invoice: 'ASL-2083-004'
+  }
 ];
 
 const formatNPR = (amount: number): string => {
@@ -197,7 +193,7 @@ const Income = () => {
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           const deletedIds = getDeletedIncomeIds();
           return parsed.filter(item => !deletedIds.has(item.id) && (!item.db_id || !deletedIds.has(item.db_id)));
         }

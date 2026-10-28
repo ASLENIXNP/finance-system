@@ -93,14 +93,13 @@ const Customers = () => {
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           const deletedIds = getDeletedCustomerIds();
           return parsed.filter(c => !deletedIds.has(c.id) && !deletedIds.has(c.customer_id));
         }
       } catch (e) {}
     }
-    const deletedIds = getDeletedCustomerIds();
-    return defaultCustomers.filter(c => !deletedIds.has(c.id) && !deletedIds.has(c.customer_id));
+    return defaultCustomers;
   });
   const [loading, setLoading] = useState(false);
 
