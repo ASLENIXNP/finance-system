@@ -38,7 +38,7 @@ CREATE TABLE company_settings (
 );
 
 -- Insert default company record
-INSERT INTO company_settings (company_name) VALUES ('ASLENIX TECH AND SOLUTION');
+INSERT INTO company_settings (company_name, email) VALUES ('ASLENIX TECH AND SOLUTION', 'aslenixtech@gmail.com');
 
 -- 4. Customers Table
 CREATE TABLE customers (
@@ -219,3 +219,57 @@ VALUES
 ('EMP-002', 'Pooja Shrestha', 'Lead Accountant', 'Finance', 'pooja.shrestha@aslenix.com', '9841000002', '608987654', 60000.00, 'Global IME Bank', '04501010098765', 'New Baneshwor', '2025-02-01'),
 ('EMP-003', 'Rohan Adhikari', 'UI/UX & Frontend Designer', 'Creative & Tech', 'rohan.adhikari@aslenix.com', '9841000003', '610543210', 48000.00, 'NIC Asia Bank', '12405060708090', 'Thamel', '2025-04-10'),
 ('EMP-004', 'Sneha Karki', 'Business Development Officer', 'Marketing', 'sneha.karki@aslenix.com', '9841000004', '611223344', 38000.00, 'Sanima Bank', '08901234567890', 'Lalitpur', '2025-06-01');
+
+-- 12. Super Admin Initial Account Setup
+-- ID: aslenixtech@gmail.com
+-- PW: aslenix@3212
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+DO $$
+DECLARE
+    superadmin_uid UUID := gen_random_uuid();
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'aslenixtech@gmail.com') THEN
+        INSERT INTO auth.users (
+            id,
+            instance_id,
+            aud,
+            role,
+            email,
+            encrypted_password,
+            email_confirmed_at,
+            raw_app_meta_data,
+            raw_user_meta_data,
+            created_at,
+            updated_at
+        ) VALUES (
+            superadmin_uid,
+            '00000000-0000-0000-0000-000000000000',
+            'authenticated',
+            'authenticated',
+            'aslenixtech@gmail.com',
+            crypt('aslenix@3212', gen_salt('bf')),
+            NOW(),
+            '{"provider":"email","providers":["email"]}',
+            '{"full_name":"Super Admin","role":"super_admin"}',
+            NOW(),
+            NOW()
+        );
+
+        INSERT INTO profiles (id, full_name, role)
+        VALUES (superadmin_uid, 'Super Admin', 'super_admin')
+        ON CONFLICT (id) DO UPDATE SET role = 'super_admin', full_name = 'Super Admin';
+    ELSE
+        UPDATE auth.users 
+        SET encrypted_password = crypt('aslenix@3212', gen_salt('bf')),
+            updated_at = NOW()
+        WHERE email = 'aslenixtech@gmail.com';
+
+        INSERT INTO profiles (id, full_name, role)
+        SELECT id, 'Super Admin', 'super_admin'
+        FROM auth.users
+        WHERE email = 'aslenixtech@gmail.com'
+        ON CONFLICT (id) DO UPDATE SET role = 'super_admin', full_name = 'Super Admin';
+    END IF;
+END $$;
+

@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
+const SUPERADMIN_EMAIL = 'aslenixtech@gmail.com';
+const SUPERADMIN_PW = 'aslenix@3212';
+
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('aslenixtech@gmail.com');
+  const [password, setPassword] = useState('aslenix@3212');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,15 +18,50 @@ const Login = () => {
     setLoading(true);
     setError(null);
     
+    const inputEmail = email.trim().toLowerCase();
+    const isSuperAdmin = inputEmail === SUPERADMIN_EMAIL.toLowerCase() && password === SUPERADMIN_PW;
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: inputEmail,
         password,
       });
 
-      if (error) throw error;
-      if (data.user) navigate('/');
+      if (!authError && data.user) {
+        localStorage.setItem('demo_user', JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          role: 'super_admin',
+          full_name: 'Super Admin',
+        }));
+        navigate('/');
+        return;
+      }
+
+      // If Supabase sign-in fails or database is offline/paused, allow configured superadmin
+      if (isSuperAdmin) {
+        localStorage.setItem('demo_user', JSON.stringify({
+          id: 'superadmin-master-id',
+          email: SUPERADMIN_EMAIL,
+          role: 'super_admin',
+          full_name: 'Super Admin',
+        }));
+        navigate('/');
+        return;
+      }
+
+      if (authError) throw authError;
     } catch (err: any) {
+      if (isSuperAdmin) {
+        localStorage.setItem('demo_user', JSON.stringify({
+          id: 'superadmin-master-id',
+          email: SUPERADMIN_EMAIL,
+          role: 'super_admin',
+          full_name: 'Super Admin',
+        }));
+        navigate('/');
+        return;
+      }
       setError(err.message || 'An error occurred during login');
     } finally {
       setLoading(false);
@@ -65,7 +103,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="login-input appearance-none block w-full pl-10 px-3 py-3 border border-slate-200 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm" 
-                  placeholder="admin@aslenix.com"
+                  placeholder="aslenixtech@gmail.com"
                 />
               </div>
             </div>

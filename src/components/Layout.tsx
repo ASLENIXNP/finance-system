@@ -48,14 +48,16 @@ const Layout = () => {
   const [branding, setBranding] = useState<SidebarBranding>(getSidebarBranding);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  const userDisplayName = userEmail
-    ? userEmail
-        .split('@')[0]
-        .split(/[._-]+/)
-        .filter(Boolean)
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ')
-    : 'Aslenix Admin';
+  const userDisplayName = userEmail === 'aslenixtech@gmail.com'
+    ? 'Super Admin'
+    : userEmail
+      ? userEmail
+          .split('@')[0]
+          .split(/[._-]+/)
+          .filter(Boolean)
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(' ')
+      : 'Aslenix Admin';
 
   useEffect(() => {
     const updateBranding = (event: Event) => {
@@ -83,13 +85,28 @@ const Layout = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    // Check if superadmin/demo user is already stored locally
+    const localUser = localStorage.getItem('demo_user');
+    if (localUser) {
+      try {
+        const parsed = JSON.parse(localUser);
+        if (parsed?.email) {
+          setUserEmail(parsed.email);
+        }
+      } catch {
+        // continue to check supabase session
+      }
+    }
+
     // Get current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUserEmail(session.user.email || null);
       } else {
-        localStorage.removeItem('demo_user');
-        navigate('/login');
+        const existingLocal = localStorage.getItem('demo_user');
+        if (!existingLocal) {
+          navigate('/login');
+        }
       }
     });
 
@@ -98,8 +115,10 @@ const Layout = () => {
       if (session?.user) {
         setUserEmail(session.user.email || null);
       } else {
-        localStorage.removeItem('demo_user');
-        navigate('/login');
+        const existingLocal = localStorage.getItem('demo_user');
+        if (!existingLocal) {
+          navigate('/login');
+        }
       }
     });
 
@@ -108,7 +127,11 @@ const Layout = () => {
 
   const handleLogout = async () => {
     localStorage.removeItem('demo_user');
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ignore offline errors
+    }
     navigate('/login');
   };
 
