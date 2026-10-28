@@ -863,6 +863,11 @@ const Customers = () => {
                     value={formData.pan_number}
                     onChange={(e) => setFormData({...formData, pan_number: e.target.value})}
                   />
+                  {formData.pan_number && formData.pan_number.length > 0 && formData.pan_number.length < 9 && (
+                    <span className="text-[11px] text-amber-600 mt-1 block font-medium">
+                      Notice: Official Nepal PAN is 9 digits (currently {formData.pan_number.length}/9).
+                    </span>
+                  )}
                 </div>
               </div>
 

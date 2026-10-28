@@ -16,11 +16,14 @@ import {
   X,
   Copy,
   Check,
-  Building2
+  Building2,
+  Printer
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
-import { formatNepaliDate, toBsDateString, getTodayBsDate } from '../lib/nepaliDate';
+import { formatNepaliDate, toBsDateString, getTodayBsDate, bsToAdDate } from '../lib/nepaliDate';
+import { formatNPR, numberToWordsNPR } from '../lib/accounting';
+import { getStoredCompanySettings } from './CompanySettings';
 
 export interface PaymentItem {
   id: string;
@@ -176,8 +179,10 @@ const Payments = () => {
     });
   }, [paymentsData, searchTerm, methodFilter, statusFilter]);
 
+  const companySettings = getStoredCompanySettings();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
+  const [receiptModalPayment, setReceiptModalPayment] = useState<PaymentItem | null>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -190,6 +195,46 @@ const Payments = () => {
     ref: '',
     status: 'Verified'
   });
+
+  // Open invoices from local storage to auto-link
+  const openInvoices = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('aslenix_invoices_v2');
+      if (raw) {
+        const invs = JSON.parse(raw);
+        if (Array.isArray(invs)) {
+          return invs.filter((i: any) => i.status !== 'Cancelled');
+        }
+      }
+    } catch {}
+    return [];
+  }, [isModalOpen]);
+
+  // Sync payments back into the invoice balance
+  const syncInvoicePayment = (invoiceNo: string, deltaAmount: number) => {
+    if (!invoiceNo) return;
+    try {
+      const raw = localStorage.getItem('aslenix_invoices_v2');
+      if (!raw) return;
+      const invs = JSON.parse(raw);
+      if (!Array.isArray(invs)) return;
+      const idx = invs.findIndex((i: any) => i.invoice_no === invoiceNo);
+      if (idx !== -1) {
+        const inv = invs[idx];
+        const newPaid = Math.max(0, Number(inv.amount_paid || 0) + deltaAmount);
+        const newBal = Math.max(0, Number(inv.grand_total || 0) - newPaid);
+        invs[idx] = {
+          ...inv,
+          amount_paid: newPaid,
+          balance_due: newBal,
+          status: newBal <= 0 ? 'Paid' : newPaid > 0 ? 'Partially Paid' : 'Unpaid'
+        };
+        localStorage.setItem('aslenix_invoices_v2', JSON.stringify(invs));
+      }
+    } catch (e) {
+      console.warn('Failed to sync invoice with payment:', e);
+    }
+  };
 
   const resetForm = () => {
     setFormData({ 
@@ -211,6 +256,10 @@ const Payments = () => {
 
   const confirmDelete = () => {
     if (paymentToDelete) {
+      const target = paymentsData.find(item => item.id === paymentToDelete);
+      if (target && target.invoice) {
+        syncInvoicePayment(target.invoice, -Number(target.amount || 0));
+      }
       recordDeletedPaymentId(paymentToDelete);
       const updated = paymentsData.filter(item => item.id !== paymentToDelete);
       savePaymentsData(updated);
@@ -233,16 +282,43 @@ const Payments = () => {
     setIsModalOpen(true);
   };
 
+  const handleSelectInvoice = (invNo: string) => {
+    const found = openInvoices.find((i: any) => i.invoice_no === invNo);
+    if (found) {
+      setFormData(prev => ({
+        ...prev,
+        invoice: found.invoice_no,
+        to: found.customer_name || prev.to,
+        amount: String(found.balance_due !== undefined ? found.balance_due : found.grand_total)
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, invoice: invNo }));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const paidAmount = Number(formData.amount) || 0;
+
     if (editingId) {
+      const prevPayment = paymentsData.find(item => item.id === editingId);
+      const prevAmount = prevPayment ? Number(prevPayment.amount || 0) : 0;
+      const prevInvoice = prevPayment?.invoice || '';
+
+      if (prevInvoice) {
+        syncInvoicePayment(prevInvoice, -prevAmount);
+      }
+      if (formData.invoice) {
+        syncInvoicePayment(formData.invoice, paidAmount);
+      }
+
       const updated = paymentsData.map(item => 
         item.id === editingId 
           ? { 
               ...item, 
               customer: formData.to, 
               invoice: formData.invoice || item.invoice,
-              amount: Number(formData.amount),
+              amount: paidAmount,
               method: formData.method,
               ref: formData.ref || item.ref,
               date: formData.date,
@@ -257,11 +333,16 @@ const Payments = () => {
         date: formData.date,
         invoice: formData.invoice || `INV-${Date.now().toString().slice(-4)}`,
         customer: formData.to,
-        amount: Number(formData.amount),
+        amount: paidAmount,
         method: formData.method,
         ref: formData.ref || `TXN-${Date.now().toString().slice(-5)}`,
         status: formData.status
       };
+
+      if (newPayment.invoice) {
+        syncInvoicePayment(newPayment.invoice, paidAmount);
+      }
+
       savePaymentsData([newPayment, ...paymentsData]);
     }
     setIsModalOpen(false);
@@ -535,6 +616,13 @@ const Payments = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button 
+                          onClick={() => setReceiptModalPayment(payment)}
+                          className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                          title="View / Print Money Receipt (रसिद)"
+                        >
+                          <Printer size={16} />
+                        </button>
+                        <button 
                           onClick={() => handleEditClick(payment)}
                           className="p-1.5 text-slate-400 hover:text-accent hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                           title="Edit payment"
@@ -642,14 +730,34 @@ const Payments = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Invoice Number</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. ASL-2083-0012"
-                    className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-bold font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all"
-                    value={formData.invoice}
-                    onChange={(e) => setFormData({...formData, invoice: e.target.value})}
-                  />
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Invoice Number</label>
+                    {openInvoices.length > 0 && (
+                      <span className="text-[10px] text-slate-500 font-medium">Select or type</span>
+                    )}
+                  </div>
+                  {openInvoices.length > 0 ? (
+                    <select
+                      className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all cursor-pointer"
+                      value={formData.invoice}
+                      onChange={(e) => handleSelectInvoice(e.target.value)}
+                    >
+                      <option value="">-- Link to an Invoice (Optional) --</option>
+                      {openInvoices.map((inv: any) => (
+                        <option key={inv.id || inv.invoice_no} value={inv.invoice_no}>
+                          {inv.invoice_no} - {inv.customer_name} (Due: Rs. {Number(inv.balance_due !== undefined ? inv.balance_due : inv.grand_total).toLocaleString('en-IN')})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input 
+                      type="text" 
+                      placeholder="e.g. ASL-2083-0012"
+                      className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-bold font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all"
+                      value={formData.invoice}
+                      onChange={(e) => setFormData({...formData, invoice: e.target.value})}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -711,6 +819,128 @@ const Payments = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Official Money Receipt Modal (नेपाल सरकार/कम्पनी आधिकारिक भरपाई) */}
+      {receiptModalPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 bg-slate-50 print:hidden">
+              <div className="flex items-center gap-2">
+                <Printer size={18} className="text-slate-700" />
+                <h2 className="text-base font-bold text-slate-900">Payment Receipt Preview (भुक्तानी भरपाई)</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  <Printer size={14} />
+                  <span>Print Receipt</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setReceiptModalPayment(null)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Receipt Slip */}
+            <div className="p-8 overflow-y-auto space-y-6 print:p-0 print:m-0" id="receipt-paper">
+              {/* Receipt Header */}
+              <div className="flex justify-between items-start border-b-2 border-slate-900 pb-5">
+                <div>
+                  <h1 className="text-xl font-black text-slate-950 uppercase tracking-wide">
+                    {companySettings.company_name}
+                  </h1>
+                  <p className="text-xs text-slate-600 mt-1 max-w-sm">
+                    {companySettings.address || 'Kathmandu, Nepal'}
+                  </p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 font-mono mt-1">
+                    <span>PAN/VAT: <strong>{companySettings.pan_number || companySettings.pan_vat_no || '623611557'}</strong></span>
+                    {companySettings.registration_no && <span>Reg: {companySettings.registration_no}</span>}
+                    <span>Phone: {companySettings.phone || '+977 9709043147'}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="inline-block px-3 py-1 bg-slate-900 text-white text-xs font-black uppercase tracking-wider rounded-lg">
+                    Official Money Receipt
+                  </div>
+                  <p className="text-xs font-bold text-slate-900 mt-2 font-mono">
+                    Receipt No: {receiptModalPayment.id}
+                  </p>
+                  <p className="text-xs text-slate-600 font-mono">
+                    Date: {receiptModalPayment.date} BS ({bsToAdDate(receiptModalPayment.date).toISOString().slice(0, 10)} AD)
+                  </p>
+                </div>
+              </div>
+
+              {/* Receipt Body */}
+              <div className="space-y-4 text-sm text-slate-800">
+                <div className="grid grid-cols-3 gap-2 py-2 border-b border-slate-100">
+                  <span className="text-slate-500 font-medium">Received with thanks from:</span>
+                  <span className="col-span-2 font-bold text-slate-950 text-base">{receiptModalPayment.customer}</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 py-2 border-b border-slate-100">
+                  <span className="text-slate-500 font-medium">The sum of Nepali Rupees:</span>
+                  <span className="col-span-2 font-bold text-slate-950 italic">
+                    {numberToWordsNPR(receiptModalPayment.amount)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 py-2 border-b border-slate-100">
+                  <span className="text-slate-500 font-medium">On Account of / Invoice No:</span>
+                  <span className="col-span-2 font-mono font-bold text-slate-900">
+                    {receiptModalPayment.invoice}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 py-2 border-b border-slate-100">
+                  <span className="text-slate-500 font-medium">Payment Method & Reference:</span>
+                  <div className="col-span-2 flex items-center gap-3">
+                    <span className="px-2 py-0.5 bg-slate-100 font-semibold rounded text-xs border border-slate-200">
+                      {receiptModalPayment.method}
+                    </span>
+                    <span className="font-mono text-xs text-slate-600">
+                      Ref: {receiptModalPayment.ref || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 py-2 border-b border-slate-100 items-center">
+                  <span className="text-slate-500 font-medium">Amount Received:</span>
+                  <span className="col-span-2 text-xl font-black font-mono text-emerald-700">
+                    {formatNPR(receiptModalPayment.amount)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Signature section */}
+              <div className="pt-8 flex justify-between items-end text-xs text-slate-600">
+                <div>
+                  <span className="inline-flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold border border-emerald-200">
+                    <CheckCircle2 size={13} />
+                    {receiptModalPayment.status}
+                  </span>
+                  <p className="text-[11px] text-slate-400 mt-2">
+                    Note: System-generated electronic payment receipt valid under Nepal accounting regulations.
+                  </p>
+                </div>
+                <div className="text-center w-48">
+                  <div className="border-b border-slate-400 pb-8 mb-1"></div>
+                  <p className="font-bold text-slate-900">Authorized Signature</p>
+                  <p className="text-[10px] text-slate-500">{companySettings.company_name}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

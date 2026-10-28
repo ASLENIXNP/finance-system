@@ -14,7 +14,9 @@ import {
   Banknote,
   Calendar,
   Menu,
-  X
+  X,
+  Scale,
+  FileSpreadsheet
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { formatNepaliDate, getCurrentFiscalYear } from '../lib/nepaliDate';
@@ -139,7 +141,9 @@ const Layout = () => {
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={19} /> },
     { name: 'Customers', path: '/customers', icon: <Users size={19} /> },
     { name: 'Products & Services', path: '/products', icon: <Package size={19} /> },
-    { name: 'Invoices', path: '/invoices', icon: <FileText size={19} /> },
+    { name: 'Invoices & Billing', path: '/invoices', icon: <FileText size={19} /> },
+    { name: 'Accounting & Ledger', path: '/accounting', icon: <Scale size={19} /> },
+    { name: 'Tax & Reports', path: '/reports', icon: <FileSpreadsheet size={19} /> },
     { name: 'Income', path: '/income', icon: <Wallet size={19} /> },
     { name: 'Expenditure', path: '/expenses', icon: <Receipt size={19} /> },
     { name: 'Payments', path: '/payments', icon: <CreditCard size={19} /> },

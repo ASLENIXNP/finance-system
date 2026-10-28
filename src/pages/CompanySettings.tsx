@@ -18,7 +18,8 @@ import {
   Check,
   ShieldCheck,
   Eye,
-  Sparkles
+  Sparkles,
+  Download
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -26,6 +27,10 @@ export interface CompanySettingsData {
   company_name: string;
   registration_no: string;
   pan_vat_no: string;
+  pan_number?: string;
+  is_vat_registered?: boolean;
+  vat_no?: string;
+  currency?: string;
   address: string;
   phone: string;
   email: string;
@@ -39,12 +44,17 @@ export interface CompanySettingsData {
   invoice_prefix: string;
   default_tax_rate: number;
   terms_conditions: string;
+  invoice_footer?: string;
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettingsData = {
   company_name: 'ASLENIX TECH & SOLUTION',
   registration_no: '391840/82/83',
   pan_vat_no: '623611557',
+  pan_number: '623611557',
+  is_vat_registered: true,
+  vat_no: '623611557',
+  currency: 'NPR',
   address: 'Buddhanagar, Kathmandu',
   phone: '+977 9709043147',
   email: 'aslenixtech@gmail.com',
@@ -58,6 +68,7 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettingsData = {
   invoice_prefix: 'ASL-',
   default_tax_rate: 13,
   terms_conditions: 'Payment is required within 15 days of invoice date. All payments can be made via bank transfer to the account listed above.',
+  invoice_footer: 'Thank you for choosing ASLENIX TECH AND SOLUTION. For inquiries, contact +977 9709043147.',
 };
 
 export const getStoredCompanySettings = (): CompanySettingsData => {
@@ -71,6 +82,11 @@ export const getStoredCompanySettings = (): CompanySettingsData => {
       if (parsed.email === 'contact@aslenix.com') parsed.email = 'aslenixtech@gmail.com';
       if (parsed.website === 'https://aslenix.com') parsed.website = 'www.aslenix.tech';
       if (parsed.address === 'Budhanagar, Kathmandu, Nepal') parsed.address = 'Buddhanagar, Kathmandu';
+      if (!parsed.pan_number) parsed.pan_number = parsed.pan_vat_no || '623611557';
+      if (parsed.is_vat_registered === undefined) parsed.is_vat_registered = true;
+      if (!parsed.vat_no) parsed.vat_no = parsed.pan_number || '623611557';
+      if (!parsed.currency) parsed.currency = 'NPR';
+      if (!parsed.invoice_footer) parsed.invoice_footer = DEFAULT_COMPANY_SETTINGS.invoice_footer;
       return { ...DEFAULT_COMPANY_SETTINGS, ...parsed };
     }
   } catch (err) {
@@ -134,7 +150,7 @@ const CompanySettings: React.FC = () => {
     };
   }, []);
 
-  const handleChange = (field: keyof CompanySettingsData, value: string | number) => {
+  const handleChange = (field: keyof CompanySettingsData, value: string | number | boolean) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -232,6 +248,33 @@ const CompanySettings: React.FC = () => {
     }
   };
 
+  const handleExportBackup = () => {
+    try {
+      const backupData = {
+        exportedAt: new Date().toISOString(),
+        system: 'ASLENIX Finance & Nepal Accounting',
+        version: '2.0.0',
+        companySettings: formData,
+        localStorageSnapshots: {
+          customers: localStorage.getItem('aslenix_customers'),
+          income: localStorage.getItem('aslenix_income'),
+          expenses: localStorage.getItem('aslenix_expenses'),
+          payments: localStorage.getItem('aslenix_payments'),
+          invoices: localStorage.getItem('aslenix_invoices_v2'),
+        }
+      };
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `aslenix_financial_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Backup export failed:', err);
+    }
+  };
+
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setIsSaving(true);
@@ -247,7 +290,11 @@ const CompanySettings: React.FC = () => {
         const payloadToDb = {
           company_name: formData.company_name,
           registration_no: formData.registration_no,
-          pan_vat_no: formData.pan_vat_no,
+          pan_vat_no: formData.pan_number || formData.pan_vat_no,
+          is_vat_registered: formData.is_vat_registered !== false,
+          vat_no: formData.vat_no || formData.pan_number || formData.pan_vat_no,
+          currency: formData.currency || 'NPR',
+          invoice_footer: formData.invoice_footer || DEFAULT_COMPANY_SETTINGS.invoice_footer,
           address: formData.address,
           phone: formData.phone,
           email: formData.email,
@@ -311,6 +358,16 @@ const CompanySettings: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleExportBackup}
+            className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200/90 rounded-2xl hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+            title="Download full JSON backup of all company and financial data"
+          >
+            <Download size={14} className="text-slate-500" />
+            Backup Data
+          </button>
+
           <button
             type="button"
             onClick={handleResetToDefault}
@@ -488,11 +545,11 @@ const CompanySettings: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                      PAN / VAT Number
+                      Permanent Account Number (PAN)
                     </label>
                     <button
                       type="button"
-                      onClick={() => copyToClipboard(formData.pan_vat_no, 'pan')}
+                      onClick={() => copyToClipboard(formData.pan_number || formData.pan_vat_no, 'pan')}
                       className="text-[11px] text-slate-400 hover:text-slate-700 flex items-center gap-1 cursor-pointer"
                     >
                       {copiedField === 'pan' ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
@@ -501,11 +558,73 @@ const CompanySettings: React.FC = () => {
                   </div>
                   <input 
                     type="text" 
-                    value={formData.pan_vat_no}
-                    onChange={(e) => handleChange('pan_vat_no', e.target.value)}
+                    value={formData.pan_number || formData.pan_vat_no}
+                    onChange={(e) => {
+                      handleChange('pan_number', e.target.value);
+                      handleChange('pan_vat_no', e.target.value);
+                    }}
                     placeholder="623611557" 
+                    maxLength={9}
                     className="w-full px-4 py-3 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all" 
                   />
+                  <p className="text-[11px] text-slate-500 mt-1">Official 9-digit PAN issued by Inland Revenue Department Nepal.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                    VAT Registration Status (मू.अ.कर)
+                  </label>
+                  <div className="flex items-center gap-4 p-3 bg-slate-50/70 border border-slate-200 rounded-2xl">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-800">
+                      <input 
+                        type="radio" 
+                        name="vat_status"
+                        checked={formData.is_vat_registered !== false}
+                        onChange={() => handleChange('is_vat_registered', true)}
+                        className="accent-slate-900 w-4 h-4 cursor-pointer"
+                      />
+                      <span>VAT Registered (13% Tax Invoices)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-800">
+                      <input 
+                        type="radio" 
+                        name="vat_status"
+                        checked={formData.is_vat_registered === false}
+                        onChange={() => handleChange('is_vat_registered', false)}
+                        className="accent-slate-900 w-4 h-4 cursor-pointer"
+                      />
+                      <span>Non-VAT Entity (Ordinary Invoices)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                    VAT Number (if applicable)
+                  </label>
+                  <input 
+                    type="text" 
+                    value={formData.vat_no || formData.pan_number || formData.pan_vat_no}
+                    onChange={(e) => handleChange('vat_no', e.target.value)}
+                    placeholder="623611557" 
+                    disabled={formData.is_vat_registered === false}
+                    className="w-full px-4 py-3 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all disabled:opacity-50" 
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">VAT registration number (usually identical to PAN in Nepal).</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                    Functional Currency
+                  </label>
+                  <input 
+                    type="text" 
+                    value={formData.currency || 'NPR'}
+                    onChange={(e) => handleChange('currency', e.target.value)}
+                    placeholder="NPR" 
+                    className="w-full px-4 py-3 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all" 
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">Standard ISO code for Nepalese Rupee (NPR).</p>
                 </div>
               </div>
             </div>

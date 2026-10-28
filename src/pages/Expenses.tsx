@@ -22,6 +22,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
 import { getTodayBsDate } from '../lib/nepaliDate';
 import { supabase } from '../lib/supabase';
+import { NEPAL_TDS_CATEGORIES, roundToTwoDecimals, isValidNepalPAN } from '../lib/accounting';
 
 export interface ExpenseItem {
   id: string;
@@ -35,6 +36,14 @@ export interface ExpenseItem {
   description?: string;
   vendor_pan?: string;
   receipt_photo?: string;
+  is_vat_bill?: boolean;
+  taxable_amount?: number;
+  vat_amount?: number;
+  tds_applicable?: boolean;
+  tds_section?: string;
+  tds_rate?: number;
+  tds_amount?: number;
+  net_paid?: number;
   created_at?: string;
 }
 
@@ -75,19 +84,29 @@ const initialExpenseData: ExpenseItem[] = [
     amount: 45000, 
     method: 'Bank Transfer', 
     receipt: 'RENT-2083-06',
-    description: 'Monthly head office rent for Ashwin 2083',
-    vendor_pan: '601928374'
+    description: 'Monthly head office rent for Ashwin 2083 (Section 88 10% TDS)',
+    vendor_pan: '601928374',
+    is_vat_bill: false,
+    tds_applicable: true,
+    tds_section: 'Section 88 - House Rent',
+    tds_rate: 10,
+    tds_amount: 4500,
+    net_paid: 40500
   },
   { 
     id: 'EXP-002', 
     date: '2083-06-15', 
-    vendor: 'Vianet Communications', 
+    vendor: 'Vianet Communications Pvt. Ltd.', 
     category: 'Internet & Telecom', 
     amount: 3500, 
     method: 'eSewa', 
     receipt: 'REC-VIA-1029',
-    description: 'Office high-speed fiber internet renewal (300 Mbps)',
-    vendor_pan: '600123987'
+    description: 'Office high-speed fiber internet renewal (300 Mbps) with 13% Tax Invoice',
+    vendor_pan: '600123987',
+    is_vat_bill: true,
+    taxable_amount: 3097.35,
+    vat_amount: 402.65,
+    net_paid: 3500
   },
   { 
     id: 'EXP-003', 
@@ -226,7 +245,11 @@ const Expenses = () => {
     receipt: '',
     description: '',
     vendor_pan: '',
-    receipt_photo: ''
+    receipt_photo: '',
+    is_vat_bill: false,
+    tds_applicable: false,
+    tds_section: 'Section 88 - House Rent',
+    tds_rate: 10
   });
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -405,7 +428,11 @@ const Expenses = () => {
       receipt: '',
       description: '',
       vendor_pan: '',
-      receipt_photo: ''
+      receipt_photo: '',
+      is_vat_bill: false,
+      tds_applicable: false,
+      tds_section: 'Section 88 - House Rent',
+      tds_rate: 10
     });
     setIsCustomCategory(false);
     setCustomCategoryInput('');
@@ -429,7 +456,11 @@ const Expenses = () => {
       receipt: expense.receipt || '',
       description: expense.description || '',
       vendor_pan: expense.vendor_pan || '',
-      receipt_photo: expense.receipt_photo || ''
+      receipt_photo: expense.receipt_photo || '',
+      is_vat_bill: Boolean(expense.is_vat_bill),
+      tds_applicable: Boolean(expense.tds_applicable),
+      tds_section: expense.tds_section || 'Section 88 - House Rent',
+      tds_rate: expense.tds_rate || 10
     });
     setIsModalOpen(true);
   };
@@ -525,6 +556,16 @@ const Expenses = () => {
     const finalCategory = isCustomCategory ? (customCategoryInput.trim() || 'General Expense') : formData.category;
     const finalAmount = Math.max(0, parseFloat(formData.amount) || 0);
 
+    const total = finalAmount;
+    const isVat = Boolean(formData.is_vat_bill);
+    const taxable = isVat ? roundToTwoDecimals(total / 1.13) : total;
+    const vatAmt = isVat ? roundToTwoDecimals(total - taxable) : 0;
+    const isTds = Boolean(formData.tds_applicable);
+    const tdsBase = isVat ? taxable : total;
+    const tdsRate = Number(formData.tds_rate) || 0;
+    const tdsAmt = isTds ? roundToTwoDecimals(tdsBase * (tdsRate / 100)) : 0;
+    const netPaid = total - tdsAmt;
+
     if (editingId) {
       const updated = expenseData.map(item => 
         item.id === editingId 
@@ -538,7 +579,15 @@ const Expenses = () => {
               receipt: formData.receipt.trim() || item.receipt,
               description: formData.description.trim(),
               vendor_pan: formData.vendor_pan.trim(),
-              receipt_photo: formData.receipt_photo
+              receipt_photo: formData.receipt_photo,
+              is_vat_bill: isVat,
+              taxable_amount: taxable,
+              vat_amount: vatAmt,
+              tds_applicable: isTds,
+              tds_section: isTds ? formData.tds_section : undefined,
+              tds_rate: isTds ? tdsRate : undefined,
+              tds_amount: isTds ? tdsAmt : undefined,
+              net_paid: netPaid
             } 
           : item
       );
@@ -551,6 +600,9 @@ const Expenses = () => {
           category: finalCategory,
           amount: finalAmount,
           total_amount: finalAmount,
+          taxable_amount: taxable,
+          vat_amount: vatAmt,
+          is_vat_bill: isVat,
           method: formData.method,
           receipt_no: formData.receipt.trim(),
           description: formData.description.trim(),
@@ -573,6 +625,14 @@ const Expenses = () => {
         description: formData.description.trim(),
         vendor_pan: formData.vendor_pan.trim(),
         receipt_photo: formData.receipt_photo,
+        is_vat_bill: isVat,
+        taxable_amount: taxable,
+        vat_amount: vatAmt,
+        tds_applicable: isTds,
+        tds_section: isTds ? formData.tds_section : undefined,
+        tds_rate: isTds ? tdsRate : undefined,
+        tds_amount: isTds ? tdsAmt : undefined,
+        net_paid: netPaid,
         created_at: new Date().toISOString()
       };
       const updated = [newExpense, ...expenseData];
@@ -586,6 +646,9 @@ const Expenses = () => {
           category: finalCategory,
           amount: finalAmount,
           total_amount: finalAmount,
+          taxable_amount: taxable,
+          vat_amount: vatAmt,
+          is_vat_bill: isVat,
           method: formData.method,
           receipt_no: newExpense.receipt,
           description: formData.description.trim(),
@@ -614,7 +677,7 @@ const Expenses = () => {
   // Export to CSV
   const handleExportCSV = () => {
     if (filteredExpenseData.length === 0) return;
-    const headers = ['Expense ID', 'Date (BS)', 'Vendor / Payee', 'Category', 'Payment Method', 'Amount (NPR)', 'Receipt Ref', 'Description', 'Vendor PAN'];
+    const headers = ['Expense ID', 'Date (BS)', 'Vendor / Payee', 'Category', 'Payment Method', 'Total Amount (NPR)', '13% VAT Bill', 'Taxable Amount', '13% Input VAT', 'TDS Withheld', 'Net Paid', 'Receipt Ref', 'Description', 'Vendor PAN'];
     const rows = filteredExpenseData.map(e => [
       e.id,
       e.date,
@@ -622,6 +685,11 @@ const Expenses = () => {
       `"${e.category.replace(/"/g, '""')}"`,
       `"${e.method}"`,
       e.amount,
+      e.is_vat_bill ? 'YES' : 'NO',
+      e.taxable_amount || (e.is_vat_bill ? roundToTwoDecimals(e.amount / 1.13) : e.amount),
+      e.vat_amount || (e.is_vat_bill ? roundToTwoDecimals(e.amount - roundToTwoDecimals(e.amount / 1.13)) : 0),
+      e.tds_amount || 0,
+      e.net_paid || (e.amount - (e.tds_amount || 0)),
       `"${e.receipt || ''}"`,
       `"${(e.description || '').replace(/"/g, '""')}"`,
       `"${e.vendor_pan || ''}"`
@@ -950,13 +1018,23 @@ const Expenses = () => {
                           <p className="font-semibold text-slate-900 leading-tight truncate max-w-[200px]" title={expense.vendor}>
                             {expense.vendor}
                           </p>
-                          <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
                             <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getCategoryColor(expense.category)}`}>
                               {expense.category}
                             </span>
                             {expense.vendor_pan && (
                               <span className="text-[10px] font-mono text-slate-400" title="Vendor PAN">
                                 PAN: {expense.vendor_pan}
+                              </span>
+                            )}
+                            {expense.is_vat_bill && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
+                                13% VAT Bill
+                              </span>
+                            )}
+                            {expense.tds_applicable && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                                TDS: रु. {Number(expense.tds_amount || 0).toLocaleString('en-IN')}
                               </span>
                             )}
                           </div>
@@ -1259,15 +1337,23 @@ const Expenses = () => {
               {/* Row 5: Optional Vendor PAN & Receipt Bill Upload */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Vendor PAN / VAT (Optional)
-                  </label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Vendor PAN / VAT (Optional)
+                    </label>
+                    {formData.vendor_pan && (
+                      <span className={`text-[10px] font-bold ${isValidNepalPAN(formData.vendor_pan) ? 'text-emerald-600' : 'text-amber-600'}`}>
+                        {isValidNepalPAN(formData.vendor_pan) ? '✓ 9-digit PAN' : 'Must be 9 digits'}
+                      </span>
+                    )}
+                  </div>
                   <input 
                     type="text" 
+                    maxLength={9}
                     placeholder="e.g. 609123456"
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
                     value={formData.vendor_pan}
-                    onChange={(e) => setFormData({...formData, vendor_pan: e.target.value})}
+                    onChange={(e) => setFormData({...formData, vendor_pan: e.target.value.replace(/\D/g, '')})}
                   />
                 </div>
 
@@ -1298,6 +1384,85 @@ const Expenses = () => {
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Row 6: Nepal Tax & IRD Compliance (13% VAT Bill & TDS Deductions) */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Nepal IRD Tax Compliance (कर कट्टी र भ्याट)
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium">Annex 7 & TDS</span>
+                </div>
+
+                {/* 13% VAT Bill Checkbox */}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input 
+                    type="checkbox"
+                    checked={formData.is_vat_bill}
+                    onChange={(e) => setFormData({ ...formData, is_vat_bill: e.target.checked })}
+                    className="mt-0.5 accent-slate-900 w-4 h-4 cursor-pointer"
+                  />
+                  <div className="flex-1">
+                    <span className="text-xs font-bold text-slate-900 block">
+                      Official 13% VAT Tax Invoice Received (१३% मू.अ.कर बिल)
+                    </span>
+                    <span className="text-[11px] text-slate-500 block">
+                      Records 13% Input VAT credit for Nepal IRD Purchase Register (खरिद खाता).
+                    </span>
+                    {formData.is_vat_bill && (
+                      <div className="mt-2 p-2 bg-white rounded-lg border border-slate-200 text-xs font-mono grid grid-cols-2 gap-2">
+                        <div>Taxable: <strong className="text-slate-900">रु. {roundToTwoDecimals((parseFloat(formData.amount) || 0) / 1.13).toLocaleString('en-IN')}</strong></div>
+                        <div>13% Input VAT: <strong className="text-purple-700">रु. {roundToTwoDecimals((parseFloat(formData.amount) || 0) - roundToTwoDecimals((parseFloat(formData.amount) || 0) / 1.13)).toLocaleString('en-IN')}</strong></div>
+                      </div>
+                    )}
+                  </div>
+                </label>
+
+                {/* TDS Withholding Checkbox */}
+                <label className="flex items-start gap-3 cursor-pointer pt-2 border-t border-slate-200/60">
+                  <input 
+                    type="checkbox"
+                    checked={formData.tds_applicable}
+                    onChange={(e) => setFormData({ ...formData, tds_applicable: e.target.checked })}
+                    className="mt-0.5 accent-slate-900 w-4 h-4 cursor-pointer"
+                  />
+                  <div className="flex-1">
+                    <span className="text-xs font-bold text-slate-900 block">
+                      Withhold TDS at Source (स्रोतमा कर कट्टी - Sec 87/88/89)
+                    </span>
+                    <span className="text-[11px] text-slate-500 block">
+                      Withholds applicable income tax from payment to deposit to IRD.
+                    </span>
+
+                    {formData.tds_applicable && (
+                      <div className="mt-2 space-y-2">
+                        <select
+                          value={formData.tds_section}
+                          onChange={(e) => {
+                            const sel = NEPAL_TDS_CATEGORIES.find(c => c.code === e.target.value);
+                            setFormData({ 
+                              ...formData, 
+                              tds_section: e.target.value, 
+                              tds_rate: sel?.defaultRate || 10 
+                            });
+                          }}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-900"
+                        >
+                          {NEPAL_TDS_CATEGORIES.map(c => (
+                            <option key={c.code} value={c.code}>
+                              {c.section}: {c.name} ({c.defaultRate}%)
+                            </option>
+                          ))}
+                        </select>
+                        <div className="p-2 bg-white rounded-lg border border-slate-200 text-xs font-mono grid grid-cols-2 gap-2">
+                          <div>TDS Deducted ({formData.tds_rate}%): <strong className="text-amber-700">रु. {roundToTwoDecimals(((formData.is_vat_bill ? roundToTwoDecimals((parseFloat(formData.amount) || 0) / 1.13) : (parseFloat(formData.amount) || 0)) * (formData.tds_rate / 100))).toLocaleString('en-IN')}</strong></div>
+                          <div>Net to Vendor: <strong className="text-emerald-700">रु. {roundToTwoDecimals((parseFloat(formData.amount) || 0) - roundToTwoDecimals(((formData.is_vat_bill ? roundToTwoDecimals((parseFloat(formData.amount) || 0) / 1.13) : (parseFloat(formData.amount) || 0)) * (formData.tds_rate / 100)))).toLocaleString('en-IN')}</strong></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </label>
               </div>
 
               {/* Receipt Preview Thumbnail if uploaded */}

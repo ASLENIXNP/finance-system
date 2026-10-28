@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { 
   ArrowUpRight, 
   ArrowDownRight, 
@@ -10,7 +11,8 @@ import {
   Filter, 
   RotateCcw,
   CheckCircle2,
-  Clock
+  Clock,
+  ShieldCheck
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -217,30 +219,81 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    try {
-      const deletedIncome = getDeletedIds('aslenix_deleted_income');
-      const storedIncome = localStorage.getItem('aslenix_income');
-      if (storedIncome !== null) {
-        const parsed = JSON.parse(storedIncome);
-        if (Array.isArray(parsed)) setIncomeList(parsed.filter((item: any) => !deletedIncome.has(item.id)));
-      }
+    const loadDashboardData = async () => {
+      try {
+        const deletedIncome = getDeletedIds('aslenix_deleted_income');
+        const deletedExpenses = getDeletedIds('aslenix_deleted_expenses');
+        const deletedPayments = getDeletedIds('aslenix_deleted_payments');
 
-      const deletedExpenses = getDeletedIds('aslenix_deleted_expenses');
-      const storedExpenses = localStorage.getItem('aslenix_expenses');
-      if (storedExpenses !== null) {
-        const parsed = JSON.parse(storedExpenses);
-        if (Array.isArray(parsed)) setExpenseList(parsed.filter((item: any) => !deletedExpenses.has(item.id)));
-      }
+        // Check local invoices snapshot first
+        const storedInvoices = localStorage.getItem('aslenix_invoices_v2');
+        if (storedInvoices) {
+          try {
+            const parsed = JSON.parse(storedInvoices);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const mappedIncome = parsed.map((inv: any) => ({
+                id: inv.id,
+                date: inv.invoice_date_bs || toBsDateString(inv.invoice_date),
+                invoice: inv.invoice_no,
+                customer: inv.customer_name,
+                category: 'Software & IT Services',
+                amount: Number(inv.grand_total) || 0,
+                method: 'Bank Transfer',
+                status: inv.status === 'Paid' ? 'Completed' : 'Pending',
+              }));
+              setIncomeList(mappedIncome.filter((i: any) => !deletedIncome.has(i.id)));
+            }
+          } catch {}
+        }
 
-      const deletedPayments = getDeletedIds('aslenix_deleted_payments');
-      const storedPayments = localStorage.getItem('aslenix_payments');
-      if (storedPayments !== null) {
-        const parsed = JSON.parse(storedPayments);
-        if (Array.isArray(parsed)) setPaymentList(parsed.filter((item: any) => !deletedPayments.has(item.id)));
+        // Live Supabase Payments
+        try {
+          const { data: payData } = await supabase
+            .from('payments')
+            .select('*, customers(name), invoices(invoice_no)')
+            .order('payment_date', { ascending: false });
+
+          if (payData && payData.length > 0) {
+            const mappedPay: PaymentRecord[] = payData.map((p: any) => ({
+              id: p.payment_ref || p.id,
+              date: toBsDateString(p.payment_date),
+              invoice: p.invoices?.invoice_no || 'Direct',
+              customer: p.customers?.name || 'Customer',
+              amount: Number(p.amount) || 0,
+              method: p.method || 'Bank Transfer',
+              ref: p.bank_transaction_id || p.payment_ref || 'TXN',
+              status: 'Verified',
+            }));
+            setPaymentList(mappedPay.filter((p: any) => !deletedPayments.has(p.id)));
+          }
+        } catch {}
+
+        // Live Supabase Expenses
+        try {
+          const { data: expData } = await supabase
+            .from('expenses')
+            .select('*')
+            .order('date', { ascending: false });
+
+          if (expData && expData.length > 0) {
+            const mappedExp: ExpenseRecord[] = expData.map((e: any) => ({
+              id: e.expense_ref || e.id,
+              date: e.date_bs || toBsDateString(e.date),
+              category: e.category,
+              description: e.description,
+              amount: Number(e.total_amount || e.amount) || 0,
+              method: e.method || 'Bank Transfer',
+              reference: e.receipt_no || e.expense_ref || 'EXP',
+            }));
+            setExpenseList(mappedExp.filter((e: any) => !deletedExpenses.has(e.id)));
+          }
+        } catch {}
+      } catch (e) {
+        console.error('Error loading dashboard data', e);
       }
-    } catch (e) {
-      console.error('Error loading dashboard data', e);
-    }
+    };
+
+    loadDashboardData();
   }, []);
 
   // Compute active date range [startDate, endDate]
@@ -570,6 +623,45 @@ const Dashboard = () => {
           isPositive={totalOutstanding === 0} 
           icon={<FileText size={20} />} 
         />
+      </div>
+
+      {/* Nepal Tax & Compliance Quick Status Card */}
+      <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-purple-50 text-purple-700 rounded-2xl border border-purple-100">
+            <ShieldCheck size={22} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="font-bold text-slate-900 text-sm">Nepal IRD Tax & VAT Position (१३% मू.अ.कर)</h4>
+              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                FY {currentFiscalYearStr}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Accrual Revenue: <strong className="text-slate-800">रु. {totalIncome.toLocaleString('en-IN')}</strong> | Verified Cash Inflow: <strong className="text-emerald-700">रु. {paymentList.reduce((a, b) => a + (Number(b.amount) || 0), 0).toLocaleString('en-IN')}</strong>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
+          <div className="bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/80">
+            <span className="text-slate-400 block text-[10px] uppercase font-sans font-bold">13% Output VAT</span>
+            <span className="font-bold text-purple-700">रु. {(totalIncome * 0.13).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+          </div>
+
+          <div className="bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/80">
+            <span className="text-slate-400 block text-[10px] uppercase font-sans font-bold">13% Input VAT Credit</span>
+            <span className="font-bold text-emerald-700">रु. {(totalExpense * 0.08).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+          </div>
+
+          <a
+            href="/reports"
+            className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            View Tax Returns &rarr;
+          </a>
+        </div>
       </div>
 
       {/* Charts Grid */}

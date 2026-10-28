@@ -11,6 +11,8 @@ import Products from './pages/Products';
 import Payments from './pages/Payments';
 import Users from './pages/Users';
 import Payroll from './pages/Payroll';
+import Accounting from './pages/Accounting';
+import Reports from './pages/Reports';
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
           <Route path="customers" element={<Customers />} />
           <Route path="products" element={<Products />} />
           <Route path="invoices" element={<InvoiceCreate />} />
+          <Route path="accounting" element={<Accounting />} />
+          <Route path="reports" element={<Reports />} />
           <Route path="income" element={<Income />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="payments" element={<Payments />} />
