@@ -383,12 +383,12 @@ const Products = () => {
       {/* 2. DYNAMIC SUMMARY METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Card 1: Total Catalog Offerings */}
-        <div className="bg-[#F8FAFF] p-5 rounded-3xl shadow-xs border border-blue-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-blue p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-blue-100/80 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-200/60 shrink-0">
+            <div className="w-10 h-10 bg-blue-100/90 rounded-xl flex items-center justify-center text-blue-700 border border-blue-200/80 shrink-0">
               <Package size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50/90 border border-blue-200/80 px-2.5 py-0.5 rounded-full">
               CATALOG
             </span>
           </div>
@@ -406,12 +406,12 @@ const Products = () => {
         </div>
 
         {/* Card 2: Professional Services */}
-        <div className="bg-[#F8F9FE] p-5 rounded-3xl shadow-xs border border-indigo-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-lavender p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-indigo-100/80 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-200/60 shrink-0">
+            <div className="w-10 h-10 bg-indigo-100/90 rounded-xl flex items-center justify-center text-indigo-700 border border-indigo-200/80 shrink-0">
               <Layers size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50/90 border border-indigo-200/80 px-2.5 py-0.5 rounded-full">
               SERVICES
             </span>
           </div>
@@ -419,7 +419,7 @@ const Products = () => {
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Service Offerings
             </p>
-            <h3 className="text-2xl font-black text-indigo-600 mt-1 font-mono">
+            <h3 className="text-2xl font-black text-indigo-700 mt-1 font-mono">
               {dynamicStats.serviceCount}
             </h3>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -429,12 +429,12 @@ const Products = () => {
         </div>
 
         {/* Card 3: Products & Hosting */}
-        <div className="bg-[#FFF9F5] p-5 rounded-3xl shadow-xs border border-orange-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-amber p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-orange-100/80 rounded-2xl flex items-center justify-center text-orange-600 border border-orange-200/60 shrink-0">
+            <div className="w-10 h-10 bg-amber-100/90 rounded-xl flex items-center justify-center text-amber-700 border border-amber-200/80 shrink-0">
               <Box size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 border border-amber-200/80 px-2.5 py-0.5 rounded-full">
               SUBSCRIPTIONS
             </span>
           </div>
@@ -442,7 +442,7 @@ const Products = () => {
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Products & Subscriptions
             </p>
-            <h3 className="text-2xl font-black text-orange-600 mt-1 font-mono">
+            <h3 className="text-2xl font-black text-amber-700 mt-1 font-mono">
               {dynamicStats.productCount}
             </h3>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -452,12 +452,12 @@ const Products = () => {
         </div>
 
         {/* Card 4: Average Catalog Rate */}
-        <div className="bg-[#F6FAF7] p-5 rounded-3xl shadow-xs border border-emerald-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-mint p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-emerald-100/80 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-200/60 shrink-0">
+            <div className="w-10 h-10 bg-emerald-100/90 rounded-xl flex items-center justify-center text-emerald-700 border border-emerald-200/80 shrink-0">
               <Percent size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full">
               AVG RATE
             </span>
           </div>
@@ -465,7 +465,7 @@ const Products = () => {
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Average Unit Price
             </p>
-            <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
+            <h3 className="text-2xl font-black text-emerald-700 mt-1 font-mono">
               {formatNPR(dynamicStats.avgRate)}
             </h3>
             <p className="text-[11px] text-slate-500 mt-1">

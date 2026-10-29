@@ -205,8 +205,8 @@ const Layout = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-150 text-[14px] font-medium ${
                   isActive 
-                    ? 'bg-gradient-to-r from-[#ffe4dc] via-[#fed8eb] to-[#e6ecfd] text-slate-950 shadow-xs ring-1 ring-rose-200/80 font-bold' 
-                    : 'text-slate-600 hover:bg-gradient-to-r hover:from-rose-50/60 hover:to-blue-50/60 hover:text-slate-950'
+                    ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs ring-1 ring-[#c4daff]/90 font-bold' 
+                    : 'text-slate-600 hover:bg-[#eef2ff] hover:text-[#0f172a]'
                 }`
               }
             >
@@ -237,9 +237,9 @@ const Layout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#f1f0ee] print:h-auto print:block print:overflow-visible print:w-full">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#f6f8fc] print:h-auto print:block print:overflow-visible print:w-full">
         {/* Top Header */}
-        <header className="min-h-16 md:h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between md:justify-center px-3 py-2 md:px-8 z-10 relative print:hidden shadow-xs">
+        <header className="min-h-16 md:h-16 bg-white/95 backdrop-blur-md border-b border-[#e2e8f0] flex items-center justify-between md:justify-center px-3 py-2 md:px-8 z-10 relative print:hidden shadow-xs">
           <button
             type="button"
             aria-label="Open navigation menu"
@@ -270,7 +270,7 @@ const Layout = () => {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#f1f0ee] print:p-0 print:overflow-visible print:h-auto print:block print:w-full">
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#f6f8fc] print:p-0 print:overflow-visible print:h-auto print:block print:w-full">
           <div className="max-w-7xl mx-auto pb-12 print:max-w-none print:m-0 print:p-0 print:w-full print:pb-0">
             <Outlet />
           </div>

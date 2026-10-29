@@ -76,46 +76,42 @@ const defaultPaymentRecords: PaymentRecord[] = [];
 type DateFilterOption = 'today' | 'this_week' | 'this_month' | 'fiscal_year' | 'custom';
 
 const StatCard = ({ title, tag, value, change, isPositive, icon, theme = 'blue' }: any) => {
-  const themeClasses: Record<string, { bg: string; border: string; iconBg: string; text: string; tag: string }> = {
+  const themeClasses: Record<string, { toneClass: string; iconBg: string; text: string; tag: string }> = {
     emerald: {
-      bg: 'bg-[#F6FAF7]',
-      border: 'border-emerald-100/90',
-      iconBg: 'bg-emerald-100/80 text-emerald-600 border-emerald-200/60',
-      text: 'text-emerald-600',
-      tag: 'text-emerald-600'
+      toneClass: 'card-tone-mint',
+      iconBg: 'bg-emerald-100/90 text-emerald-700 border-emerald-200/80',
+      text: 'text-emerald-700',
+      tag: 'text-emerald-700 bg-emerald-50/90 border border-emerald-200/80'
     },
     rose: {
-      bg: 'bg-[#FFF6F6]',
-      border: 'border-rose-100/90',
-      iconBg: 'bg-rose-100/80 text-rose-600 border-rose-200/60',
-      text: 'text-rose-600',
-      tag: 'text-rose-600'
+      toneClass: 'card-tone-rose',
+      iconBg: 'bg-rose-100/90 text-rose-700 border-rose-200/80',
+      text: 'text-rose-700',
+      tag: 'text-rose-700 bg-rose-50/90 border border-rose-200/80'
     },
     blue: {
-      bg: 'bg-[#F8FAFF]',
-      border: 'border-blue-100/90',
-      iconBg: 'bg-blue-100/80 text-blue-600 border-blue-200/60',
-      text: 'text-blue-600',
-      tag: 'text-blue-600'
+      toneClass: 'card-tone-blue',
+      iconBg: 'bg-blue-100/90 text-blue-700 border-blue-200/80',
+      text: 'text-blue-700',
+      tag: 'text-blue-700 bg-blue-50/90 border border-blue-200/80'
     },
     orange: {
-      bg: 'bg-[#FFF9F5]',
-      border: 'border-orange-100/90',
-      iconBg: 'bg-orange-100/80 text-orange-600 border-orange-200/60',
-      text: 'text-orange-600',
-      tag: 'text-orange-600'
+      toneClass: 'card-tone-amber',
+      iconBg: 'bg-amber-100/90 text-amber-700 border-amber-200/80',
+      text: 'text-amber-700',
+      tag: 'text-amber-700 bg-amber-50/90 border border-amber-200/80'
     },
   };
 
   const t = themeClasses[theme] || themeClasses.blue;
 
   return (
-    <div className={`${t.bg} p-5 rounded-3xl shadow-xs border ${t.border} flex flex-col justify-between hover:shadow-md transition-all`}>
+    <div className={`glass ${t.toneClass} p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-all`}>
       <div className="flex justify-between items-center mb-3">
-        <div className={`w-10 h-10 ${t.iconBg} rounded-2xl flex items-center justify-center border shrink-0`}>
+        <div className={`w-10 h-10 ${t.iconBg} rounded-xl flex items-center justify-center border shrink-0`}>
           {icon}
         </div>
-        <span className={`text-[11px] font-bold uppercase tracking-wider ${t.tag}`}>
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${t.tag}`}>
           {tag}
         </span>
       </div>
@@ -478,9 +474,9 @@ const Dashboard = () => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Financial Overview and date-range controls */}
-      <div className="bg-gradient-to-r from-[#fff3ef] via-white to-[#f0f4fe] rounded-[24px] border border-[#ffcfdc]/60 shadow-[0_6px_20px_rgba(255,107,74,0.06)] px-5 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm px-5 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#ff6b4a] via-[#e91e63] to-[#2563eb] text-white shadow-md shadow-rose-200/70">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs">
             <Calendar size={19} />
           </div>
           <div className="min-w-0">
@@ -604,15 +600,15 @@ const Dashboard = () => {
       </div>
 
       {/* Nepal Tax & Compliance Quick Status Card */}
-      <div className="bg-gradient-to-r from-[#fff3ef] via-white to-[#f0f4fe] p-5 rounded-3xl border border-[#ffcfdc]/60 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="glass card-tone-lavender p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-[#ff6b4a] via-[#e91e63] to-[#2563eb] text-white rounded-2xl shadow-xs">
+          <div className="p-3 bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] rounded-xl shadow-xs border border-[#c4daff]/80">
             <ShieldCheck size={22} />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h4 className="font-bold text-slate-900 text-sm">Nepal IRD Tax & VAT Position (१३% मू.अ.कर)</h4>
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
+              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60">
                 FY {currentFiscalYearStr}
               </span>
             </div>
@@ -623,19 +619,19 @@ const Dashboard = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
-          <div className="bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 block text-[10px] uppercase font-sans font-bold">13% Output VAT</span>
-            <span className="font-bold text-purple-700">रु. {(totalIncome * 0.13).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+          <div className="bg-white/90 px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs">
+            <span className="text-slate-500 block text-[10px] uppercase font-sans font-bold">13% Output VAT</span>
+            <span className="font-bold text-indigo-700">रु. {(totalIncome * 0.13).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
           </div>
 
-          <div className="bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 block text-[10px] uppercase font-sans font-bold">13% Input VAT Credit</span>
+          <div className="bg-white/90 px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs">
+            <span className="text-slate-500 block text-[10px] uppercase font-sans font-bold">13% Input VAT Credit</span>
             <span className="font-bold text-emerald-700">रु. {(totalExpense * 0.08).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
           </div>
 
           <a
             href="/reports"
-            className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer"
+            className="px-4 py-2 bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] rounded-xl font-bold text-xs hover:opacity-90 transition-all shadow-xs border border-[#c4daff]/80 cursor-pointer"
           >
             View Tax Returns &rarr;
           </a>
@@ -644,7 +640,7 @@ const Dashboard = () => {
 
       {/* Clean Slate Onboarding State when system is ready for user data */}
       {incomeList.length === 0 && expenseList.length === 0 && (
-        <div className="bg-gradient-to-r from-[#fff5f2] via-white to-[#f0f6ff] p-7 rounded-3xl border border-rose-200/70 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="glass card-tone-blue p-7 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-1 text-center md:text-left">
             <h3 className="text-base font-bold text-slate-900">System Ready for Your Company Data</h3>
             <p className="text-xs text-slate-600 max-w-xl">
@@ -693,12 +689,12 @@ const Dashboard = () => {
               <AreaChart data={monthlyChartData} margin={{ top: 10, right: 12, left: 4, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.38} />
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.04} />
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity={0.38} />
+                    <stop offset="100%" stopColor="#c4daff" stopOpacity={0.04} />
                   </linearGradient>
                   <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.32} />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0.03} />
+                    <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.32} />
+                    <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.03} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e2e8f0" />
@@ -722,8 +718,8 @@ const Dashboard = () => {
                   formatter={(value: any, name: string | number | undefined) => [`रु. ${Number(value).toLocaleString('en-IN')}`, String(name || 'Value')]}
                   labelFormatter={(label) => `Month: ${String(label)}`}
                 />
-                <Area type="monotone" dataKey="income" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" name="Income" activeDot={{ r: 6, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }} />
-                <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" name="Expense" activeDot={{ r: 6, fill: '#ef4444', stroke: '#fff', strokeWidth: 2 }} />
+                <Area type="monotone" dataKey="income" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" name="Income" activeDot={{ r: 6, fill: '#4f46e5', stroke: '#fff', strokeWidth: 2 }} />
+                <Area type="monotone" dataKey="expense" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" name="Expense" activeDot={{ r: 6, fill: '#f43f5e', stroke: '#fff', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -739,8 +735,8 @@ const Dashboard = () => {
               <BarChart data={categoryData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
                 <defs>
                   <linearGradient id="barIncomeGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#2563eb" stopOpacity={0.86} />
+                    <stop offset="0%" stopColor="#c4daff" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#a5b4fc" stopOpacity={0.86} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e2e8f0" />

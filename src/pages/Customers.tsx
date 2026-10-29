@@ -394,12 +394,12 @@ const Customers = () => {
       {/* 2. DYNAMIC SUMMARY METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Card 1: Total Client Accounts */}
-        <div className="bg-[#F8FAFF] p-5 rounded-3xl shadow-xs border border-blue-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-blue p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-blue-100/80 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-200/60 shrink-0">
+            <div className="w-10 h-10 bg-blue-100/90 rounded-xl flex items-center justify-center text-blue-700 border border-blue-200/80 shrink-0">
               <Users size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50/90 border border-blue-200/80 px-2.5 py-0.5 rounded-full">
               PORTFOLIO
             </span>
           </div>
@@ -417,12 +417,12 @@ const Customers = () => {
         </div>
 
         {/* Card 2: Corporate Entities */}
-        <div className="bg-[#F8F9FE] p-5 rounded-3xl shadow-xs border border-indigo-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-cyan p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-indigo-100/80 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-200/60 shrink-0">
+            <div className="w-10 h-10 bg-cyan-100/90 rounded-xl flex items-center justify-center text-cyan-700 border border-cyan-200/80 shrink-0">
               <Building2 size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-700 bg-cyan-50/90 border border-cyan-200/80 px-2.5 py-0.5 rounded-full">
               CORPORATE
             </span>
           </div>
@@ -430,7 +430,7 @@ const Customers = () => {
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Corporate Entities
             </p>
-            <h3 className="text-2xl font-black text-indigo-600 mt-1 font-mono">
+            <h3 className="text-2xl font-black text-cyan-700 mt-1 font-mono">
               {dynamicStats.companyCount}
             </h3>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -440,12 +440,12 @@ const Customers = () => {
         </div>
 
         {/* Card 3: Tax Verified (PAN) Accounts */}
-        <div className="bg-[#F6FAF7] p-5 rounded-3xl shadow-xs border border-emerald-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-mint p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-emerald-100/80 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-200/60 shrink-0">
+            <div className="w-10 h-10 bg-emerald-100/90 rounded-xl flex items-center justify-center text-emerald-700 border border-emerald-200/80 shrink-0">
               <ShieldCheck size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full">
               TAX-VERIFIED
             </span>
           </div>
@@ -453,7 +453,7 @@ const Customers = () => {
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Tax-Verified (PAN)
             </p>
-            <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
+            <h3 className="text-2xl font-black text-emerald-700 mt-1 font-mono">
               {dynamicStats.panRegisteredCount}
             </h3>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -463,12 +463,12 @@ const Customers = () => {
         </div>
 
         {/* Card 4: Individual & Retail */}
-        <div className="bg-[#FAF7FD] p-5 rounded-3xl shadow-xs border border-purple-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-lavender p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-purple-100/80 rounded-2xl flex items-center justify-center text-purple-600 border border-purple-200/60 shrink-0">
+            <div className="w-10 h-10 bg-indigo-100/90 rounded-xl flex items-center justify-center text-indigo-700 border border-indigo-200/80 shrink-0">
               <UserCheck size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50/90 border border-indigo-200/80 px-2.5 py-0.5 rounded-full">
               INDIVIDUAL
             </span>
           </div>
@@ -476,7 +476,7 @@ const Customers = () => {
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Individual Accounts
             </p>
-            <h3 className="text-2xl font-black text-purple-600 mt-1 font-mono">
+            <h3 className="text-2xl font-black text-indigo-700 mt-1 font-mono">
               {dynamicStats.individualCount}
             </h3>
             <p className="text-[11px] text-slate-500 mt-1">

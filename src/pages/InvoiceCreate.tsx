@@ -747,7 +747,7 @@ export const InvoiceCreate: React.FC = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">Invoices & Nepal Tax Billing</h1>
-            <span className="px-3 py-1 bg-gradient-to-r from-[#fff3ef] to-[#f0f4fe] text-slate-800 text-xs font-bold rounded-full border border-[#ffcfdc]/70">
+            <span className="px-3 py-1 bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] text-xs font-bold rounded-full border border-[#c4daff]/80">
               IRD Compliant
             </span>
           </div>
@@ -757,14 +757,14 @@ export const InvoiceCreate: React.FC = () => {
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200/80">
+        <div className="flex items-center gap-1.5 p-1 bg-white/90 rounded-2xl border border-slate-200/80 shadow-xs">
           <button
             type="button"
             onClick={() => setActiveTab('list')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'list'
-                ? 'bg-white text-slate-950 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#eef2ff]'
             }`}
           >
             <FileText size={15} />
@@ -779,11 +779,11 @@ export const InvoiceCreate: React.FC = () => {
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'create'
-                ? 'btn-gradient shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90 ring-1 ring-[#c4daff]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#eef2ff]'
             }`}
           >
-            <Plus size={15} className={activeTab === 'create' ? 'text-black' : ''} />
+            <Plus size={15} className="text-[#0f172a]" />
             <span>New Tax Invoice</span>
           </button>
 
@@ -793,8 +793,8 @@ export const InvoiceCreate: React.FC = () => {
             disabled={!activeDisplayInvoice}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'preview'
-                ? 'bg-white text-slate-950 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#eef2ff]'
             }`}
           >
             <Printer size={15} />
@@ -806,8 +806,8 @@ export const InvoiceCreate: React.FC = () => {
             onClick={() => setActiveTab('credit_notes')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'credit_notes'
-                ? 'bg-white text-slate-950 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#eef2ff]'
             }`}
           >
             <RotateCcw size={15} />
@@ -823,28 +823,28 @@ export const InvoiceCreate: React.FC = () => {
         <div className="space-y-6 no-print animate-in fade-in duration-300">
           {/* Summary Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-5 rounded-3xl border border-blue-100 bg-[#F8FAFF] shadow-xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">TOTAL INVOICED</span>
-              <h3 className="text-2xl font-black text-slate-900 font-mono mt-1">{formatNPR(stats.totalInvoiced)}</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Accrual Revenue (Active Invoices)</p>
+            <div className="glass card-tone-blue p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50/90 border border-blue-200/80 px-2.5 py-0.5 rounded-full">TOTAL INVOICED</span>
+              <h3 className="text-2xl font-black text-slate-900 font-mono mt-2">{formatNPR(stats.totalInvoiced)}</h3>
+              <p className="text-xs text-slate-500 mt-1">Accrual Revenue (Active Invoices)</p>
             </div>
 
-            <div className="p-5 rounded-3xl border border-emerald-100 bg-[#F6FAF7] shadow-xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">COLLECTED CASH</span>
-              <h3 className="text-2xl font-black text-emerald-700 font-mono mt-1">{formatNPR(stats.totalCollected)}</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Total Payments Received</p>
+            <div className="glass card-tone-mint p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full">COLLECTED CASH</span>
+              <h3 className="text-2xl font-black text-emerald-700 font-mono mt-2">{formatNPR(stats.totalCollected)}</h3>
+              <p className="text-xs text-slate-500 mt-1">Total Payments Received</p>
             </div>
 
-            <div className="p-5 rounded-3xl border border-rose-100 bg-[#FFF8F8] shadow-xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600">RECEIVABLES OUTSTANDING</span>
-              <h3 className="text-2xl font-black text-rose-700 font-mono mt-1">{formatNPR(stats.totalReceivables)}</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Customer Balance Due</p>
+            <div className="glass card-tone-rose p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50/90 border border-rose-200/80 px-2.5 py-0.5 rounded-full">RECEIVABLES OUTSTANDING</span>
+              <h3 className="text-2xl font-black text-rose-700 font-mono mt-2">{formatNPR(stats.totalReceivables)}</h3>
+              <p className="text-xs text-slate-500 mt-1">Customer Balance Due</p>
             </div>
 
-            <div className="p-5 rounded-3xl border border-purple-100 bg-[#FAF7FD] shadow-xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">13% OUTPUT VAT</span>
-              <h3 className="text-2xl font-black text-purple-700 font-mono mt-1">{formatNPR(stats.totalVatCollected)}</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Output Tax Payable to IRD</p>
+            <div className="glass card-tone-lavender p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50/90 border border-indigo-200/80 px-2.5 py-0.5 rounded-full">13% OUTPUT VAT</span>
+              <h3 className="text-2xl font-black text-indigo-700 font-mono mt-2">{formatNPR(stats.totalVatCollected)}</h3>
+              <p className="text-xs text-slate-500 mt-1">Output Tax Payable to IRD</p>
             </div>
           </div>
 
@@ -1434,7 +1434,7 @@ export const InvoiceCreate: React.FC = () => {
           {/* Printable Corporate A4 Letterhead Canvas */}
           <div
             id="printable-invoice"
-            className="max-w-[840px] mx-auto bg-[#f1f0ee] rounded-2xl shadow-xl border border-slate-300/80 overflow-hidden print:shadow-none print:border-none print:rounded-none print:m-0 print:w-full print:max-w-full relative"
+            className="max-w-[840px] mx-auto bg-[#f6f8fc] rounded-2xl shadow-xl border border-slate-200 overflow-hidden print:shadow-none print:border-none print:rounded-none print:m-0 print:w-full print:max-w-full relative"
           >
             {/* Watermark Layer */}
             <div className="invoice-watermark-layer absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">

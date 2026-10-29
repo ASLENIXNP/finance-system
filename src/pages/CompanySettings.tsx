@@ -1025,7 +1025,7 @@ const CompanySettings: React.FC = () => {
               </p>
 
               {/* Miniature Letterhead Simulation */}
-              <div className="p-4 bg-[#f1f0ee] rounded-2xl border border-slate-300/80 text-left text-slate-800 space-y-3">
+              <div className="p-4 bg-[#f6f8fc] rounded-2xl border border-slate-200 text-left text-slate-800 space-y-3">
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-black tracking-widest text-slate-950 uppercase leading-tight truncate">

@@ -443,12 +443,14 @@ export const Accounting: React.FC = () => {
         </div>
 
         {/* Tab Controls */}
-        <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200/80">
+        <div className="flex items-center gap-1.5 p-1 bg-white/90 rounded-2xl border border-slate-200/80 shadow-xs">
           <button
             type="button"
             onClick={() => setActiveTab('journals')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'journals' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              activeTab === 'journals'
+                ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#eef2ff]'
             }`}
           >
             <BookOpen size={15} />
@@ -459,7 +461,9 @@ export const Accounting: React.FC = () => {
             type="button"
             onClick={() => setActiveTab('ledger')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'ledger' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              activeTab === 'ledger'
+                ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#eef2ff]'
             }`}
           >
             <Layers size={15} />
@@ -470,7 +474,9 @@ export const Accounting: React.FC = () => {
             type="button"
             onClick={() => setActiveTab('coa')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'coa' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              activeTab === 'coa'
+                ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#eef2ff]'
             }`}
           >
             <Building2 size={15} />
@@ -481,7 +487,9 @@ export const Accounting: React.FC = () => {
             type="button"
             onClick={() => setActiveTab('trial_balance')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'trial_balance' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              activeTab === 'trial_balance'
+                ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#eef2ff]'
             }`}
           >
             <Scale size={15} />

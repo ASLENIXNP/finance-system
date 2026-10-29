@@ -675,12 +675,12 @@ const Expenses = () => {
       {/* 2. DYNAMIC SUMMARY METRIC CARDS (100% Calculated in Real Time) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Card 1: Total Expenses (This Month) */}
-        <div className="bg-[#FFF6F6] p-5 rounded-3xl shadow-xs border border-rose-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-rose p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-rose-100/80 rounded-2xl flex items-center justify-center text-rose-600 border border-rose-200/60 shrink-0">
+            <div className="w-10 h-10 bg-rose-100/90 rounded-xl flex items-center justify-center text-rose-700 border border-rose-200/80 shrink-0">
               <CreditCard size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50/90 border border-rose-200/80 px-2.5 py-0.5 rounded-full">
               THIS MONTH
             </span>
           </div>
@@ -702,12 +702,12 @@ const Expenses = () => {
         </div>
 
         {/* Card 2: All-Time Total Expenses */}
-        <div className="bg-[#F8FAFF] p-5 rounded-3xl shadow-xs border border-blue-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-blue p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-blue-100/80 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-200/60 shrink-0">
+            <div className="w-10 h-10 bg-blue-100/90 rounded-xl flex items-center justify-center text-blue-700 border border-blue-200/80 shrink-0">
               <TrendingUp size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50/90 border border-blue-200/80 px-2.5 py-0.5 rounded-full">
               TOTAL SPEND
             </span>
           </div>
@@ -725,12 +725,12 @@ const Expenses = () => {
         </div>
 
         {/* Card 3: Highest Category (100% Dynamic) */}
-        <div className="bg-[#FFF9F5] p-5 rounded-3xl shadow-xs border border-orange-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-amber p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-orange-100/80 rounded-2xl flex items-center justify-center text-orange-600 border border-orange-200/60 shrink-0">
+            <div className="w-10 h-10 bg-amber-100/90 rounded-xl flex items-center justify-center text-amber-700 border border-amber-200/80 shrink-0">
               <PieChart size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 border border-amber-200/80 px-2.5 py-0.5 rounded-full">
               TOP OUTFLOW
             </span>
           </div>
@@ -753,12 +753,12 @@ const Expenses = () => {
         </div>
 
         {/* Card 4: Average Expense Size */}
-        <div className="bg-[#F6FAF7] p-5 rounded-3xl shadow-xs border border-emerald-100/90 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="glass card-tone-mint p-5 rounded-2xl shadow-xs border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-emerald-100/80 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-200/60 shrink-0">
+            <div className="w-10 h-10 bg-emerald-100/90 rounded-xl flex items-center justify-center text-emerald-700 border border-emerald-200/80 shrink-0">
               <Receipt size={20} />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full">
               AVG TICKET
             </span>
           </div>

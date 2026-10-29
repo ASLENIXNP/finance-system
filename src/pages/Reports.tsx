@@ -220,12 +220,12 @@ export const Reports: React.FC = () => {
       </div>
 
       {/* Report Selection Tabs Bar */}
-      <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center gap-1.5 no-print">
+      <div className="bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center gap-1.5 no-print">
         <button
           type="button"
           onClick={() => setActiveReport('vat_return')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeReport === 'vat_return' ? 'bg-slate-950 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            activeReport === 'vat_return' ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90' : 'text-slate-600 hover:bg-[#eef2ff] hover:text-[#0f172a]'
           }`}
         >
           VAT 13% Return (Annex 10)
@@ -235,7 +235,7 @@ export const Reports: React.FC = () => {
           type="button"
           onClick={() => setActiveReport('vat_sales')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeReport === 'vat_sales' ? 'bg-slate-950 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            activeReport === 'vat_sales' ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90' : 'text-slate-600 hover:bg-[#eef2ff] hover:text-[#0f172a]'
           }`}
         >
           Sales Register (Annex 8)
@@ -245,7 +245,7 @@ export const Reports: React.FC = () => {
           type="button"
           onClick={() => setActiveReport('vat_purchase')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeReport === 'vat_purchase' ? 'bg-slate-950 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            activeReport === 'vat_purchase' ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90' : 'text-slate-600 hover:bg-[#eef2ff] hover:text-[#0f172a]'
           }`}
         >
           Purchase Register (Annex 7)
@@ -255,7 +255,7 @@ export const Reports: React.FC = () => {
           type="button"
           onClick={() => setActiveReport('tds_summary')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeReport === 'tds_summary' ? 'bg-slate-950 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            activeReport === 'tds_summary' ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90' : 'text-slate-600 hover:bg-[#eef2ff] hover:text-[#0f172a]'
           }`}
         >
           TDS Withholding Summary
@@ -265,7 +265,7 @@ export const Reports: React.FC = () => {
           type="button"
           onClick={() => setActiveReport('profit_loss')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeReport === 'profit_loss' ? 'bg-slate-950 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            activeReport === 'profit_loss' ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90' : 'text-slate-600 hover:bg-[#eef2ff] hover:text-[#0f172a]'
           }`}
         >
           Profit & Loss Statement
@@ -275,7 +275,7 @@ export const Reports: React.FC = () => {
           type="button"
           onClick={() => setActiveReport('balance_sheet')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeReport === 'balance_sheet' ? 'bg-slate-950 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            activeReport === 'balance_sheet' ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90' : 'text-slate-600 hover:bg-[#eef2ff] hover:text-[#0f172a]'
           }`}
         >
           Balance Sheet
@@ -285,7 +285,7 @@ export const Reports: React.FC = () => {
           type="button"
           onClick={() => setActiveReport('customer_aging')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeReport === 'customer_aging' ? 'bg-slate-950 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            activeReport === 'customer_aging' ? 'bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] shadow-xs border border-[#c4daff]/90' : 'text-slate-600 hover:bg-[#eef2ff] hover:text-[#0f172a]'
           }`}
         >
           Customer Outstanding Aging
