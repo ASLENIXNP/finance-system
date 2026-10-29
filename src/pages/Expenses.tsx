@@ -75,63 +75,7 @@ const PAYMENT_METHODS = [
   'Other'
 ];
 
-const initialExpenseData: ExpenseItem[] = [
-  { 
-    id: 'EXP-001', 
-    date: '2083-06-16', 
-    vendor: 'Kathmandu Properties', 
-    category: 'Office Rent', 
-    amount: 45000, 
-    method: 'Bank Transfer', 
-    receipt: 'RENT-2083-06',
-    description: 'Monthly head office rent for Ashwin 2083',
-    vendor_pan: '601928374'
-  },
-  { 
-    id: 'EXP-002', 
-    date: '2083-06-15', 
-    vendor: 'Vianet Communications', 
-    category: 'Internet & Communications', 
-    amount: 3200, 
-    method: 'eSewa', 
-    receipt: 'REC-VIA-1029',
-    description: 'Office Fiber Internet 200 Mbps subscription',
-    vendor_pan: '600129384'
-  },
-  { 
-    id: 'EXP-003', 
-    date: '2083-06-10', 
-    vendor: 'Digital Ocean LLC', 
-    category: 'Server & Cloud', 
-    amount: 14500, 
-    method: 'Credit / Debit Card', 
-    receipt: 'INV-DO-992',
-    description: 'Cloud VPS droplet servers and database instances',
-    vendor_pan: ''
-  },
-  { 
-    id: 'EXP-004', 
-    date: '2083-06-08', 
-    vendor: 'Meta Platforms Inc.', 
-    category: 'Marketing & Ads', 
-    amount: 8500, 
-    method: 'Credit / Debit Card', 
-    receipt: 'FB-ADS-8821',
-    description: 'Digital marketing and lead acquisition campaigns',
-    vendor_pan: ''
-  },
-  { 
-    id: 'EXP-005', 
-    date: '2083-06-05', 
-    vendor: 'Nepal Electricity Authority', 
-    category: 'Electricity & Water', 
-    amount: 5400, 
-    method: 'Khalti', 
-    receipt: 'NEA-83719',
-    description: 'Electricity bill payment for Ashwin 2083',
-    vendor_pan: '600000123'
-  }
-];
+const DUMMY_SEED_EXP_RECEIPTS = new Set(['RENT-2083-06', 'REC-VIA-1029', 'INV-DO-992', 'FB-ADS-8821', 'NEA-83719']);
 
 const formatNPR = (amount: number): string => {
   return `रु. ${Number(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -197,16 +141,15 @@ const Expenses = () => {
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           const deletedIds = getDeletedExpenseIds();
-          return parsed.filter(item => !deletedIds.has(item.id) && (!item.db_id || !deletedIds.has(item.db_id)));
+          return parsed.filter(item => !deletedIds.has(item.id) && !DUMMY_SEED_EXP_RECEIPTS.has(item.receipt) && (!item.db_id || !deletedIds.has(item.db_id)));
         }
       } catch (e) {
         console.error('Failed to parse saved expenses:', e);
       }
     }
-    const deletedIds = getDeletedExpenseIds();
-    return initialExpenseData.filter(item => !deletedIds.has(item.id));
+    return [];
   });
 
   // Filters State

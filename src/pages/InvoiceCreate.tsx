@@ -112,95 +112,15 @@ const getStoredInvoices = (): StoredInvoice[] => {
     const raw = localStorage.getItem(LOCAL_STORAGE_INVOICES_KEY);
     if (raw) {
       const arr = JSON.parse(raw);
-      if (Array.isArray(arr) && arr.length > 0) {
-        return arr;
+      if (Array.isArray(arr)) {
+        return arr.filter((item: any) => !item.id?.startsWith('inv-seed-'));
       }
     }
   } catch (e) {
     console.warn('Failed to parse stored invoices:', e);
   }
 
-  // Initial invoices for demonstration & offline fallback
-  return [
-    {
-      id: 'inv-seed-001',
-      invoice_no: 'ASL-2082/83-0012',
-      customer_id: 'cust-101',
-      customer_name: 'Tech Innovations Pvt. Ltd.',
-      customer_pan: '609123456',
-      customer_address: 'Putalisadak, Kathmandu, Nepal',
-      customer_phone: '+977 1-4412345',
-      customer_email: 'accounts@techinnovations.com.np',
-      invoice_date: '2026-10-01',
-      invoice_date_bs: '2083-06-15',
-      due_date: '2083-06-30',
-      fiscal_year: '2082/83',
-      subtotal: 150000,
-      total_discount: 0,
-      taxable_amount: 150000,
-      exempt_amount: 0,
-      total_tax: 19500,
-      grand_total: 169500,
-      amount_paid: 169500,
-      balance_due: 0,
-      status: 'Paid',
-      is_vat_invoice: true,
-      notes: 'Website Development & Corporate CMS deployment',
-      items: [
-        {
-          id: 1,
-          name: 'Website Development & Corporate Branding',
-          desc: 'Corporate dynamic portal design, CMS integration & cloud deployment',
-          qty: 1,
-          unit: 'Project',
-          rate: 150000,
-          discount: 0,
-          taxClassification: 'Taxable',
-          tax: 13,
-        },
-      ],
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 'inv-seed-002',
-      invoice_no: 'ASL-2082/83-0014',
-      customer_id: 'cust-102',
-      customer_name: 'Himalayan Coffee House',
-      customer_pan: '608987654',
-      customer_address: 'Thamel, Kathmandu, Nepal',
-      customer_phone: '+977 1-4423456',
-      customer_email: 'info@himalayancoffee.np',
-      invoice_date: '2026-10-05',
-      invoice_date_bs: '2083-06-19',
-      due_date: '2083-07-04',
-      fiscal_year: '2082/83',
-      subtotal: 45000,
-      total_discount: 0,
-      taxable_amount: 45000,
-      exempt_amount: 0,
-      total_tax: 5850,
-      grand_total: 50850,
-      amount_paid: 20000,
-      balance_due: 30850,
-      status: 'Partially Paid',
-      is_vat_invoice: true,
-      notes: 'Social Media Management & Digital Assets',
-      items: [
-        {
-          id: 1,
-          name: 'Monthly Social Media Retainer & Campaign Design',
-          desc: 'Content creation, ad graphics, and audience growth management',
-          qty: 1,
-          unit: 'Month',
-          rate: 45000,
-          discount: 0,
-          taxClassification: 'Taxable',
-          tax: 13,
-        },
-      ],
-      created_at: new Date().toISOString(),
-    },
-  ];
+  return [];
 };
 
 const getStoredCreditNotes = (): CreditNoteItem[] => {

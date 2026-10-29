@@ -68,31 +68,10 @@ interface PaymentRecord {
   status: string;
 }
 
-const defaultIncomeRecords: IncomeRecord[] = [
-  { id: 'INC-001', date: '2083-06-15', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', category: 'Web Development', amount: 45000, method: 'Bank Transfer', status: 'Completed' },
-  { id: 'INC-002', date: '2083-06-12', invoice: 'ASL-2083-0011', customer: 'Himalayan Coffee House', category: 'UI/UX Design', amount: 15500, method: 'eSewa', status: 'Completed' },
-  { id: 'INC-003', date: '2083-06-09', invoice: 'ASL-2083-0009', customer: 'Retail Solutions', category: 'Software Development', amount: 85000, method: 'Cheque', status: 'Pending' },
-  { id: 'INC-004', date: '2083-06-04', invoice: 'Manual Entry', customer: 'Freelance Client', category: 'Consulting', amount: 12000, method: 'Cash', status: 'Completed' },
-  { id: 'INC-005', date: '2083-05-24', invoice: 'ASL-2083-0006', customer: 'Everest Trading', category: 'Web Development', amount: 65000, method: 'Bank Transfer', status: 'Completed' },
-  { id: 'INC-006', date: '2083-04-18', invoice: 'ASL-2083-0003', customer: 'Apex Logistics', category: 'Software Development', amount: 95000, method: 'Bank Transfer', status: 'Completed' },
-  { id: 'INC-007', date: '2083-03-20', invoice: 'ASL-2083-0001', customer: 'Kathmandu Media', category: 'Hosting', amount: 25000, method: 'Card', status: 'Completed' },
-];
-
-const defaultExpenseRecords: ExpenseRecord[] = [
-  { id: 'EXP-001', date: '2083-06-18', category: 'Office Rent', description: 'Monthly Office Space Rent', amount: 35000, method: 'Bank Transfer', reference: 'RENT-ASW-01' },
-  { id: 'EXP-002', date: '2083-06-14', category: 'Utilities & Internet', description: 'WorldLink Fiber Internet Bill', amount: 3200, method: 'eSewa', reference: 'WL-998822' },
-  { id: 'EXP-003', date: '2083-06-10', category: 'Server & Cloud', description: 'AWS Cloud Infrastructure Hosting', amount: 18500, method: 'Card', reference: 'AWS-INV-7711' },
-  { id: 'EXP-004', date: '2083-06-05', category: 'Refreshments & Tea', description: 'Weekly Office Snacks and Beverages', amount: 2400, method: 'Cash', reference: 'CASH-083-44' },
-  { id: 'EXP-005', date: '2083-05-15', category: 'Office Rent', description: 'Bhadra Office Rent', amount: 35000, method: 'Bank Transfer', reference: 'RENT-BHA-01' },
-  { id: 'EXP-006', date: '2083-04-15', category: 'Office Rent', description: 'Shrawan Office Rent', amount: 35000, method: 'Bank Transfer', reference: 'RENT-SHR-01' },
-];
-
-const defaultPaymentRecords: PaymentRecord[] = [
-  { id: 'PAY-001', date: '2083-06-19', invoice: 'ASL-2083-0012', customer: 'Tech Innovations Pvt. Ltd.', amount: 45000, method: 'Bank Transfer', ref: 'NABIL123456789', status: 'Verified' },
-  { id: 'PAY-002', date: '2083-06-18', invoice: 'ASL-2083-0014', customer: 'Everest Trading', amount: 15500, method: 'eSewa', ref: 'ESEWA987654', status: 'Verified' },
-  { id: 'PAY-003', date: '2083-06-16', invoice: 'ASL-2083-0010', customer: 'Himalayan Coffee House', amount: 50000, method: 'Cheque', ref: 'CHQ-445566', status: 'Pending Clearance' },
-  { id: 'PAY-004', date: '2083-06-13', invoice: 'ASL-2083-0008', customer: 'Individual Client', amount: 12000, method: 'Cash', ref: 'CASH-REC-11', status: 'Verified' },
-];
+// Initial empty datasets - no static/fake mock numbers
+const defaultIncomeRecords: IncomeRecord[] = [];
+const defaultExpenseRecords: ExpenseRecord[] = [];
+const defaultPaymentRecords: PaymentRecord[] = [];
 
 type DateFilterOption = 'today' | 'this_week' | 'this_month' | 'fiscal_year' | 'custom';
 

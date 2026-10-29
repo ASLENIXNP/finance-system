@@ -36,11 +36,7 @@ interface Customer {
   is_active: boolean;
 }
 
-const defaultCustomers: Customer[] = [
-  { id: 'c1', customer_id: 'CUST-1001', name: 'Global Tech Nepal', company_name: 'Global Tech Nepal Pvt. Ltd.', pan_number: '601234567', phone: '9851000001', email: 'info@globaltech.com.np', type: 'Company', is_active: true },
-  { id: 'c2', customer_id: 'CUST-1002', name: 'Himalayan Mart', company_name: 'Himalayan Mart Pvt. Ltd.', pan_number: '602345678', phone: '9851000002', email: 'accounts@himalayanmart.com', type: 'Company', is_active: true },
-  { id: 'c3', customer_id: 'CUST-1003', name: 'Vertex Media', company_name: 'Vertex Media Group', pan_number: '603456789', phone: '9851000003', email: 'hello@vertexmedia.com', type: 'Company', is_active: true },
-];
+const DUMMY_SEED_CUSTOMER_IDS = new Set(['c1', 'c2', 'c3', 'CUST-1001', 'CUST-1002', 'CUST-1003']);
 
 const DELETED_CUSTOMERS_KEY = 'aslenix_deleted_customers';
 
@@ -93,13 +89,13 @@ const Customers = () => {
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           const deletedIds = getDeletedCustomerIds();
-          return parsed.filter(c => !deletedIds.has(c.id) && !deletedIds.has(c.customer_id));
+          return parsed.filter(c => !deletedIds.has(c.id) && !deletedIds.has(c.customer_id) && !DUMMY_SEED_CUSTOMER_IDS.has(c.id) && !DUMMY_SEED_CUSTOMER_IDS.has(c.customer_id));
         }
       } catch (e) {}
     }
-    return defaultCustomers;
+    return [];
   });
   const [loading, setLoading] = useState(false);
 

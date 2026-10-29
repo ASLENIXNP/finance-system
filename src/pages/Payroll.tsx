@@ -229,137 +229,8 @@ export const getEmployeePhoto = (emp: { name: string; photo_url?: string }) => {
   return '';
 };
 
-const defaultEmployees: Employee[] = [
-  { id: 'ASL-001', employee_code: 'ASL-001', name: 'Aarav Sharma', designation: 'Senior Full Stack Engineer', department: 'Technology', email: 'aarav.sharma@aslenix.com', phone: '9841000001', pan_number: '609123456', fixed_salary: 75000.00, bank_name: 'Nabil Bank', bank_account_no: '01901017500123', bank_branch: 'Putalisadak', joining_date: '2025-01-15', is_active: true },
-  { id: 'ASL-002', employee_code: 'ASL-002', name: 'Pooja Shrestha', designation: 'Lead Accountant', department: 'Finance', email: 'pooja.shrestha@aslenix.com', phone: '9841000002', pan_number: '608987654', fixed_salary: 60000.00, bank_name: 'Global IME Bank', bank_account_no: '04501010098765', bank_branch: 'New Baneshwor', joining_date: '2025-02-01', is_active: true },
-  { id: 'ASL-003', employee_code: 'ASL-003', name: 'Rohan Adhikari', designation: 'UI/UX & Frontend Designer', department: 'Creative & Tech', email: 'rohan.adhikari@aslenix.com', phone: '9841000003', pan_number: '610543210', fixed_salary: 48000.00, bank_name: 'NIC Asia Bank', bank_account_no: '12405060708090', bank_branch: 'Thamel', joining_date: '2025-04-10', is_active: true },
-  { id: 'ASL-004', employee_code: 'ASL-004', name: 'Sneha Karki', designation: 'Business Development Officer', department: 'Marketing', email: 'sneha.karki@aslenix.com', phone: '9841000004', pan_number: '611223344', fixed_salary: 38000.00, bank_name: 'Sanima Bank', bank_account_no: '08901234567890', bank_branch: 'Lalitpur', joining_date: '2025-06-01', is_active: true }
-];
-
-// Initial demo records calculated using the exact salary and 1% TDS rules
-const initialPayrollRecords: PayrollRecord[] = [
-  {
-    id: 'PAY-2083-06-001',
-    payroll_ref: 'PAY-2083-06-001',
-    employee_id: 'ASL-001',
-    employee_code: 'ASL-001',
-    employee_name: 'Aarav Sharma',
-    designation: 'Senior Full Stack Engineer',
-    department: 'Technology',
-    month: 'Ashwin',
-    year: 2083,
-    total_working_days: 30,
-    present_days: 24,
-    half_days: 2,
-    absent_days: 5,
-    effective_days: 24.0,
-    fixed_salary: 75000,
-    per_day_rate: 2500,
-    attendance_salary: 60000,
-    earned_salary: 60000,
-    bonus_allowance: 2500,
-    deductions: 1500,
-    net_before_tds: 61000,
-    tds_rate: 1,
-    tds_amount: 610,
-    net_salary: 60390,
-    payment_status: 'Paid',
-    payment_date: '2083-06-15',
-    payment_method: 'Bank Transfer',
-    reference_no: 'NBL-TXN-98442',
-    notes: '24 present days; 2 half-day absences count as 1 absent day. 1% TDS applied.'
-  },
-  {
-    id: 'PAY-2083-06-002',
-    payroll_ref: 'PAY-2083-06-002',
-    employee_id: 'ASL-002',
-    employee_code: 'ASL-002',
-    employee_name: 'Pooja Shrestha',
-    designation: 'Lead Accountant',
-    department: 'Finance',
-    month: 'Ashwin',
-    year: 2083,
-    total_working_days: 30,
-    present_days: 25,
-    half_days: 1,
-    absent_days: 4.5,
-    effective_days: 25,
-    fixed_salary: 60000,
-    per_day_rate: 2000,
-    attendance_salary: 50000,
-    earned_salary: 50000,
-    bonus_allowance: 0,
-    deductions: 0,
-    net_before_tds: 50000,
-    tds_rate: 1,
-    tds_amount: 500,
-    net_salary: 49500,
-    payment_status: 'Approved',
-    payment_date: undefined,
-    payment_method: undefined,
-    reference_no: undefined,
-    notes: 'Approved by management. 1% TDS applied.'
-  },
-  {
-    id: 'PAY-2083-06-003',
-    payroll_ref: 'PAY-2083-06-003',
-    employee_id: 'ASL-003',
-    employee_code: 'ASL-003',
-    employee_name: 'Rohan Adhikari',
-    designation: 'UI/UX & Frontend Designer',
-    department: 'Creative & Tech',
-    month: 'Ashwin',
-    year: 2083,
-    total_working_days: 30,
-    present_days: 23,
-    half_days: 2,
-    absent_days: 6,
-    effective_days: 23.0,
-    fixed_salary: 48000,
-    per_day_rate: 1600.00,
-    attendance_salary: 36800.00,
-    earned_salary: 36800.00,
-    bonus_allowance: 1000,
-    deductions: 2000,
-    net_before_tds: 35800.00,
-    tds_rate: 1,
-    tds_amount: 358.00,
-    net_salary: 35442.00,
-    payment_status: 'Unpaid',
-    notes: 'Advance salary deduction Rs. 2,000. 1% TDS applied.'
-  },
-  {
-    id: 'PAY-2083-06-004',
-    payroll_ref: 'PAY-2083-06-004',
-    employee_id: 'ASL-004',
-    employee_code: 'ASL-004',
-    employee_name: 'Sneha Karki',
-    designation: 'Business Development Officer',
-    department: 'Marketing',
-    month: 'Ashwin',
-    year: 2083,
-    total_working_days: 30,
-    present_days: 30,
-    half_days: 0,
-    absent_days: 0,
-    effective_days: 30.0,
-    fixed_salary: 38000,
-    per_day_rate: 1461.54,
-    attendance_salary: 38000.00,
-    earned_salary: 38000.00,
-    bonus_allowance: 3000,
-    deductions: 0,
-    net_before_tds: 41000.00,
-    tds_rate: 1,
-    tds_amount: 410.00,
-    net_salary: 40590.00,
-    payment_status: 'Paid',
-    payment_date: '2083-06-15',
-    payment_method: 'Bank Transfer',
-    reference_no: 'SNM-TXN-55120',
-    notes: '100% full attendance + marketing commission. 1% TDS applied.'
-  }
-];
+const DUMMY_SEED_PAYROLL_IDS = new Set(['PAY-2083-06-001', 'PAY-2083-06-002', 'PAY-2083-06-003', 'PAY-2083-06-004']);
+const DUMMY_SEED_EMPLOYEE_CODES = new Set(['ASL-001', 'ASL-002', 'ASL-003', 'ASL-004', 'EMP-001', 'EMP-002', 'EMP-003', 'EMP-004']);
 
 const monthsList = [
   'Baishakh', 'Jestha', 'Ashadh', 'Shrawan', 'Bhadra', 'Ashwin',
@@ -425,7 +296,9 @@ const Payroll = () => {
       try {
         const parsed = JSON.parse(saved);
         let hasMigrated = false;
-        const migrated: Employee[] = parsed.map((e: Employee, idx: number) => {
+        const migrated: Employee[] = parsed
+          .filter((e: any) => !DUMMY_SEED_EMPLOYEE_CODES.has(e.employee_code) && !DUMMY_SEED_EMPLOYEE_CODES.has(e.id))
+          .map((e: Employee, idx: number) => {
           const rawCode = e.employee_code || e.id || `ASL-${String(idx + 1).padStart(3, '0')}`;
           const cleanSuffix = rawCode.replace(/^(EMP|ASL)-?/i, '');
           const newCode = `ASL-${cleanSuffix || String(idx + 1).padStart(3, '0')}`;
@@ -447,7 +320,7 @@ const Payroll = () => {
         console.error('Error loading employees:', err);
       }
     }
-    return defaultEmployees;
+    return [];
   });
   const [employeeSyncError, setEmployeeSyncError] = useState<string | null>(null);
   const [employeeSyncLoading, setEmployeeSyncLoading] = useState(true);
@@ -472,6 +345,7 @@ const Payroll = () => {
       try {
         const parsed = JSON.parse(saved);
         const mapped = (Array.isArray(parsed) ? parsed : [])
+          .filter((r: any) => !DUMMY_SEED_PAYROLL_IDS.has(r.id))
           .map((r: any) => {
             const employee_id = (r.employee_id || '').replace(/^EMP-/i, 'ASL-');
             const employee_code = (r.employee_code || '').replace(/^EMP-/i, 'ASL-');
@@ -520,7 +394,7 @@ const Payroll = () => {
         console.error('Error loading payroll records:', e);
       }
     }
-    return deduplicatePayrollRecords(initialPayrollRecords);
+    return [];
   });
 
   // Filters & Period

@@ -69,79 +69,22 @@ const getInitialCOA = (): AccountItem[] => {
   return STANDARD_CHART_OF_ACCOUNTS;
 };
 
+const DUMMY_SEED_JV_IDS = new Set(['jv-001', 'jv-002', 'jv-003']);
+
 const getInitialJournals = (): JournalEntryRecord[] => {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_JOURNAL_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        return parsed.filter((item: any) => !DUMMY_SEED_JV_IDS.has(item.id));
+      }
     }
   } catch (e) {
     console.warn('Failed to parse stored journals:', e);
   }
 
-  // Pre-seeded balanced journal entries
-  return [
-    {
-      id: 'jv-001',
-      entry_no: 'JV-2082/83-0001',
-      entry_date: '2026-07-16',
-      entry_date_bs: '2083-04-01',
-      reference_no: 'OP-BAL-01',
-      description: 'Opening Balances for Fiscal Year 2082/83',
-      total_debit: 500000,
-      total_credit: 500000,
-      is_balanced: true,
-      status: 'Posted',
-      source: 'Opening',
-      created_by: 'Super Admin',
-      created_at: new Date().toISOString(),
-      lines: [
-        { id: 1, accountId: '1020', accountCode: '1020', accountName: 'Global IME Bank (Main Account)', description: 'Bank Operating Reserve', debit: 450000, credit: 0 },
-        { id: 2, accountId: '1010', accountCode: '1010', accountName: 'Cash in Hand', description: 'Petty cash reserve', debit: 50000, credit: 0 },
-        { id: 3, accountId: '3010', accountCode: '3010', accountName: 'Owners Capital', description: 'Paid-in Share Capital', debit: 0, credit: 500000 },
-      ],
-    },
-    {
-      id: 'jv-002',
-      entry_no: 'JV-2082/83-0002',
-      entry_date: '2026-10-01',
-      entry_date_bs: '2083-06-15',
-      reference_no: 'ASL-2082/83-0012',
-      description: 'Sales Revenue for Invoice ASL-2082/83-0012 (Tech Innovations)',
-      total_debit: 169500,
-      total_credit: 169500,
-      is_balanced: true,
-      status: 'Posted',
-      source: 'Invoice',
-      created_by: 'Super Admin',
-      created_at: new Date().toISOString(),
-      lines: [
-        { id: 1, accountId: '1100', accountCode: '1100', accountName: 'Accounts Receivable (Debtors)', description: 'Tech Innovations Receivable', debit: 169500, credit: 0 },
-        { id: 2, accountId: '4010', accountCode: '4010', accountName: 'IT & Software Development Revenue', description: 'Web Dev & Portal Services', debit: 0, credit: 150000 },
-        { id: 3, accountId: '2100', accountCode: '2100', accountName: 'Output VAT Payable', description: '13% Output Tax', debit: 0, credit: 19500 },
-      ],
-    },
-    {
-      id: 'jv-003',
-      entry_no: 'JV-2082/83-0003',
-      entry_date: '2026-10-05',
-      entry_date_bs: '2083-06-19',
-      reference_no: 'NABIL-TXN-4411',
-      description: 'Client Payment received for Invoice ASL-2082/83-0012',
-      total_debit: 169500,
-      total_credit: 169500,
-      is_balanced: true,
-      status: 'Posted',
-      source: 'Payment',
-      created_by: 'Super Admin',
-      created_at: new Date().toISOString(),
-      lines: [
-        { id: 1, accountId: '1020', accountCode: '1020', accountName: 'Global IME Bank (Main Account)', description: 'Direct Wire Settlement', debit: 169500, credit: 0 },
-        { id: 2, accountId: '1100', accountCode: '1100', accountName: 'Accounts Receivable (Debtors)', description: 'Clearance of Invoice ASL-2082/83-0012', debit: 0, credit: 169500 },
-      ],
-    },
-  ];
+  return [];
 };
 
 export const Accounting: React.FC = () => {

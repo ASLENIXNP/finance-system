@@ -38,14 +38,7 @@ export const Reports: React.FC = () => {
       const raw = localStorage.getItem('aslenix_expenses');
       if (raw) return JSON.parse(raw);
     } catch {}
-    return [
-      { id: 'EXP-001', date: '2083-06-18', category: 'Office Rent', description: 'Monthly Office Space Rent', amount: 35000, method: 'Bank Transfer', reference: 'RENT-ASW-01', vendor: 'Buddhanagar Properties', vendor_pan: '601234567', is_vat: false, vat_amount: 0, tds_deducted: 3500 },
-      { id: 'EXP-002', date: '2083-06-14', category: 'Utilities & Internet', description: 'WorldLink Fiber Internet Bill', amount: 3200, method: 'eSewa', reference: 'WL-998822', vendor: 'WorldLink Communications', vendor_pan: '300055441', is_vat: true, vat_amount: 368.14, tds_deducted: 0 },
-      { id: 'EXP-003', date: '2083-06-10', category: 'Server & Cloud', description: 'AWS Cloud Infrastructure Hosting', amount: 18500, method: 'Card', reference: 'AWS-INV-7711', vendor: 'Amazon Web Services', vendor_pan: 'N/A', is_vat: false, vat_amount: 0, tds_deducted: 0 },
-      { id: 'EXP-004', date: '2083-06-05', category: 'Refreshments & Tea', description: 'Weekly Office Snacks and Beverages', amount: 2400, method: 'Cash', reference: 'CASH-083-44', vendor: 'Local Mart', vendor_pan: 'N/A', is_vat: false, vat_amount: 0, tds_deducted: 0 },
-      { id: 'EXP-005', date: '2083-05-15', category: 'Office Rent', description: 'Bhadra Office Rent', amount: 35000, method: 'Bank Transfer', reference: 'RENT-BHA-01', vendor: 'Buddhanagar Properties', vendor_pan: '601234567', is_vat: false, vat_amount: 0, tds_deducted: 3500 },
-      { id: 'EXP-006', date: '2083-04-15', category: 'Office Rent', description: 'Shrawan Office Rent', amount: 35000, method: 'Bank Transfer', reference: 'RENT-SHR-01', vendor: 'Buddhanagar Properties', vendor_pan: '601234567', is_vat: false, vat_amount: 0, tds_deducted: 3500 },
-    ];
+    return [];
   }, []);
 
   // Filtered by date range

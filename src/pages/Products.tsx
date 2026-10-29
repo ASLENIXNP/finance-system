@@ -32,12 +32,7 @@ interface Product {
   is_active: boolean;
 }
 
-const defaultProducts: Product[] = [
-  { id: 'p1', item_code: 'SRV-001', name: 'Custom Web Application Development', type: 'Service', description: 'Full stack scalable software development', default_rate: 85000, tax_rate: 13, is_active: true },
-  { id: 'p2', item_code: 'SRV-002', name: 'UI/UX Design & Prototyping', type: 'Service', description: 'Figma interactive prototype & user journey design', default_rate: 45000, tax_rate: 13, is_active: true },
-  { id: 'p3', item_code: 'SRV-003', name: 'Annual Software Maintenance (AMC)', type: 'Service', description: 'Regular SLA maintenance, uptime, and database backups', default_rate: 35000, tax_rate: 13, is_active: true },
-  { id: 'p4', item_code: 'PRD-001', name: 'Cloud Server VPS (1 Year)', type: 'Product', description: 'High-performance cloud hosting with dedicated RAM/SSD', default_rate: 20000, tax_rate: 13, is_active: true },
-];
+const DUMMY_SEED_PRODUCT_CODES = new Set(['p1', 'p2', 'p3', 'p4', 'SRV-001', 'SRV-002', 'SRV-003', 'PRD-001']);
 
 const DELETED_PRODUCTS_KEY = 'aslenix_deleted_products';
 
@@ -78,13 +73,13 @@ const Products = () => {
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           const deletedIds = getDeletedProductIds();
-          return parsed.filter(item => !deletedIds.has(item.id) && !deletedIds.has(item.item_code));
+          return parsed.filter(item => !deletedIds.has(item.id) && !deletedIds.has(item.item_code) && !DUMMY_SEED_PRODUCT_CODES.has(item.id) && !DUMMY_SEED_PRODUCT_CODES.has(item.item_code));
         }
       } catch (e) {}
     }
-    return defaultProducts;
+    return [];
   });
   const [loading, setLoading] = useState(false);
 

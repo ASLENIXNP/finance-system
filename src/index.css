@@ -5,14 +5,16 @@
   --color-secondary: #334155;
   --color-accent: #3b82f6;
   --color-accent-hover: #2563eb;
-  
+
   --color-sidebar: #ffffff;
   --color-background: #f1f0ee;
   --color-card: #ffffff;
 }
 
 @layer base {
-  html, body {
+
+  rhtml,
+  body {
     @apply bg-background text-primary antialiased;
     background-color: #f1f0ee;
   }
@@ -114,7 +116,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     margin-top: 0 !important;
   }
 
-  .login-card > div {
+  .login-card>div {
     border-radius: 1.5rem !important;
     padding: 1.5rem 0.9rem !important;
     box-shadow: 0 18px 42px -24px rgba(15, 23, 42, 0.2) !important;
@@ -167,7 +169,9 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   }
 
   /* Disable animations and transitions in print */
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
     transition: none !important;
     transform: none !important;
@@ -214,13 +218,13 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     overflow: visible !important;
   }
 
-  body.payroll-register-printing .payroll-page-root > :not(#printable-payroll-register) {
+  body.payroll-register-printing .payroll-page-root> :not(#printable-payroll-register) {
     display: none !important;
   }
 
   /* Flatten outer application layout containers so there is zero offset or padding */
   #root,
-  #root > div:not(#printable-invoice):not(#printable-payslip),
+  #root>div:not(#printable-invoice):not(#printable-payslip),
   main:not(#printable-invoice):not(#printable-payslip),
   .dashboard-layout {
     display: block !important;
@@ -249,7 +253,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     box-shadow: none !important;
   }
 
-  .fixed.inset-0 > div {
+  .fixed.inset-0>div {
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 !important;
@@ -674,7 +678,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     margin: 0 auto 2mm !important;
   }
 
-  #printable-payroll-register .payroll-register-summary > div {
+  #printable-payroll-register .payroll-register-summary>div {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -848,7 +852,7 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
     gap: 15mm !important;
   }
 
-  #printable-payroll-register .payroll-register-signatures > div {
+  #printable-payroll-register .payroll-register-signatures>div {
     display: flex !important;
     flex-direction: column !important;
     min-width: 38mm !important;
@@ -885,13 +889,16 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   width: 8px;
   height: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
