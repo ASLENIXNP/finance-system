@@ -1,19 +1,29 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import InvoiceCreate from './pages/InvoiceCreate';
-import Customers from './pages/Customers';
-import Income from './pages/Income';
-import Expenses from './pages/Expenses';
-import CompanySettings from './pages/CompanySettings';
-import Login from './pages/Login';
-import Products from './pages/Products';
-import Payments from './pages/Payments';
-import Users from './pages/Users';
-import Payroll from './pages/Payroll';
-import Accounting from './pages/Accounting';
-import Reports from './pages/Reports';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const InvoiceCreate = lazy(() => import('./pages/InvoiceCreate'));
+const Customers = lazy(() => import('./pages/Customers'));
+const Income = lazy(() => import('./pages/Income'));
+const Expenses = lazy(() => import('./pages/Expenses'));
+const CompanySettings = lazy(() => import('./pages/CompanySettings'));
+const Login = lazy(() => import('./pages/Login'));
+const Products = lazy(() => import('./pages/Products'));
+const Payments = lazy(() => import('./pages/Payments'));
+const Users = lazy(() => import('./pages/Users'));
+const Payroll = lazy(() => import('./pages/Payroll'));
+const Accounting = lazy(() => import('./pages/Accounting'));
+const Reports = lazy(() => import('./pages/Reports'));
+
+const PageLoading = () => (
+  <div className="flex min-h-[320px] items-center justify-center" role="status" aria-live="polite">
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-600 shadow-sm">
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600" />
+      Loading page…
+    </div>
+  </div>
+);
 
 function App() {
   useEffect(() => {
@@ -35,26 +45,28 @@ function App() {
   }, []);
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
 
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="customers" element={<Customers />} />
-          <Route path="products" element={<Products />} />
-          <Route path="invoices" element={<InvoiceCreate />} />
-          <Route path="accounting" element={<Accounting />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="income" element={<Income />} />
-          <Route path="expenses" element={<Expenses />} />
-          <Route path="payments" element={<Payments />} />
-          <Route path="payroll" element={<Payroll />} />
-          <Route path="settings" element={<CompanySettings />} />
-          <Route path="users" element={<Users />} />
-        </Route>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="customers" element={<Customers />} />
+            <Route path="products" element={<Products />} />
+            <Route path="invoices" element={<InvoiceCreate />} />
+            <Route path="accounting" element={<Accounting />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="income" element={<Income />} />
+            <Route path="expenses" element={<Expenses />} />
+            <Route path="payments" element={<Payments />} />
+            <Route path="payroll" element={<Payroll />} />
+            <Route path="settings" element={<CompanySettings />} />
+            <Route path="users" element={<Users />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

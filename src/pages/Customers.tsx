@@ -167,18 +167,36 @@ const Customers = () => {
   };
 
   useEffect(() => {
-    fetchCustomers();
+    const controller = new AbortController();
+    fetchCustomers(controller.signal);
+
+    return () => controller.abort();
   }, []);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = async (signal?: AbortSignal) => {
+    const requestController = new AbortController();
+    const cancelRequest = () => requestController.abort();
+    signal?.addEventListener('abort', cancelRequest, { once: true });
+    const timeoutId = window.setTimeout(() => {
+      console.warn('Customer refresh timed out; continuing with saved customer records.');
+      requestController.abort();
+    }, 7000);
+
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const request = supabase
         .from('customers')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      const { data, error } = await request.abortSignal(requestController.signal);
+
+      if (error) {
+        console.error('Error fetching customers:', error);
+        return;
+      }
+
+      if (data) {
         const deletedIds = getDeletedCustomerIds();
         const validServerCustomers = data.filter((c: any) => 
           !deletedIds.has(c.id) && !deletedIds.has(c.customer_id)
@@ -194,14 +212,22 @@ const Customers = () => {
             !serverCodes.has(c.customer_id)
           );
           const combined = [...validServerCustomers, ...localOnly];
-          saveCustomers(combined);
+          try {
+            localStorage.setItem('aslenix_customers', JSON.stringify(combined));
+          } catch (storageError) {
+            console.error('Failed to save customers to localStorage', storageError);
+          }
           return combined;
         });
       }
     } catch (error) {
-      console.error('Error fetching customers:', error);
+      if (!signal?.aborted) {
+        console.error('Error fetching customers:', error);
+      }
     } finally {
-      setLoading(false);
+      window.clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', cancelRequest);
+      if (!signal?.aborted) setLoading(false);
     }
   };
 
@@ -579,7 +605,7 @@ const Customers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {loading ? (
+              {loading && customers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-16 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
