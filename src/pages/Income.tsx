@@ -163,15 +163,34 @@ const Income = () => {
   const [savedCustomers, setSavedCustomers] = useState<{ name: string; pan?: string }[]>([]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('aslenix_customers');
-      if (raw) {
-        const parsed = JSON.parse(raw);
+    const loadSavedCustomers = () => {
+      try {
+        const raw = localStorage.getItem('aslenix_customers');
+        const parsed = raw ? JSON.parse(raw) : [];
         if (Array.isArray(parsed)) {
-          setSavedCustomers(parsed.map(c => ({ name: c.name || c.company_name, pan: c.pan_number })));
+          setSavedCustomers(
+            parsed
+              .filter(c => c.is_active !== false)
+              .map(c => ({ name: c.company_name || c.name, pan: c.pan_number }))
+              .filter(c => Boolean(c.name))
+          );
         }
+      } catch {
+        setSavedCustomers([]);
       }
-    } catch {}
+    };
+
+    const handleStorageUpdate = (event: StorageEvent) => {
+      if (event.key === 'aslenix_customers') loadSavedCustomers();
+    };
+
+    loadSavedCustomers();
+    window.addEventListener('customers_updated', loadSavedCustomers);
+    window.addEventListener('storage', handleStorageUpdate);
+    return () => {
+      window.removeEventListener('customers_updated', loadSavedCustomers);
+      window.removeEventListener('storage', handleStorageUpdate);
+    };
   }, []);
 
   // Filters State

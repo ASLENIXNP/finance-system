@@ -106,6 +106,31 @@ interface CreditNoteItem {
 
 const LOCAL_STORAGE_INVOICES_KEY = 'aslenix_invoices_v2';
 const LOCAL_STORAGE_CREDIT_NOTES_KEY = 'aslenix_credit_notes_v2';
+const LOCAL_STORAGE_CUSTOMERS_KEY = 'aslenix_customers';
+
+const getStoredCustomers = (): Customer[] => {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_CUSTOMERS_KEY);
+    const customers = raw ? JSON.parse(raw) : [];
+    return Array.isArray(customers) ? customers : [];
+  } catch (error) {
+    console.warn('Failed to parse stored customers:', error);
+    return [];
+  }
+};
+
+const mergeCustomers = (serverCustomers: Customer[], localCustomers: Customer[]): Customer[] => {
+  const byCustomerCode = new Map<string, Customer>();
+
+  [...localCustomers, ...serverCustomers].forEach((customer) => {
+    const key = customer.customer_id || customer.id;
+    if (key) byCustomerCode.set(key, customer);
+  });
+
+  return Array.from(byCustomerCode.values()).sort((a, b) =>
+    (a.company_name || a.name || '').localeCompare(b.company_name || b.name || '')
+  );
+};
 
 const getStoredInvoices = (): StoredInvoice[] => {
   try {
@@ -153,7 +178,8 @@ export const InvoiceCreate: React.FC = () => {
   const [companySettings, setCompanySettings] = useState<CompanySettingsData>(getStoredCompanySettings);
   const [invoices, setInvoices] = useState<StoredInvoice[]>(getStoredInvoices);
   const [creditNotes, setCreditNotes] = useState<CreditNoteItem[]>(getStoredCreditNotes);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  // Show locally saved customers immediately; the server list is merged in below.
+  const [customers, setCustomers] = useState<Customer[]>(getStoredCustomers);
   const [loading, setLoading] = useState(false);
 
   // Filters & Search
@@ -233,7 +259,8 @@ export const InvoiceCreate: React.FC = () => {
     };
   }, []);
 
-  // Fetch customers from Supabase
+  // Fetch customers from Supabase, retaining newly created local customers when
+  // the network request has not completed or the customer has not synced yet.
   const loadCustomers = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -241,8 +268,10 @@ export const InvoiceCreate: React.FC = () => {
         .select('*')
         .order('name', { ascending: true });
 
-      if (!error && data && data.length > 0) {
-        setCustomers(data);
+      if (!error) {
+        const combined = mergeCustomers(data || [], getStoredCustomers());
+        setCustomers(combined);
+        localStorage.setItem(LOCAL_STORAGE_CUSTOMERS_KEY, JSON.stringify(combined));
       }
     } catch (e) {
       console.warn('Customer fetch note:', e);
@@ -327,6 +356,20 @@ export const InvoiceCreate: React.FC = () => {
     loadCustomers();
     loadInvoicesFromSupabase();
   }, [loadCustomers, loadInvoicesFromSupabase]);
+
+  useEffect(() => {
+    const refreshCustomers = () => setCustomers(getStoredCustomers());
+    const handleStorageUpdate = (event: StorageEvent) => {
+      if (event.key === LOCAL_STORAGE_CUSTOMERS_KEY) refreshCustomers();
+    };
+
+    window.addEventListener('customers_updated', refreshCustomers);
+    window.addEventListener('storage', handleStorageUpdate);
+    return () => {
+      window.removeEventListener('customers_updated', refreshCustomers);
+      window.removeEventListener('storage', handleStorageUpdate);
+    };
+  }, []);
 
   // When selected customer changes in creation form
   useEffect(() => {

@@ -103,6 +103,7 @@ const Customers = () => {
     setCustomers(data);
     try {
       localStorage.setItem('aslenix_customers', JSON.stringify(data));
+      window.dispatchEvent(new Event('customers_updated'));
     } catch (e) {
       console.error('Failed to save customers to localStorage', e);
     }
@@ -214,6 +215,7 @@ const Customers = () => {
           const combined = [...validServerCustomers, ...localOnly];
           try {
             localStorage.setItem('aslenix_customers', JSON.stringify(combined));
+            window.dispatchEvent(new Event('customers_updated'));
           } catch (storageError) {
             console.error('Failed to save customers to localStorage', storageError);
           }
@@ -281,7 +283,11 @@ const Customers = () => {
           ]).select();
 
           if (insertedData?.[0]?.id) {
-            setCustomers(prev => prev.map(c => c.id === newCustomer.id ? { ...c, id: insertedData[0].id } : c));
+            saveCustomers(
+              [newCustomer, ...customers].map(c =>
+                c.id === newCustomer.id ? { ...c, id: insertedData[0].id } : c
+              )
+            );
           }
         } catch (dbErr) {
           console.error('DB insert error:', dbErr);
