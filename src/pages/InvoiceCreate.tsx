@@ -222,6 +222,7 @@ export const InvoiceCreate: React.FC = () => {
   });
   const [isVatInvoice, setIsVatInvoice] = useState(true);
   const [overallDiscount, setOverallDiscount] = useState(0);
+  const [advancePaymentAmount, setAdvancePaymentAmount] = useState(0);
 
   const [customerInfo, setCustomerInfo] = useState({
     name: 'Tech Innovations Pvt. Ltd.',
@@ -449,6 +450,7 @@ export const InvoiceCreate: React.FC = () => {
     setDueDate(invoice.due_date ? toBsDateString(invoice.due_date) : invoice.invoice_date_bs);
     setIsVatInvoice(invoice.is_vat_invoice);
     setOverallDiscount(invoice.total_discount || 0);
+    setAdvancePaymentAmount(0);
     setCustomerInfo({
       name: invoice.customer_name,
       address: invoice.customer_address || '',
@@ -481,6 +483,12 @@ export const InvoiceCreate: React.FC = () => {
     const adDueDate = bsToAdDate(dueDate).toISOString().slice(0, 10);
 
     const existingInvoice = invoices.find(inv => inv.id === editingInvoiceId);
+    const additionalAdvance = Math.max(0, Number(advancePaymentAmount) || 0);
+    const totalPaid = (existingInvoice?.amount_paid || 0) + additionalAdvance;
+    if (totalPaid > taxBreakdown.grandTotal) {
+      alert('The advance received cannot be greater than the invoice grand total.');
+      return;
+    }
     const newInvoice: StoredInvoice = {
       id: editingInvoiceId || `inv-${Date.now()}`,
       invoice_no: invoiceNumber.trim(),
@@ -500,10 +508,10 @@ export const InvoiceCreate: React.FC = () => {
       exempt_amount: taxBreakdown.exemptAmount,
       total_tax: taxBreakdown.vatAmount,
       grand_total: taxBreakdown.grandTotal,
-      amount_paid: existingInvoice?.amount_paid || 0,
-      balance_due: Math.max(0, taxBreakdown.grandTotal - (existingInvoice?.amount_paid || 0)),
-      status: existingInvoice?.amount_paid
-        ? ((existingInvoice.amount_paid >= taxBreakdown.grandTotal) ? 'Paid' : 'Partially Paid')
+      amount_paid: totalPaid,
+      balance_due: Math.max(0, taxBreakdown.grandTotal - totalPaid),
+      status: totalPaid
+        ? ((totalPaid >= taxBreakdown.grandTotal) ? 'Paid' : 'Partially Paid')
         : 'Unpaid',
       is_vat_invoice: isVatInvoice,
       items: items.map((it) => ({ ...it })),
@@ -584,12 +592,25 @@ export const InvoiceCreate: React.FC = () => {
         };
 
         if (!editingInvoiceId) await supabase.from('journal_entries').insert([jvPayload]);
+
+        if (additionalAdvance > 0) {
+          await supabase.from('payments').insert([{
+            payment_ref: `ADV-${Date.now().toString().slice(-6)}`,
+            customer_id: selectedCustomerId || null,
+            amount: additionalAdvance,
+            payment_date: bsToAdDate(invoiceDate).toISOString().slice(0, 10),
+            method: 'Bank Transfer',
+            category: 'Advance Payment',
+            notes: `Advance payment applied to Invoice ${newInvoice.invoice_no}`,
+          }]);
+        }
       }
     } catch (dbErr) {
       console.warn('Supabase sync notice:', dbErr);
     }
 
     setEditingInvoiceId(null);
+    setAdvancePaymentAmount(0);
     // Switch to preview tab
     setActiveTab('preview');
   };
@@ -1418,6 +1439,22 @@ export const InvoiceCreate: React.FC = () => {
                     className="w-48 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold"
                     placeholder="0.00"
                   />
+                </div>
+                <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200 text-xs">
+                  <label className="block font-bold uppercase tracking-wider text-emerald-800 mb-1">
+                    Advance Received Now (Rs.)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max={taxBreakdown.grandTotal}
+                    step="any"
+                    value={advancePaymentAmount || ''}
+                    onChange={(e) => setAdvancePaymentAmount(Number(e.target.value) || 0)}
+                    className="w-48 px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-mono font-bold text-emerald-900"
+                    placeholder="0.00"
+                  />
+                  <p className="mt-1.5 text-[11px] text-emerald-700">Optional. This records the client advance and reduces the balance due when you save.</p>
                 </div>
                 <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600">
                   <span className="font-bold text-slate-900 block mb-0.5">Amount in Words:</span>
