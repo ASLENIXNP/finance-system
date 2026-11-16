@@ -16,6 +16,7 @@ import {
   Download,
   FileText,
   Eye,
+  Pencil,
   RotateCcw,
   X
 } from 'lucide-react';
@@ -195,12 +196,14 @@ export const InvoiceCreate: React.FC = () => {
   const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState<StoredInvoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState('Bank Transfer');
+  const [paymentType, setPaymentType] = useState<'Invoice Payment' | 'Advance Payment'>('Invoice Payment');
   const [paymentRef, setPaymentRef] = useState('');
   const [paymentDateBs, setPaymentDateBs] = useState(getTodayBsDate());
 
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [invoiceToCancel, setInvoiceToCancel] = useState<StoredInvoice | null>(null);
   const [cancellationReason, setCancellationReason] = useState('');
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
 
   // ==========================================
   // Form State for NEW INVOICE
@@ -436,6 +439,28 @@ export const InvoiceCreate: React.FC = () => {
     );
   };
 
+  const handleEditInvoice = (invoice: StoredInvoice) => {
+    if (invoice.status === 'Cancelled') return;
+
+    setEditingInvoiceId(invoice.id);
+    setSelectedCustomerId(invoice.customer_id || '');
+    setInvoiceNumber(invoice.invoice_no);
+    setInvoiceDate(invoice.invoice_date_bs);
+    setDueDate(invoice.due_date ? toBsDateString(invoice.due_date) : invoice.invoice_date_bs);
+    setIsVatInvoice(invoice.is_vat_invoice);
+    setOverallDiscount(invoice.total_discount || 0);
+    setCustomerInfo({
+      name: invoice.customer_name,
+      address: invoice.customer_address || '',
+      pan: invoice.customer_pan || '',
+      phone: invoice.customer_phone || '',
+      email: invoice.customer_email || '',
+      customerRef: customers.find(c => c.id === invoice.customer_id)?.customer_id || '',
+    });
+    setItems(invoice.items.map((item, index) => ({ ...item, id: item.id || `edit-${index}` })));
+    setActiveTab('create');
+  };
+
   // ==========================================
   // SAVE INVOICE (Supabase + Local fallback)
   // ==========================================
@@ -455,8 +480,9 @@ export const InvoiceCreate: React.FC = () => {
     const adInvoiceDate = bsToAdDate(invoiceDate).toISOString().slice(0, 10);
     const adDueDate = bsToAdDate(dueDate).toISOString().slice(0, 10);
 
+    const existingInvoice = invoices.find(inv => inv.id === editingInvoiceId);
     const newInvoice: StoredInvoice = {
-      id: `inv-${Date.now()}`,
+      id: editingInvoiceId || `inv-${Date.now()}`,
       invoice_no: invoiceNumber.trim(),
       customer_id: selectedCustomerId || undefined,
       customer_name: customerInfo.name,
@@ -474,16 +500,20 @@ export const InvoiceCreate: React.FC = () => {
       exempt_amount: taxBreakdown.exemptAmount,
       total_tax: taxBreakdown.vatAmount,
       grand_total: taxBreakdown.grandTotal,
-      amount_paid: 0,
-      balance_due: taxBreakdown.grandTotal,
-      status: 'Unpaid',
+      amount_paid: existingInvoice?.amount_paid || 0,
+      balance_due: Math.max(0, taxBreakdown.grandTotal - (existingInvoice?.amount_paid || 0)),
+      status: existingInvoice?.amount_paid
+        ? ((existingInvoice.amount_paid >= taxBreakdown.grandTotal) ? 'Paid' : 'Partially Paid')
+        : 'Unpaid',
       is_vat_invoice: isVatInvoice,
       items: items.map((it) => ({ ...it })),
       created_at: new Date().toISOString(),
     };
 
     // 1. Save locally first
-    const updatedInvoices = [newInvoice, ...invoices];
+    const updatedInvoices = editingInvoiceId
+      ? invoices.map(inv => inv.id === editingInvoiceId ? newInvoice : inv)
+      : [newInvoice, ...invoices];
     setInvoices(updatedInvoices);
     localStorage.setItem(LOCAL_STORAGE_INVOICES_KEY, JSON.stringify(updatedInvoices));
     setPreviewInvoice(newInvoice);
@@ -503,17 +533,15 @@ export const InvoiceCreate: React.FC = () => {
         exempt_amount: newInvoice.exempt_amount,
         total_tax: newInvoice.total_tax,
         grand_total: newInvoice.grand_total,
-        amount_paid: 0,
-        balance_due: newInvoice.grand_total,
-        status: 'Unpaid',
+        amount_paid: newInvoice.amount_paid,
+        balance_due: newInvoice.balance_due,
+        status: newInvoice.status,
         is_vat_invoice: isVatInvoice,
       };
 
-      const { data: dbInv, error: invError } = await supabase
-        .from('invoices')
-        .insert([invoicePayload])
-        .select()
-        .single();
+      const { data: dbInv, error: invError } = editingInvoiceId
+        ? await supabase.from('invoices').update(invoicePayload).eq('invoice_no', newInvoice.invoice_no).select().maybeSingle()
+        : await supabase.from('invoices').insert([invoicePayload]).select().single();
 
       if (!invError && dbInv?.id) {
         const itemRows = items.map((it) => ({
@@ -529,10 +557,10 @@ export const InvoiceCreate: React.FC = () => {
           amount: it.qty * it.rate - it.discount,
         }));
 
-        await supabase.from('invoice_items').insert(itemRows);
+        if (!editingInvoiceId) await supabase.from('invoice_items').insert(itemRows);
 
         // Audit Log
-        await supabase.from('audit_logs').insert([{
+        if (!editingInvoiceId) await supabase.from('audit_logs').insert([{
           table_name: 'invoices',
           record_id: dbInv.id,
           action: 'INSERT',
@@ -555,12 +583,13 @@ export const InvoiceCreate: React.FC = () => {
           created_by: 'Super Admin',
         };
 
-        await supabase.from('journal_entries').insert([jvPayload]);
+        if (!editingInvoiceId) await supabase.from('journal_entries').insert([jvPayload]);
       }
     } catch (dbErr) {
       console.warn('Supabase sync notice:', dbErr);
     }
 
+    setEditingInvoiceId(null);
     // Switch to preview tab
     setActiveTab('preview');
   };
@@ -570,7 +599,8 @@ export const InvoiceCreate: React.FC = () => {
   // ==========================================
   const handleOpenPaymentModal = (invoice: StoredInvoice) => {
     setSelectedInvoiceForPayment(invoice);
-    setPaymentAmount(invoice.balance_due > 0 ? invoice.balance_due : invoice.grand_total);
+    setPaymentAmount(invoice.balance_due > 0 ? invoice.balance_due : 0);
+    setPaymentType('Invoice Payment');
     setPaymentRef(`PAY-${Date.now().toString().slice(-6)}`);
     setPaymentDateBs(getTodayBsDate());
     setPaymentModalOpen(true);
@@ -581,6 +611,11 @@ export const InvoiceCreate: React.FC = () => {
     const payAmt = Number(paymentAmount) || 0;
     if (payAmt <= 0) {
       alert('Please enter a valid payment amount greater than zero.');
+      return;
+    }
+
+    if (payAmt > selectedInvoiceForPayment.balance_due) {
+      alert('The payment amount cannot be greater than the remaining invoice balance. Record any extra amount as a separate customer advance.');
       return;
     }
 
@@ -622,8 +657,8 @@ export const InvoiceCreate: React.FC = () => {
         amount: payAmt,
         payment_date: bsToAdDate(paymentDateBs).toISOString().slice(0, 10),
         method: paymentMethod,
-        category: 'Invoice Payment',
-        notes: `Payment for Invoice ${selectedInvoiceForPayment.invoice_no}`,
+        category: paymentType,
+        notes: `${paymentType} for Invoice ${selectedInvoiceForPayment.invoice_no}`,
       }]);
     } catch (e) {
       console.warn('Payment sync notice:', e);
@@ -817,6 +852,7 @@ export const InvoiceCreate: React.FC = () => {
           <button
             type="button"
             onClick={() => {
+              setEditingInvoiceId(null);
               setInvoiceNumber(generateNextInvoiceNumber(companySettings.invoice_prefix || 'ASL-', companySettings.fiscal_year || '2082/83', invoices.length + 1));
               setActiveTab('create');
             }}
@@ -1033,6 +1069,18 @@ export const InvoiceCreate: React.FC = () => {
                                 <Eye size={15} />
                               </button>
 
+                              {/* Edit invoice */}
+                              {!isCancelled && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditInvoice(inv)}
+                                  className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                  title="Edit Invoice"
+                                >
+                                  <Pencil size={15} />
+                                </button>
+                              )}
+
                               {/* Record Payment */}
                               {!isCancelled && inv.balance_due > 0 && (
                                 <button
@@ -1077,8 +1125,8 @@ export const InvoiceCreate: React.FC = () => {
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Tax Invoice Information</h3>
-                <p className="text-xs text-slate-500">Provide customer coordinates and verify 13% Nepal VAT applicability.</p>
+                <h3 className="text-lg font-bold text-slate-900">{editingInvoiceId ? 'Edit Tax Invoice' : 'Tax Invoice Information'}</h3>
+                <p className="text-xs text-slate-500">{editingInvoiceId ? 'Update the invoice details, then save your changes.' : 'Provide customer coordinates and verify 13% Nepal VAT applicability.'}</p>
               </div>
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
@@ -1894,7 +1942,24 @@ export const InvoiceCreate: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Payment Amount (NPR) *
+                  Receipt Type
+                </label>
+                <select
+                  value={paymentType}
+                  onChange={(e) => setPaymentType(e.target.value as 'Invoice Payment' | 'Advance Payment')}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800"
+                >
+                  <option value="Invoice Payment">Invoice Payment</option>
+                  <option value="Advance Payment">Advance Payment (received before work / delivery)</option>
+                </select>
+                {paymentType === 'Advance Payment' && (
+                  <p className="mt-1.5 text-[11px] text-amber-700">This advance is applied to this invoice and reduces its balance due.</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  {paymentType === 'Advance Payment' ? 'Advance Amount (NPR) *' : 'Payment Amount (NPR) *'}
                 </label>
                 <input
                   type="number"
@@ -1961,7 +2026,7 @@ export const InvoiceCreate: React.FC = () => {
                 onClick={handleConfirmPayment}
                 className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm"
               >
-                Confirm Payment Receipt
+                Confirm {paymentType === 'Advance Payment' ? 'Advance Receipt' : 'Payment Receipt'}
               </button>
             </div>
           </div>

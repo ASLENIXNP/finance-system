@@ -368,8 +368,10 @@ const CompanySettings: React.FC = () => {
       localStorage.setItem('aslenix_company_settings', JSON.stringify(formData));
       window.dispatchEvent(new CustomEvent('company_settings_updated', { detail: formData }));
 
-      // 2. Sync with Supabase company_settings table
-      try {
+      // 2. Sync with Supabase in the background. The local save above is
+      // already complete, so a slow connection never blocks the user.
+      void (async () => {
+        try {
         const payloadToDb = {
           company_name: formData.company_name,
           registration_no: formData.registration_no,
@@ -393,24 +395,25 @@ const CompanySettings: React.FC = () => {
           updated_at: new Date().toISOString(),
         };
 
-        const { data: existingRows } = await supabase
-          .from('company_settings')
-          .select('id')
-          .limit(1);
+          const { data: existingRows } = await supabase
+            .from('company_settings')
+            .select('id')
+            .limit(1);
 
-        if (existingRows && existingRows.length > 0) {
-          await supabase
-            .from('company_settings')
-            .update(payloadToDb)
-            .eq('id', existingRows[0].id);
-        } else {
-          await supabase
-            .from('company_settings')
-            .insert([payloadToDb]);
+          if (existingRows && existingRows.length > 0) {
+            await supabase
+              .from('company_settings')
+              .update(payloadToDb)
+              .eq('id', existingRows[0].id);
+          } else {
+            await supabase
+              .from('company_settings')
+              .insert([payloadToDb]);
+          }
+        } catch (dbErr) {
+          console.warn('Supabase sync note (local save retained):', dbErr);
         }
-      } catch (dbErr) {
-        console.warn('Supabase sync note (localStorage active):', dbErr);
-      }
+      })();
 
       setSaveStatus('success');
       setStatusMessage('Company settings saved successfully! Invoices, salary slips, and sidebar updated.');
