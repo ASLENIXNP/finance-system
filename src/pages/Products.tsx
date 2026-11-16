@@ -5,7 +5,6 @@ import {
   Filter, 
   Package, 
   Edit, 
-  Trash2, 
   Loader2, 
   RotateCcw,
   Download,
@@ -18,6 +17,7 @@ import {
   Tag
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import SlideToDelete from '../components/SlideToDelete';
 import { supabase } from '../lib/supabase';
 import { getTodayBsDate } from '../lib/nepaliDate';
 
@@ -707,13 +707,7 @@ const Products = () => {
                         >
                           <Edit size={15} />
                         </button>
-                        <button 
-                          onClick={() => handleDeleteClick(product.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                          title="Delete Item"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        <SlideToDelete onDelete={() => handleDeleteClick(product.id)} label="Slide to delete" />
                       </div>
                     </td>
                   </tr>

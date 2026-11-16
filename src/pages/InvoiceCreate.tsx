@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useLocation } from 'react-router-dom';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import ConfirmModal from '../components/ConfirmModal';
+import SlideToDelete from '../components/SlideToDelete';
 import { 
   Plus, 
   Trash2, 
@@ -215,6 +217,7 @@ export const InvoiceCreate: React.FC = () => {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [invoiceToCancel, setInvoiceToCancel] = useState<StoredInvoice | null>(null);
   const [cancellationReason, setCancellationReason] = useState('');
+  const [invoiceToDelete, setInvoiceToDelete] = useState<StoredInvoice | null>(null);
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
   const [editingInvoiceNumber, setEditingInvoiceNumber] = useState<string | null>(null);
   const [isSavingInvoice, setIsSavingInvoice] = useState(false);
@@ -812,6 +815,26 @@ export const InvoiceCreate: React.FC = () => {
     setInvoiceToCancel(null);
   };
 
+  const handlePermanentDeleteInvoice = async () => {
+    if (!invoiceToDelete) return;
+
+    const remainingInvoices = invoices.filter((invoice) => invoice.id !== invoiceToDelete.id);
+    const remainingCreditNotes = creditNotes.filter((note) => note.invoice_no !== invoiceToDelete.invoice_no);
+    setInvoices(remainingInvoices);
+    setCreditNotes(remainingCreditNotes);
+    localStorage.setItem(LOCAL_STORAGE_INVOICES_KEY, JSON.stringify(remainingInvoices));
+    localStorage.setItem(LOCAL_STORAGE_CREDIT_NOTES_KEY, JSON.stringify(remainingCreditNotes));
+
+    try {
+      await supabase.from('credit_notes').delete().eq('invoice_no', invoiceToDelete.invoice_no);
+      await supabase.from('invoices').delete().eq('invoice_no', invoiceToDelete.invoice_no);
+    } catch (error) {
+      console.warn('Invoice was removed locally but the database removal could not be completed:', error);
+    } finally {
+      setInvoiceToDelete(null);
+    }
+  };
+
   // Export Sales Register CSV (IRD Annex 8 compliant)
   const handleExportSalesRegisterCSV = () => {
     if (invoices.length === 0) return;
@@ -1224,6 +1247,11 @@ export const InvoiceCreate: React.FC = () => {
                                 >
                                   <Ban size={15} />
                                 </button>
+                              )}
+
+                              {/* Permanently remove cancelled duplicate / test invoices */}
+                              {isCancelled && (
+                                <SlideToDelete onDelete={() => setInvoiceToDelete(inv)} label="Slide to delete" />
                               )}
                             </div>
                           </td>
@@ -2283,6 +2311,17 @@ export const InvoiceCreate: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={Boolean(invoiceToDelete)}
+        onClose={() => setInvoiceToDelete(null)}
+        onConfirm={handlePermanentDeleteInvoice}
+        title="Permanently Delete Invoice?"
+        message={`This permanently removes cancelled invoice ${invoiceToDelete?.invoice_no || ''} and its related credit note from this system. This action cannot be undone.`}
+        confirmText="Delete Permanently"
+        cancelText="Keep Invoice"
+        isDanger
+      />
 
     </div>
   );

@@ -5,7 +5,6 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Edit, 
-  Trash2, 
   Plus, 
   RotateCcw,
   CreditCard,
@@ -20,6 +19,7 @@ import {
   Printer
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import SlideToDelete from '../components/SlideToDelete';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
 import { formatNepaliDate, toBsDateString, getTodayBsDate, bsToAdDate } from '../lib/nepaliDate';
 import { formatNPR, numberToWordsNPR } from '../lib/accounting';
@@ -623,13 +623,7 @@ const Payments = () => {
                         >
                           <Edit size={16} />
                         </button>
-                        <button 
-                          onClick={() => handleDeleteClick(payment.id)}
-                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                          title="Delete payment"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <SlideToDelete onDelete={() => handleDeleteClick(payment.id)} label="Slide to delete" />
                       </div>
                     </td>
                   </tr>

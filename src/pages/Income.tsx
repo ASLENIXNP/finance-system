@@ -5,7 +5,6 @@ import {
   Filter, 
   Wallet, 
   Edit, 
-  Trash2, 
   RotateCcw, 
   Download, 
   Eye, 
@@ -21,6 +20,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import SlideToDelete from '../components/SlideToDelete';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
 import { formatNepaliDate, toBsDateString, getTodayBsDate } from '../lib/nepaliDate';
 import { supabase } from '../lib/supabase';
@@ -1115,13 +1115,7 @@ const Income = () => {
                         >
                           <Edit size={15} />
                         </button>
-                        <button 
-                          onClick={() => handleDeleteClick(income.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                          title="Delete Income Record"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        <SlideToDelete onDelete={() => handleDeleteClick(income.id)} label="Slide to delete" />
                       </div>
                     </td>
                   </tr>

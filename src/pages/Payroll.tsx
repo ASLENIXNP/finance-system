@@ -38,6 +38,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import SlideToDelete from '../components/SlideToDelete';
 import { NepaliDatePicker } from '../components/NepaliDatePicker';
 import { formatNepaliDate, getTodayBsDate } from '../lib/nepaliDate';
 import { EmployeeIdCard } from '../components/EmployeeIdCard';
@@ -2184,13 +2185,7 @@ const Payroll = () => {
                             </button>
 
                             {/* Delete */}
-                            <button
-                              onClick={() => handleDeleteClick(record.id, 'payroll')}
-                              title="Delete Record"
-                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                            >
-                              <Trash2 size={15} />
-                            </button>
+                            <SlideToDelete onDelete={() => handleDeleteClick(record.id, 'payroll')} label="Slide to delete" />
                           </div>
                         </td>
                       </tr>
@@ -2737,13 +2732,7 @@ const Payroll = () => {
                             <Edit size={15} />
                           </button>
 
-                          <button
-                            onClick={() => handleDeleteClick(emp.id, 'employee')}
-                            title="Delete Employee"
-                            className="p-2.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200/60 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          <SlideToDelete onDelete={() => handleDeleteClick(emp.id, 'employee')} label="Slide to delete" />
                         </div>
                       </div>
                     );
@@ -2923,13 +2912,7 @@ const Payroll = () => {
                               >
                                 <Edit size={16} />
                               </button>
-                              <button
-                                onClick={() => handleDeleteClick(emp.id, 'employee')}
-                                title="Delete Employee"
-                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                              <SlideToDelete onDelete={() => handleDeleteClick(emp.id, 'employee')} label="Slide to delete" />
                             </div>
                           </td>
                         </tr>

@@ -7,7 +7,6 @@ import {
   Download, 
   Loader2, 
   Edit, 
-  Trash2, 
   FileText, 
   RotateCcw,
   Users,
@@ -21,6 +20,7 @@ import {
   X
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import SlideToDelete from '../components/SlideToDelete';
 import { supabase } from '../lib/supabase';
 import { getTodayBsDate } from '../lib/nepaliDate';
 
@@ -780,13 +780,7 @@ const Customers = () => {
                           >
                             <Edit size={15} />
                           </button>
-                          <button 
-                            onClick={() => handleDeleteClick(customer.id)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                            title="Delete Client Record"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          <SlideToDelete onDelete={() => handleDeleteClick(customer.id)} label="Slide to delete" />
                         </div>
                       </td>
                     </tr>
