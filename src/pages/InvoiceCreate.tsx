@@ -855,18 +855,32 @@ export const InvoiceCreate: React.FC = () => {
     if (!invoiceElement || !activeDisplayInvoice) return;
 
     setIsExportingPdf(true);
+    const exportHost = document.createElement('div');
+    const exportCopy = invoiceElement.cloneNode(true) as HTMLElement;
+    const exportWidth = 840;
+
+    // Render a stable desktop-width copy outside the visible page. Capturing
+    // the live responsive preview can crop columns when the browser viewport
+    // is narrower than the A4 letterhead.
+    exportHost.className = 'pdf-export-host';
+    exportCopy.id = 'pdf-export-invoice';
+    exportCopy.classList.add('pdf-exporting');
+    exportCopy.style.width = `${exportWidth}px`;
+    exportCopy.style.minWidth = `${exportWidth}px`;
+    exportCopy.style.maxWidth = 'none';
+    exportHost.appendChild(exportCopy);
+    document.body.appendChild(exportHost);
     try {
-      // Preserve the full desktop letterhead width in the cloned export. Without
-      // explicit dimensions, responsive grid/table styles can be captured as a
-      // narrow layout and clip the right-hand totals.
-      const exportWidth = Math.max(invoiceElement.clientWidth, invoiceElement.scrollWidth, 840);
-      const exportHeight = Math.max(invoiceElement.clientHeight, invoiceElement.scrollHeight);
-      const imageData = await toPng(invoiceElement, {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      const exportHeight = exportCopy.scrollHeight;
+      const imageData = await toPng(exportCopy, {
         backgroundColor: '#f6f8fc',
         pixelRatio: 2,
         cacheBust: true,
         width: exportWidth,
         height: exportHeight,
+        canvasWidth: exportWidth * 2,
+        canvasHeight: exportHeight * 2,
         style: {
           width: `${exportWidth}px`,
           maxWidth: 'none',
@@ -891,6 +905,7 @@ export const InvoiceCreate: React.FC = () => {
       console.error('PDF export failed:', error);
       alert('Could not create the PDF. Please try again.');
     } finally {
+      exportHost.remove();
       setIsExportingPdf(false);
     }
   };

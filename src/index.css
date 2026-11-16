@@ -239,6 +239,28 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   }
 }
 
+/* Direct PDF export: allow the capture library to see the complete A4 canvas,
+   including normally scrollable table and summary content. */
+.pdf-exporting,
+.pdf-exporting .print-items,
+.pdf-exporting .invoice-content-wrapper {
+  overflow: visible !important;
+}
+
+.pdf-exporting .print-items table {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.pdf-export-host {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 840px;
+  overflow: visible;
+  pointer-events: none;
+}
+
 @media print {
   @page payroll-register {
     size: A4 landscape !important;
