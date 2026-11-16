@@ -1739,12 +1739,12 @@ export const InvoiceCreate: React.FC = () => {
                           </td>
                           <td className="py-3 px-2 text-center align-top font-mono">{item.qty}</td>
                           <td className="py-3 px-2 text-center align-top text-slate-600">{item.unit}</td>
-                          <td className="py-3 px-3 text-right align-top font-mono">{formatNPR(item.rate)}</td>
-                          <td className="py-3 px-3 text-right align-top font-mono text-slate-500">{formatNPR(item.discount)}</td>
+                          <td className="py-3 px-3 text-right align-top font-mono text-[11px] whitespace-nowrap">{formatNPR(item.rate)}</td>
+                          <td className="py-3 px-3 text-right align-top font-mono text-slate-500 text-[11px] whitespace-nowrap">{formatNPR(item.discount)}</td>
                           <td className="py-3 px-2 text-center align-top text-[11px] font-semibold text-purple-700">
                             {item.taxClassification === 'Exempt' ? 'Exempt' : `${item.tax}%`}
                           </td>
-                          <td className="py-3 px-3 text-right font-bold text-slate-900 font-mono text-xs align-top">
+                          <td className="py-3 px-3 text-right font-bold text-slate-900 font-mono text-xs align-top whitespace-nowrap">
                             {formatNPR(lineNet)}
                           </td>
                         </tr>
@@ -1797,38 +1797,38 @@ export const InvoiceCreate: React.FC = () => {
                   <div className="w-full max-w-[300px] space-y-1.5 text-xs">
                     <div className="flex justify-between text-slate-600">
                       <span>Subtotal (जम्मा):</span>
-                      <span className="font-semibold text-slate-900 font-mono">{formatNPR(activeDisplayInvoice.subtotal)}</span>
+                        <span className="font-semibold text-slate-900 font-mono whitespace-nowrap shrink-0">{formatNPR(activeDisplayInvoice.subtotal)}</span>
                     </div>
 
                     {activeDisplayInvoice.total_discount > 0 && (
                       <div className="flex justify-between text-emerald-600">
                         <span>Total Discount (छुट):</span>
-                        <span className="font-semibold font-mono">-{formatNPR(activeDisplayInvoice.total_discount)}</span>
+                        <span className="font-semibold font-mono whitespace-nowrap shrink-0">-{formatNPR(activeDisplayInvoice.total_discount)}</span>
                       </div>
                     )}
 
                     {activeDisplayInvoice.exempt_amount > 0 && (
                       <div className="flex justify-between text-slate-600">
                         <span>Non-Taxable / Exempt Sales:</span>
-                        <span className="font-semibold text-slate-900 font-mono">{formatNPR(activeDisplayInvoice.exempt_amount)}</span>
+                        <span className="font-semibold text-slate-900 font-mono whitespace-nowrap shrink-0">{formatNPR(activeDisplayInvoice.exempt_amount)}</span>
                       </div>
                     )}
 
                     <div className="flex justify-between text-slate-600">
                       <span>Taxable Amount (करयोग्य रकम):</span>
-                      <span className="font-semibold text-slate-900 font-mono">{formatNPR(activeDisplayInvoice.taxable_amount)}</span>
+                      <span className="font-semibold text-slate-900 font-mono whitespace-nowrap shrink-0">{formatNPR(activeDisplayInvoice.taxable_amount)}</span>
                     </div>
 
                     <div className="flex justify-between text-slate-600">
                       <span>13% VAT (१३% मू.अ.कर):</span>
-                      <span className="font-bold text-purple-700 font-mono">{formatNPR(activeDisplayInvoice.total_tax)}</span>
+                      <span className="font-bold text-purple-700 font-mono whitespace-nowrap shrink-0">{formatNPR(activeDisplayInvoice.total_tax)}</span>
                     </div>
 
                     <div className="border-t-2 border-slate-900 pt-2 mt-1.5 flex justify-between items-baseline">
                       <span className="text-sm font-black text-slate-900 uppercase">
                         Grand Total (कुल जम्मा):
                       </span>
-                      <span className="text-lg font-black text-slate-950 font-mono">
+                      <span className="text-lg font-black text-slate-950 font-mono whitespace-nowrap shrink-0">
                         {formatNPR(activeDisplayInvoice.grand_total)}
                       </span>
                     </div>
