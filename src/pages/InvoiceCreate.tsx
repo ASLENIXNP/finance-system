@@ -847,6 +847,12 @@ export const InvoiceCreate: React.FC = () => {
     window.print();
   };
 
+  const handleSavePdf = () => {
+    // The browser print dialog provides the most reliable A4 PDF rendering.
+    // Choose “Save as PDF” as the destination to download the letterhead.
+    handlePrint();
+  };
+
   // Filtered Invoices
   const filteredInvoices = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -1604,10 +1610,19 @@ export const InvoiceCreate: React.FC = () => {
               <button
                 type="button"
                 onClick={handlePrint}
-                className="btn-gradient flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 border border-slate-200 text-xs font-bold text-slate-700 rounded-xl hover:bg-slate-50 active:scale-98 transition-all cursor-pointer shadow-sm"
               >
-                <Printer size={16} className="text-black" />
+                <Printer size={16} className="text-slate-700" />
                 <span>Print Tax Invoice (A4)</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePdf}
+                className="btn-gradient flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-sm"
+                title="Choose Save as PDF in the print dialog"
+              >
+                <Download size={16} className="text-black" />
+                <span>Save as PDF</span>
               </button>
             </div>
           </div>
