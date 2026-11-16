@@ -856,22 +856,34 @@ export const InvoiceCreate: React.FC = () => {
 
     setIsExportingPdf(true);
     try {
+      // Preserve the full desktop letterhead width in the cloned export. Without
+      // explicit dimensions, responsive grid/table styles can be captured as a
+      // narrow layout and clip the right-hand totals.
+      const exportWidth = Math.max(invoiceElement.clientWidth, invoiceElement.scrollWidth, 840);
+      const exportHeight = Math.max(invoiceElement.clientHeight, invoiceElement.scrollHeight);
       const imageData = await toPng(invoiceElement, {
         backgroundColor: '#f6f8fc',
         pixelRatio: 2,
         cacheBust: true,
+        width: exportWidth,
+        height: exportHeight,
+        style: {
+          width: `${exportWidth}px`,
+          maxWidth: 'none',
+          minWidth: `${exportWidth}px`,
+          overflow: 'visible',
+        },
       });
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pageWidth = 210;
       const pageHeight = 297;
       const margin = 5;
-      const { width: elementWidth, height: elementHeight } = invoiceElement.getBoundingClientRect();
       const scale = Math.min(
-        (pageWidth - margin * 2) / elementWidth,
-        (pageHeight - margin * 2) / elementHeight,
+        (pageWidth - margin * 2) / exportWidth,
+        (pageHeight - margin * 2) / exportHeight,
       );
-      const imageWidth = elementWidth * scale;
-      const imageHeight = elementHeight * scale;
+      const imageWidth = exportWidth * scale;
+      const imageHeight = exportHeight * scale;
 
       pdf.addImage(imageData, 'PNG', (pageWidth - imageWidth) / 2, margin, imageWidth, imageHeight, undefined, 'FAST');
       pdf.save(`${activeDisplayInvoice.invoice_no}.pdf`);
