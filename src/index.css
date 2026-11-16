@@ -261,6 +261,22 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   pointer-events: none;
 }
 
+/* Official invoice typography uses black ink throughout for a clean,
+   printer-friendly tax document. */
+#printable-invoice,
+#printable-invoice *,
+#pdf-export-invoice,
+#pdf-export-invoice * {
+  color: #000 !important;
+}
+
+#printable-invoice .header-reference,
+#pdf-export-invoice .header-reference {
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  min-width: max-content;
+}
+
 @media print {
   @page payroll-register {
     size: A4 landscape !important;

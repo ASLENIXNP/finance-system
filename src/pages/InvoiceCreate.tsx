@@ -1744,9 +1744,9 @@ export const InvoiceCreate: React.FC = () => {
                       alt="ASLENIX Logo"
                       className="h-16 sm:h-20 w-auto object-contain print:h-16 drop-shadow-xs"
                     />
-                    <div className="header-reference mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-950 sm:mt-auto sm:mb-1">
+                    <div className="header-reference mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-950 sm:mt-auto sm:mb-1 whitespace-nowrap">
                       <span className="whitespace-nowrap text-slate-500 font-semibold uppercase text-[11px]">Invoice No:</span>
-                      <span className="font-bold font-mono text-slate-950">{activeDisplayInvoice.invoice_no}</span>
+                      <span className="font-bold font-mono text-slate-950 whitespace-nowrap">{activeDisplayInvoice.invoice_no}</span>
                     </div>
                   </div>
                 </div>
