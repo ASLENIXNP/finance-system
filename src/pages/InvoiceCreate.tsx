@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   Plus, 
@@ -214,6 +214,9 @@ export const InvoiceCreate: React.FC = () => {
   const [invoiceToCancel, setInvoiceToCancel] = useState<StoredInvoice | null>(null);
   const [cancellationReason, setCancellationReason] = useState('');
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
+  const [editingInvoiceNumber, setEditingInvoiceNumber] = useState<string | null>(null);
+  const [isSavingInvoice, setIsSavingInvoice] = useState(false);
+  const invoiceSaveInProgress = useRef(false);
 
   // ==========================================
   // Form State for NEW INVOICE
@@ -455,13 +458,14 @@ export const InvoiceCreate: React.FC = () => {
     if (invoice.status === 'Cancelled') return;
 
     setEditingInvoiceId(invoice.id);
+    setEditingInvoiceNumber(invoice.invoice_no);
     setSelectedCustomerId(invoice.customer_id || '');
     setInvoiceNumber(invoice.invoice_no);
     setInvoiceDate(invoice.invoice_date_bs);
     setDueDate(invoice.due_date ? toBsDateString(invoice.due_date) : invoice.invoice_date_bs);
     setIsVatInvoice(invoice.is_vat_invoice);
     setOverallDiscount(invoice.total_discount || 0);
-    setAdvancePaymentAmount(0);
+    setAdvancePaymentAmount(invoice.amount_paid || 0);
     setCustomerInfo({
       name: invoice.customer_name,
       address: invoice.customer_address || '',
@@ -490,17 +494,29 @@ export const InvoiceCreate: React.FC = () => {
       return;
     }
 
+    if (invoiceSaveInProgress.current) return;
+    invoiceSaveInProgress.current = true;
+    setIsSavingInvoice(true);
+
     const adInvoiceDate = bsToAdDate(invoiceDate).toISOString().slice(0, 10);
     const adDueDate = bsToAdDate(dueDate).toISOString().slice(0, 10);
 
     // Invoice numbers are unique. If the user saves an existing number again,
     // update that invoice rather than adding a duplicate record.
     const existingInvoice = invoices.find(inv =>
-      inv.id === editingInvoiceId || inv.invoice_no.trim().toLowerCase() === invoiceNumber.trim().toLowerCase()
+      inv.id === editingInvoiceId ||
+      inv.invoice_no.trim().toLowerCase() === (editingInvoiceNumber || invoiceNumber).trim().toLowerCase()
     );
     const isUpdatingInvoice = Boolean(existingInvoice);
-    const additionalAdvance = Math.max(0, Number(advancePaymentAmount) || 0);
-    const totalPaid = (existingInvoice?.amount_paid || 0) + additionalAdvance;
+    const previouslyRecordedAmount = existingInvoice?.amount_paid || 0;
+    // This field represents the total advance received for the invoice, not an
+    // extra amount to add again every time the invoice is edited.
+    const totalPaid = Math.max(0, Number(advancePaymentAmount) || 0);
+    const additionalAdvance = Math.max(0, totalPaid - previouslyRecordedAmount);
+    if (totalPaid < previouslyRecordedAmount) {
+      alert('The recorded advance cannot be reduced here. Please use a payment reversal or credit note for an adjustment.');
+      return;
+    }
     if (totalPaid > taxBreakdown.grandTotal) {
       alert('The advance received cannot be greater than the invoice grand total.');
       return;
@@ -626,7 +642,10 @@ export const InvoiceCreate: React.FC = () => {
     }
 
     setEditingInvoiceId(null);
+    setEditingInvoiceNumber(null);
     setAdvancePaymentAmount(0);
+    invoiceSaveInProgress.current = false;
+    setIsSavingInvoice(false);
     // Switch to preview tab
     setActiveTab('preview');
   };
@@ -890,6 +909,8 @@ export const InvoiceCreate: React.FC = () => {
             type="button"
             onClick={() => {
               setEditingInvoiceId(null);
+              setEditingInvoiceNumber(null);
+              setAdvancePaymentAmount(0);
               setInvoiceNumber(generateNextInvoiceNumber(companySettings.invoice_prefix || 'ASL-', companySettings.fiscal_year || '2082/83', invoices.length + 1));
               setActiveTab('create');
             }}
@@ -1189,7 +1210,8 @@ export const InvoiceCreate: React.FC = () => {
                   required
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-slate-950"
+                  readOnly={Boolean(editingInvoiceId)}
+                  className={`w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-950 ${editingInvoiceId ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-slate-50 focus:bg-white'}`}
                   placeholder="ASL-2082/83-0001"
                 />
               </div>
@@ -1458,7 +1480,7 @@ export const InvoiceCreate: React.FC = () => {
                 </div>
                 <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200 text-xs">
                   <label className="block font-bold uppercase tracking-wider text-emerald-800 mb-1">
-                    Advance Received Now (Rs.)
+                    Total Advance Received (Rs.)
                   </label>
                   <input
                     type="number"
@@ -1470,7 +1492,7 @@ export const InvoiceCreate: React.FC = () => {
                     className="w-48 px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-mono font-bold text-emerald-900"
                     placeholder="0.00"
                   />
-                  <p className="mt-1.5 text-[11px] text-emerald-700">Optional. This records the client advance and reduces the balance due when you save.</p>
+                  <p className="mt-1.5 text-[11px] text-emerald-700">Optional. Enter the total received so far; the balance due updates automatically.</p>
                 </div>
                 <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600">
                   <span className="font-bold text-slate-900 block mb-0.5">Amount in Words:</span>
@@ -1510,13 +1532,13 @@ export const InvoiceCreate: React.FC = () => {
                 {advancePaymentAmount > 0 && (
                   <>
                     <div className="flex justify-between text-emerald-700 font-bold pt-1">
-                      <span>Advance Received:</span>
+                      <span>Total Advance Received:</span>
                       <span className="font-mono">-{formatNPR(advancePaymentAmount)}</span>
                     </div>
                     <div className="flex justify-between text-rose-700 font-bold">
                       <span>Balance Due:</span>
                       <span className="font-mono">
-                        {formatNPR(Math.max(0, taxBreakdown.grandTotal - ((invoices.find(inv => inv.id === editingInvoiceId)?.amount_paid || 0) + advancePaymentAmount)))}
+                        {formatNPR(Math.max(0, taxBreakdown.grandTotal - advancePaymentAmount))}
                       </span>
                     </div>
                   </>
@@ -1535,10 +1557,11 @@ export const InvoiceCreate: React.FC = () => {
               </button>
               <button
                 type="submit"
+                disabled={isSavingInvoice}
                 className="btn-gradient flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold active:scale-98 transition-all cursor-pointer"
               >
                 <CheckCircle size={16} className="text-black" />
-                <span>Save & Issue Tax Invoice</span>
+                <span>{isSavingInvoice ? 'Saving Changes...' : editingInvoiceId ? 'Save Invoice Changes' : 'Save & Issue Tax Invoice'}</span>
               </button>
             </div>
           </div>
