@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-const SUPERADMIN_EMAIL = 'aslenixtech@gmail.com';
-const SUPERADMIN_PW = 'aslenix@3212';
+const SUPERADMIN_EMAIL = import.meta.env.VITE_SUPERADMIN_EMAIL || 'aslenixtech@gmail.com';
+const SUPERADMIN_PW = import.meta.env.VITE_SUPERADMIN_PASSWORD || 'aslenix@3212';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('aslenixtech@gmail.com');
-  const [password, setPassword] = useState('aslenix@3212');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,10 +100,11 @@ const Login = () => {
                 <input 
                   type="email" 
                   required 
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="login-input appearance-none block w-full pl-10 px-3 py-3 border border-slate-200 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm" 
-                  placeholder="aslenixtech@gmail.com"
+                  placeholder="name@company.com"
                 />
               </div>
             </div>
@@ -122,10 +123,11 @@ const Login = () => {
                 <input 
                   type="password" 
                   required 
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="login-input appearance-none block w-full pl-10 px-3 py-3 border border-slate-200 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm" 
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                 />
               </div>
             </div>
