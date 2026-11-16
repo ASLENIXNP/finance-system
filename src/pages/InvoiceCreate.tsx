@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { 
   Plus, 
   Trash2, 
@@ -216,6 +218,7 @@ export const InvoiceCreate: React.FC = () => {
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
   const [editingInvoiceNumber, setEditingInvoiceNumber] = useState<string | null>(null);
   const [isSavingInvoice, setIsSavingInvoice] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const invoiceSaveInProgress = useRef(false);
 
   // ==========================================
@@ -847,10 +850,37 @@ export const InvoiceCreate: React.FC = () => {
     window.print();
   };
 
-  const handleSavePdf = () => {
-    // The browser print dialog provides the most reliable A4 PDF rendering.
-    // Choose “Save as PDF” as the destination to download the letterhead.
-    handlePrint();
+  const handleSavePdf = async () => {
+    const invoiceElement = document.getElementById('printable-invoice');
+    if (!invoiceElement || !activeDisplayInvoice) return;
+
+    setIsExportingPdf(true);
+    try {
+      const canvas = await html2canvas(invoiceElement, {
+        backgroundColor: '#f6f8fc',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 5;
+      const scale = Math.min(
+        (pageWidth - margin * 2) / canvas.width,
+        (pageHeight - margin * 2) / canvas.height,
+      );
+      const imageWidth = canvas.width * scale;
+      const imageHeight = canvas.height * scale;
+
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', (pageWidth - imageWidth) / 2, margin, imageWidth, imageHeight, undefined, 'FAST');
+      pdf.save(`${activeDisplayInvoice.invoice_no}.pdf`);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('Could not create the PDF. Please try again.');
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   // Filtered Invoices
@@ -1618,11 +1648,12 @@ export const InvoiceCreate: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSavePdf}
+                disabled={isExportingPdf}
                 className="btn-gradient flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-sm"
-                title="Choose Save as PDF in the print dialog"
+                title="Download the color A4 letterhead as a PDF"
               >
                 <Download size={16} className="text-black" />
-                <span>Save as PDF</span>
+                <span>{isExportingPdf ? 'Creating PDF...' : 'Download PDF'}</span>
               </button>
             </div>
           </div>
