@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { 
   Plus, 
@@ -856,24 +856,24 @@ export const InvoiceCreate: React.FC = () => {
 
     setIsExportingPdf(true);
     try {
-      const canvas = await html2canvas(invoiceElement, {
+      const imageData = await toPng(invoiceElement, {
         backgroundColor: '#f6f8fc',
-        scale: 2,
-        useCORS: true,
-        logging: false,
+        pixelRatio: 2,
+        cacheBust: true,
       });
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pageWidth = 210;
       const pageHeight = 297;
       const margin = 5;
+      const { width: elementWidth, height: elementHeight } = invoiceElement.getBoundingClientRect();
       const scale = Math.min(
-        (pageWidth - margin * 2) / canvas.width,
-        (pageHeight - margin * 2) / canvas.height,
+        (pageWidth - margin * 2) / elementWidth,
+        (pageHeight - margin * 2) / elementHeight,
       );
-      const imageWidth = canvas.width * scale;
-      const imageHeight = canvas.height * scale;
+      const imageWidth = elementWidth * scale;
+      const imageHeight = elementHeight * scale;
 
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', (pageWidth - imageWidth) / 2, margin, imageWidth, imageHeight, undefined, 'FAST');
+      pdf.addImage(imageData, 'PNG', (pageWidth - imageWidth) / 2, margin, imageWidth, imageHeight, undefined, 'FAST');
       pdf.save(`${activeDisplayInvoice.invoice_no}.pdf`);
     } catch (error) {
       console.error('PDF export failed:', error);
