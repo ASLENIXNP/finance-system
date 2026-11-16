@@ -109,6 +109,16 @@ const LOCAL_STORAGE_INVOICES_KEY = 'aslenix_invoices_v2';
 const LOCAL_STORAGE_CREDIT_NOTES_KEY = 'aslenix_credit_notes_v2';
 const LOCAL_STORAGE_CUSTOMERS_KEY = 'aslenix_customers';
 
+const deduplicateInvoices = (invoiceList: StoredInvoice[]): StoredInvoice[] => {
+  const seenInvoiceNumbers = new Set<string>();
+  return invoiceList.filter((invoice) => {
+    const key = invoice.invoice_no?.trim().toLowerCase();
+    if (!key || seenInvoiceNumbers.has(key)) return false;
+    seenInvoiceNumbers.add(key);
+    return true;
+  });
+};
+
 const getStoredCustomers = (): Customer[] => {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_CUSTOMERS_KEY);
@@ -139,7 +149,7 @@ const getStoredInvoices = (): StoredInvoice[] => {
     if (raw) {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) {
-        return arr.filter((item: any) => !item.id?.startsWith('inv-seed-'));
+        return deduplicateInvoices(arr.filter((item: any) => !item.id?.startsWith('inv-seed-')));
       }
     }
   } catch (e) {
@@ -343,10 +353,11 @@ export const InvoiceCreate: React.FC = () => {
           created_at: inv.created_at,
         }));
 
-        setInvoices(mapped);
-        localStorage.setItem(LOCAL_STORAGE_INVOICES_KEY, JSON.stringify(mapped));
-        if (mapped.length > 0) {
-          setPreviewInvoice(mapped[0]);
+        const uniqueInvoices = deduplicateInvoices(mapped);
+        setInvoices(uniqueInvoices);
+        localStorage.setItem(LOCAL_STORAGE_INVOICES_KEY, JSON.stringify(uniqueInvoices));
+        if (uniqueInvoices.length > 0) {
+          setPreviewInvoice(uniqueInvoices[0]);
         }
       }
     } catch (err) {
@@ -482,7 +493,12 @@ export const InvoiceCreate: React.FC = () => {
     const adInvoiceDate = bsToAdDate(invoiceDate).toISOString().slice(0, 10);
     const adDueDate = bsToAdDate(dueDate).toISOString().slice(0, 10);
 
-    const existingInvoice = invoices.find(inv => inv.id === editingInvoiceId);
+    // Invoice numbers are unique. If the user saves an existing number again,
+    // update that invoice rather than adding a duplicate record.
+    const existingInvoice = invoices.find(inv =>
+      inv.id === editingInvoiceId || inv.invoice_no.trim().toLowerCase() === invoiceNumber.trim().toLowerCase()
+    );
+    const isUpdatingInvoice = Boolean(existingInvoice);
     const additionalAdvance = Math.max(0, Number(advancePaymentAmount) || 0);
     const totalPaid = (existingInvoice?.amount_paid || 0) + additionalAdvance;
     if (totalPaid > taxBreakdown.grandTotal) {
@@ -490,7 +506,7 @@ export const InvoiceCreate: React.FC = () => {
       return;
     }
     const newInvoice: StoredInvoice = {
-      id: editingInvoiceId || `inv-${Date.now()}`,
+      id: existingInvoice?.id || editingInvoiceId || `inv-${Date.now()}`,
       invoice_no: invoiceNumber.trim(),
       customer_id: selectedCustomerId || undefined,
       customer_name: customerInfo.name,
@@ -519,8 +535,8 @@ export const InvoiceCreate: React.FC = () => {
     };
 
     // 1. Save locally first
-    const updatedInvoices = editingInvoiceId
-      ? invoices.map(inv => inv.id === editingInvoiceId ? newInvoice : inv)
+    const updatedInvoices = isUpdatingInvoice
+      ? deduplicateInvoices(invoices.map(inv => inv.id === existingInvoice?.id ? newInvoice : inv))
       : [newInvoice, ...invoices];
     setInvoices(updatedInvoices);
     localStorage.setItem(LOCAL_STORAGE_INVOICES_KEY, JSON.stringify(updatedInvoices));
@@ -547,7 +563,7 @@ export const InvoiceCreate: React.FC = () => {
         is_vat_invoice: isVatInvoice,
       };
 
-      const { data: dbInv, error: invError } = editingInvoiceId
+      const { data: dbInv, error: invError } = isUpdatingInvoice
         ? await supabase.from('invoices').update(invoicePayload).eq('invoice_no', newInvoice.invoice_no).select().maybeSingle()
         : await supabase.from('invoices').insert([invoicePayload]).select().single();
 
@@ -565,10 +581,10 @@ export const InvoiceCreate: React.FC = () => {
           amount: it.qty * it.rate - it.discount,
         }));
 
-        if (!editingInvoiceId) await supabase.from('invoice_items').insert(itemRows);
+        if (!isUpdatingInvoice) await supabase.from('invoice_items').insert(itemRows);
 
         // Audit Log
-        if (!editingInvoiceId) await supabase.from('audit_logs').insert([{
+        if (!isUpdatingInvoice) await supabase.from('audit_logs').insert([{
           table_name: 'invoices',
           record_id: dbInv.id,
           action: 'INSERT',
@@ -591,7 +607,7 @@ export const InvoiceCreate: React.FC = () => {
           created_by: 'Super Admin',
         };
 
-        if (!editingInvoiceId) await supabase.from('journal_entries').insert([jvPayload]);
+        if (!isUpdatingInvoice) await supabase.from('journal_entries').insert([jvPayload]);
 
         if (additionalAdvance > 0) {
           await supabase.from('payments').insert([{
@@ -1491,6 +1507,20 @@ export const InvoiceCreate: React.FC = () => {
                   <span>Grand Total (कुल जम्मा):</span>
                   <span className="font-mono text-base font-black text-slate-950">{formatNPR(taxBreakdown.grandTotal)}</span>
                 </div>
+                {advancePaymentAmount > 0 && (
+                  <>
+                    <div className="flex justify-between text-emerald-700 font-bold pt-1">
+                      <span>Advance Received:</span>
+                      <span className="font-mono">-{formatNPR(advancePaymentAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-rose-700 font-bold">
+                      <span>Balance Due:</span>
+                      <span className="font-mono">
+                        {formatNPR(Math.max(0, taxBreakdown.grandTotal - ((invoices.find(inv => inv.id === editingInvoiceId)?.amount_paid || 0) + advancePaymentAmount)))}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1832,6 +1862,18 @@ export const InvoiceCreate: React.FC = () => {
                         {formatNPR(activeDisplayInvoice.grand_total)}
                       </span>
                     </div>
+                    {activeDisplayInvoice.amount_paid > 0 && (
+                      <>
+                        <div className="flex justify-between text-emerald-700 font-bold pt-1">
+                          <span>Advance / Amount Received:</span>
+                          <span className="font-mono whitespace-nowrap">-{formatNPR(activeDisplayInvoice.amount_paid)}</span>
+                        </div>
+                        <div className="flex justify-between text-rose-700 font-bold">
+                          <span>Balance Due:</span>
+                          <span className="font-mono whitespace-nowrap">{formatNPR(activeDisplayInvoice.balance_due)}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
