@@ -277,6 +277,14 @@ button[type="submit"]:not(.btn-danger):not(.btn-secondary):not(.text-rose-600):n
   min-width: max-content;
 }
 
+/* Compact official invoice layout: exact single (1.0) line spacing. */
+#printable-invoice,
+#printable-invoice *,
+#pdf-export-invoice,
+#pdf-export-invoice * {
+  line-height: 1 !important;
+}
+
 @media print {
   @page payroll-register {
     size: A4 landscape !important;
