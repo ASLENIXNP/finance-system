@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 
@@ -26,23 +26,6 @@ const PageLoading = () => (
 );
 
 function App() {
-  useEffect(() => {
-    // Automated initial clean-slate purge of old legacy demo seeds
-    const PURGE_KEY = 'aslenix_clean_slate_v1';
-    if (!localStorage.getItem(PURGE_KEY)) {
-      localStorage.removeItem('aslenix_invoices_v2');
-      localStorage.removeItem('aslenix_credit_notes_v2');
-      localStorage.removeItem('aslenix_payments');
-      localStorage.removeItem('aslenix_expenses');
-      localStorage.removeItem('aslenix_customers');
-      localStorage.removeItem('aslenix_products');
-      localStorage.removeItem('aslenix_journals_v2');
-      localStorage.removeItem('aslenix_income');
-      localStorage.removeItem('aslenix_payroll_records');
-      localStorage.removeItem('aslenix_employees');
-      localStorage.setItem(PURGE_KEY, 'true');
-    }
-  }, []);
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoading />}>

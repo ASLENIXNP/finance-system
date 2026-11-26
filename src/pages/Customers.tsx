@@ -17,6 +17,7 @@ import {
   Check,
   Phone,
   Mail,
+  MapPin,
   X
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
@@ -30,13 +31,12 @@ interface Customer {
   name: string;
   company_name: string;
   pan_number: string;
+  address?: string;
   phone: string;
   email: string;
   type: string;
   is_active: boolean;
 }
-
-const DUMMY_SEED_CUSTOMER_IDS = new Set(['c1', 'c2', 'c3', 'CUST-1001', 'CUST-1002', 'CUST-1003']);
 
 const DELETED_CUSTOMERS_KEY = 'aslenix_deleted_customers';
 
@@ -91,7 +91,7 @@ const Customers = () => {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
           const deletedIds = getDeletedCustomerIds();
-          return parsed.filter(c => !deletedIds.has(c.id) && !deletedIds.has(c.customer_id) && !DUMMY_SEED_CUSTOMER_IDS.has(c.id) && !DUMMY_SEED_CUSTOMER_IDS.has(c.customer_id));
+          return parsed.filter(c => !deletedIds.has(c.id) && !deletedIds.has(c.customer_id));
         }
       } catch (e) {}
     }
@@ -157,13 +157,14 @@ const Customers = () => {
     name: '',
     company_name: '',
     pan_number: '',
+    address: '',
     phone: '',
     email: '',
     type: 'Company',
   });
 
   const resetForm = () => {
-    setFormData({ name: '', company_name: '', pan_number: '', phone: '', email: '', type: 'Company' });
+    setFormData({ name: '', company_name: '', pan_number: '', address: '', phone: '', email: '', type: 'Company' });
     setEditingId(null);
   };
 
@@ -175,29 +176,19 @@ const Customers = () => {
   }, []);
 
   const fetchCustomers = async (signal?: AbortSignal) => {
-    const requestController = new AbortController();
-    const cancelRequest = () => requestController.abort();
-    signal?.addEventListener('abort', cancelRequest, { once: true });
-    const timeoutId = window.setTimeout(() => {
-      console.warn('Customer refresh timed out; continuing with saved customer records.');
-      requestController.abort();
-    }, 7000);
-
     try {
       setLoading(true);
-      const request = supabase
+      const { data, error } = await supabase
         .from('customers')
         .select('*')
         .order('created_at', { ascending: false });
 
-      const { data, error } = await request.abortSignal(requestController.signal);
-
       if (error) {
-        console.error('Error fetching customers:', error);
+        console.warn('Using local customer records (Supabase offline/timeout):', error.message);
         return;
       }
 
-      if (data) {
+      if (data && Array.isArray(data)) {
         const deletedIds = getDeletedCustomerIds();
         const validServerCustomers = data.filter((c: any) => 
           !deletedIds.has(c.id) && !deletedIds.has(c.customer_id)
@@ -223,12 +214,8 @@ const Customers = () => {
         });
       }
     } catch (error) {
-      if (!signal?.aborted) {
-        console.error('Error fetching customers:', error);
-      }
+      console.warn('Customer fetch notice (using local data):', error);
     } finally {
-      window.clearTimeout(timeoutId);
-      signal?.removeEventListener('abort', cancelRequest);
       if (!signal?.aborted) setLoading(false);
     }
   };
@@ -243,22 +230,29 @@ const Customers = () => {
           c.id === editingId ? { ...c, ...formData } : c
         );
         saveCustomers(updated);
+        resetForm();
+        setIsModalOpen(false);
+        setIsSubmitting(false);
 
-        try {
-          await supabase
-            .from('customers')
-            .update({
-              name: formData.name,
-              company_name: formData.company_name,
-              pan_number: formData.pan_number,
-              phone: formData.phone,
-              email: formData.email,
-              type: formData.type,
-            })
-            .eq('id', editingId);
-        } catch (dbErr) {
-          console.error('DB update error:', dbErr);
-        }
+        // Background sync to Supabase without blocking UI
+        void (async () => {
+          try {
+            await supabase
+              .from('customers')
+              .update({
+                name: formData.name,
+                company_name: formData.company_name,
+                pan_number: formData.pan_number,
+                address: formData.address,
+                phone: formData.phone,
+                email: formData.email,
+                type: formData.type,
+              })
+              .eq('id', editingId);
+          } catch (dbErr) {
+            console.warn('Customer update offline notice:', dbErr);
+          }
+        })();
       } else {
         const newId = `CUST-${Math.floor(1000 + Math.random() * 9000)}`;
         const newCustomer: Customer = {
@@ -267,38 +261,43 @@ const Customers = () => {
           name: formData.name,
           company_name: formData.company_name,
           pan_number: formData.pan_number,
+          address: formData.address,
           phone: formData.phone,
           email: formData.email,
           type: formData.type,
           is_active: true
         };
-        saveCustomers([newCustomer, ...customers]);
+        const updatedList = [newCustomer, ...customers];
+        saveCustomers(updatedList);
+        resetForm();
+        setIsModalOpen(false);
+        setIsSubmitting(false);
 
-        try {
-          const { data: insertedData } = await supabase.from('customers').insert([
-            {
-              customer_id: newId,
-              ...formData
-            }
-          ]).select();
+        // Background sync to Supabase without blocking UI
+        void (async () => {
+          try {
+            const { data: insertedData } = await supabase.from('customers').insert([
+              {
+                customer_id: newId,
+                ...formData
+              }
+            ]).select();
 
-          if (insertedData?.[0]?.id) {
-            saveCustomers(
-              [newCustomer, ...customers].map(c =>
+            if (insertedData?.[0]?.id) {
+              const currentRaw = localStorage.getItem('aslenix_customers');
+              const currentList = currentRaw ? JSON.parse(currentRaw) : [];
+              const synced = (Array.isArray(currentList) ? currentList : updatedList).map((c: any) =>
                 c.id === newCustomer.id ? { ...c, id: insertedData[0].id } : c
-              )
-            );
+              );
+              saveCustomers(synced);
+            }
+          } catch (dbErr) {
+            console.warn('Customer insert offline notice:', dbErr);
           }
-        } catch (dbErr) {
-          console.error('DB insert error:', dbErr);
-        }
+        })();
       }
-      
-      resetForm();
-      setIsModalOpen(false);
     } catch (error: any) {
       alert(error.message || 'Error saving customer');
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -325,6 +324,7 @@ const Customers = () => {
       name: customer.name || '',
       company_name: customer.company_name || '',
       pan_number: customer.pan_number || '',
+      address: customer.address || '',
       phone: customer.phone || '',
       email: customer.email || '',
       type: customer.type || 'Company',
@@ -721,6 +721,13 @@ const Customers = () => {
                           ) : (
                             <span className="text-xs text-slate-400 italic">No email</span>
                           )}
+
+                          {customer.address && (
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                              <MapPin size={12} className="text-slate-400 shrink-0" />
+                              <span className="truncate max-w-[200px]" title={customer.address}>{customer.address}</span>
+                            </div>
+                          )}
                         </div>
                       </td>
 
@@ -919,6 +926,20 @@ const Customers = () => {
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <MapPin size={13} className="text-slate-400" />
+                  Office / Billing Address
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Putalisadak, Kathmandu, Nepal"
+                  className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 text-sm font-semibold text-slate-900 placeholder:text-slate-400 transition-all"
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                />
               </div>
 
               <div className="pt-5 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white">

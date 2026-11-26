@@ -204,6 +204,21 @@ const Payments = () => {
     return [];
   }, [isModalOpen]);
 
+  // Load saved customers for autocomplete
+  const savedCustomers = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('aslenix_customers');
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((c: any) => c.is_active !== false)
+          .map((c: any) => c.company_name || c.name)
+          .filter(Boolean);
+      }
+    } catch {}
+    return [];
+  }, [isModalOpen]);
+
   // Sync payments back into the invoice balance
   const syncInvoicePayment = (invoiceNo: string, deltaAmount: number) => {
     if (!invoiceNo) return;
@@ -711,11 +726,17 @@ const Payments = () => {
                   <input 
                     type="text" 
                     required
+                    list="payment-customers-list"
                     placeholder="e.g. Tech Innovations Pvt. Ltd."
                     className="w-full px-4 py-3 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-slate-950 transition-all"
                     value={formData.to}
                     onChange={(e) => setFormData({...formData, to: e.target.value})}
                   />
+                  <datalist id="payment-customers-list">
+                    {savedCustomers.map((custName, idx) => (
+                      <option key={idx} value={custName} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-2">

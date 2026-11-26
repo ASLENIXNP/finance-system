@@ -127,7 +127,18 @@ const getStoredCustomers = (): Customer[] => {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_CUSTOMERS_KEY);
     const customers = raw ? JSON.parse(raw) : [];
-    return Array.isArray(customers) ? customers : [];
+    if (!Array.isArray(customers)) return [];
+
+    let deletedSet = new Set<string>();
+    try {
+      const delRaw = localStorage.getItem('aslenix_deleted_customers');
+      if (delRaw) {
+        const delArr = JSON.parse(delRaw);
+        if (Array.isArray(delArr)) deletedSet = new Set(delArr);
+      }
+    } catch {}
+
+    return customers.filter(c => !deletedSet.has(c.id) && !deletedSet.has(c.customer_id));
   } catch (error) {
     console.warn('Failed to parse stored customers:', error);
     return [];
@@ -135,9 +146,19 @@ const getStoredCustomers = (): Customer[] => {
 };
 
 const mergeCustomers = (serverCustomers: Customer[], localCustomers: Customer[]): Customer[] => {
+  let deletedSet = new Set<string>();
+  try {
+    const delRaw = localStorage.getItem('aslenix_deleted_customers');
+    if (delRaw) {
+      const delArr = JSON.parse(delRaw);
+      if (Array.isArray(delArr)) deletedSet = new Set(delArr);
+    }
+  } catch {}
+
   const byCustomerCode = new Map<string, Customer>();
 
   [...localCustomers, ...serverCustomers].forEach((customer) => {
+    if (deletedSet.has(customer.id) || deletedSet.has(customer.customer_id)) return;
     const key = customer.customer_id || customer.id;
     if (key) byCustomerCode.set(key, customer);
   });
@@ -187,7 +208,9 @@ export const InvoiceCreate: React.FC = () => {
   const customerIdFromUrl = searchParams.get('customerId');
 
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'preview' | 'credit_notes'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'preview' | 'credit_notes'>(
+    customerIdFromUrl ? 'create' : 'list'
+  );
 
   // Stored state
   const [companySettings, setCompanySettings] = useState<CompanySettingsData>(getStoredCompanySettings);
@@ -395,21 +418,50 @@ export const InvoiceCreate: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (customerIdFromUrl) {
+      setSelectedCustomerId(customerIdFromUrl);
+      setActiveTab('create');
+    }
+  }, [customerIdFromUrl]);
+
   // When selected customer changes in creation form
   useEffect(() => {
     if (!selectedCustomerId) return;
-    const active = customers.find((c) => c.id === selectedCustomerId);
+    const active = customers.find((c) => c.id === selectedCustomerId || c.customer_id === selectedCustomerId);
     if (!active) return;
 
     setCustomerInfo({
-      name: active.company_name || active.name || 'Customer Name',
-      address: active.address || (active.company_name ? `${active.company_name}, Kathmandu, Nepal` : 'Kathmandu, Nepal'),
-      pan: active.pan_number || 'N/A',
-      phone: active.phone || 'N/A',
-      email: active.email || 'N/A',
+      name: active.company_name || active.name || '',
+      address: active.address || (active.company_name ? `${active.company_name}, Kathmandu, Nepal` : ''),
+      pan: active.pan_number || '',
+      phone: active.phone || '',
+      email: active.email || '',
       customerRef: active.customer_id || 'CUST-1001',
     });
   }, [customers, selectedCustomerId]);
+
+  const handleCustomerNameChange = (val: string) => {
+    const matched = customers.find(c => 
+      (c.company_name && c.company_name.toLowerCase() === val.toLowerCase().trim()) ||
+      (c.name && c.name.toLowerCase() === val.toLowerCase().trim()) ||
+      (c.customer_id && c.customer_id.toLowerCase() === val.toLowerCase().trim())
+    );
+
+    if (matched) {
+      setSelectedCustomerId(matched.id);
+      setCustomerInfo({
+        name: matched.company_name || matched.name,
+        address: matched.address || (matched.company_name ? `${matched.company_name}, Kathmandu, Nepal` : ''),
+        pan: matched.pan_number || '',
+        phone: matched.phone || '',
+        email: matched.email || '',
+        customerRef: matched.customer_id || 'CUST-1001',
+      });
+    } else {
+      setCustomerInfo(prev => ({ ...prev, name: val }));
+    }
+  };
 
   // Calculations for Creation Form
   const taxLines = useMemo(() => {
@@ -1348,20 +1400,32 @@ export const InvoiceCreate: React.FC = () => {
             {/* Grid 2: Customer Coordinates */}
             <div className="p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Customer & Buyer Coordinates
-                </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500">Quick Select:</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Customer & Buyer Coordinates
+                  </span>
+                  {customers.length > 0 ? (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {customers.length} saved {customers.length === 1 ? 'customer' : 'customers'}
+                    </span>
+                  ) : (
+                    <a href="/customers" className="text-[11px] font-semibold text-indigo-600 hover:underline">
+                      + Add Customer in Directory
+                    </a>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 font-medium">Quick Select:</span>
                   <select
                     value={selectedCustomerId}
                     onChange={(e) => setSelectedCustomerId(e.target.value)}
-                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none"
+                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none shadow-2xs hover:border-slate-300 transition-colors"
                   >
                     <option value="">-- Choose Existing Customer --</option>
                     {customers.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.company_name || c.name} ({c.pan_number ? `PAN: ${c.pan_number}` : 'No PAN'})
+                        {c.company_name ? `${c.company_name} (${c.name})` : c.name} {c.pan_number ? `• PAN: ${c.pan_number}` : ''}
                       </option>
                     ))}
                   </select>
@@ -1370,15 +1434,28 @@ export const InvoiceCreate: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="lg:col-span-2">
-                  <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Company / Customer Name *</label>
+                  <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1 flex items-center justify-between">
+                    <span>Company / Customer Name *</span>
+                    {customers.length > 0 && (
+                      <span className="text-[10px] text-slate-400 font-normal">Type to auto-fill details</span>
+                    )}
+                  </label>
                   <input
                     type="text"
                     required
+                    list="invoice-customer-datalist"
                     value={customerInfo.name}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold"
-                    placeholder="Tech Innovations Pvt. Ltd."
+                    onChange={(e) => handleCustomerNameChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    placeholder="Search or enter customer name..."
                   />
+                  <datalist id="invoice-customer-datalist">
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.company_name || c.name}>
+                        {c.pan_number ? `PAN: ${c.pan_number}` : ''} {c.phone ? `• ${c.phone}` : ''}
+                      </option>
+                    ))}
+                  </datalist>
                 </div>
 
                 <div>
