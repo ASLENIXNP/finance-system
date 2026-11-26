@@ -47,6 +47,7 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [hasCloudSession, setHasCloudSession] = useState<boolean | null>(null);
   const [branding, setBranding] = useState<SidebarBranding>(getSidebarBranding);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -102,6 +103,7 @@ const Layout = () => {
 
     // Get current session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasCloudSession(Boolean(session?.user));
       if (session?.user) {
         setUserEmail(session.user.email || null);
       } else {
@@ -114,6 +116,7 @@ const Layout = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setHasCloudSession(Boolean(session?.user));
       if (session?.user) {
         setUserEmail(session.user.email || null);
       } else {
@@ -266,6 +269,29 @@ const Layout = () => {
               <span className="text-slate-400 uppercase text-[10px] font-bold tracking-wider">Fiscal Year:</span>
               <span className="font-mono font-bold text-slate-900">{getCurrentFiscalYear()}</span>
             </div>
+
+            {/* Cloud Sync Status Badge */}
+            {hasCloudSession !== null && (
+              <div
+                className={`flex items-center gap-1.5 px-2 py-1 md:px-3 md:py-1.5 rounded-lg md:rounded-xl border shadow-2xs text-[10px] md:text-xs font-semibold ${
+                  hasCloudSession
+                    ? 'bg-emerald-50/90 border-emerald-200/80 text-emerald-700'
+                    : 'bg-amber-50/90 border-amber-200/80 text-amber-800'
+                }`}
+                title={
+                  hasCloudSession
+                    ? 'Connected to Supabase cloud database'
+                    : 'No Supabase Auth session — data is saved in this browser only until Supabase user auth is configured'
+                }
+              >
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    hasCloudSession ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'
+                  }`}
+                />
+                <span>{hasCloudSession ? 'Cloud Synced' : 'Local Only'}</span>
+              </div>
+            )}
           </div>
         </header>
 

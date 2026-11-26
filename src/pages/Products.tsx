@@ -229,15 +229,24 @@ const Products = () => {
         saveProducts([newProduct, ...products]);
 
         try {
-          const { data: insertedData } = await supabase.from('products').insert([
+          const { data: insertedData, error: insertErr } = await supabase.from('products').insert([
             {
               item_code: newCode,
               ...formData
             }
           ]).select();
 
+          if (insertErr) {
+            console.warn('Product Supabase insert blocked/failed:', insertErr.message);
+          }
+
           if (insertedData?.[0]?.id) {
-            setProducts(prev => prev.map(p => p.id === newProduct.id ? { ...p, id: insertedData[0].id } : p));
+            const currentRaw = localStorage.getItem('aslenix_products');
+            const currentList = currentRaw ? JSON.parse(currentRaw) : [];
+            const synced = (Array.isArray(currentList) ? currentList : [newProduct, ...products]).map((p: any) =>
+              p.id === newProduct.id ? { ...p, id: insertedData[0].id } : p
+            );
+            saveProducts(synced);
           }
         } catch (dbErr) {
           console.error('DB insert err:', dbErr);

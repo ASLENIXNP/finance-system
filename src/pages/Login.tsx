@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Lock, 
-  Mail, 
-  ArrowRight, 
-  AlertCircle, 
-  Eye, 
-  EyeOff, 
-  Loader2, 
-  ShieldCheck, 
-  CheckCircle2 
+import {
+  Lock,
+  Mail,
+  ArrowRight,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Loader2,
+  ShieldCheck,
+  CheckCircle2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -36,19 +36,19 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     const inputEmail = email.trim().toLowerCase();
     const inputPassword = password.trim();
 
-    const isSuperAdminEmail = 
-      inputEmail === 'aslenixtech@gmail.com' || 
+    const isSuperAdminEmail =
+      inputEmail === 'aslenixtech@gmail.com' ||
       inputEmail === SUPERADMIN_EMAIL.toLowerCase() ||
       inputEmail === 'admin' ||
       inputEmail === 'superadmin';
 
-    const isSuperAdminPassword = 
-      inputPassword === 'aslenix@3212' || 
-      inputPassword === 'aslenix3212' || 
+    const isSuperAdminPassword =
+      inputPassword === 'aslenix@3212' ||
+      inputPassword === 'aslenix3212' ||
       inputPassword === SUPERADMIN_PW;
 
     const isSuperAdmin = isSuperAdminEmail && isSuperAdminPassword;
@@ -63,13 +63,21 @@ const Login = () => {
         remember: rememberMe,
       }));
 
-      // Non-blocking background session attempt
-      supabase.auth.signInWithPassword({
-        email: 'aslenixtech@gmail.com',
-        password: inputPassword,
-      }).catch(() => {
-        // Ignore offline network error
-      });
+      // Non-blocking background session attempt (try entered password, then alternate)
+      void (async () => {
+        const candidates = Array.from(new Set([inputPassword, 'aslenix@3212', 'aslenix3212']));
+        for (const candidate of candidates) {
+          try {
+            const { data, error: bgErr } = await supabase.auth.signInWithPassword({
+              email: 'aslenixtech@gmail.com',
+              password: candidate,
+            });
+            if (!bgErr && data?.session) break;
+          } catch {
+            // Ignore offline network error
+          }
+        }
+      })();
 
       navigate('/');
       return;
@@ -123,17 +131,17 @@ const Login = () => {
       {/* Centered Login Card */}
       <div className="relative z-20 w-full max-w-[440px] mx-auto animate-in fade-in slide-in-from-bottom-3 duration-500">
         <div className="bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_20px_60px_-15px_rgba(79,70,229,0.12)] rounded-3xl p-6 sm:p-10 transition-all">
-          
+
           {/* Logo & Header */}
           <div className="text-center mb-7">
             <div className="flex justify-center mb-4">
-              <img 
-                src="/logo.png" 
-                alt="Aslenix Logo" 
-                className="h-24 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105 duration-300" 
+              <img
+                src="/logo.png"
+                alt="Aslenix Logo"
+                className="h-24 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105 duration-300"
               />
             </div>
-            
+
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-gradient-to-r from-[#c4daff] to-[#e5ccff] text-[#0f172a] border border-[#c4daff]/90 mb-3 shadow-2xs">
               <ShieldCheck size={13} className="text-[#0f172a]" />
               <span>FINANCE & IRD COMPLIANCE</span>
@@ -155,7 +163,7 @@ const Login = () => {
                 <span>{error}</span>
               </div>
             )}
-            
+
             {/* Email Field */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -165,13 +173,13 @@ const Login = () => {
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                   <Mail size={17} />
                 </div>
-                <input 
-                  type="email" 
-                  required 
+                <input
+                  type="email"
+                  required
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3.5 py-3 border border-slate-200 bg-white hover:border-slate-300 rounded-xl shadow-2xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 text-sm font-medium transition-all" 
+                  className="appearance-none block w-full pl-10 pr-3.5 py-3 border border-slate-200 bg-white hover:border-slate-300 rounded-xl shadow-2xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 text-sm font-medium transition-all"
                   placeholder="name@company.com"
                 />
               </div>
@@ -196,15 +204,15 @@ const Login = () => {
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                   <Lock size={17} />
                 </div>
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  required 
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={checkCapsLock}
                   onKeyUp={checkCapsLock}
-                  className="appearance-none block w-full pl-10 pr-11 py-3 border border-slate-200 bg-white hover:border-slate-300 rounded-xl shadow-2xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 text-sm font-medium transition-all" 
+                  className="appearance-none block w-full pl-10 pr-11 py-3 border border-slate-200 bg-white hover:border-slate-300 rounded-xl shadow-2xs placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 text-sm font-medium transition-all"
                   placeholder="Enter your password"
                 />
                 <button
@@ -229,7 +237,7 @@ const Login = () => {
             {/* Remember Me Checkbox */}
             <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input 
+                <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
@@ -246,8 +254,8 @@ const Login = () => {
 
             {/* Submit Button */}
             <div className="pt-2">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={loading}
                 className="btn-gradient w-full h-12 flex justify-center items-center gap-2 px-4 rounded-xl text-sm font-bold text-[#0f172a] shadow-xs hover:shadow-md hover:brightness-105 active:scale-[0.99] transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer border border-[#c4daff]/90"
               >

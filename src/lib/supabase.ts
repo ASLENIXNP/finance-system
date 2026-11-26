@@ -10,7 +10,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABA
 // A network outage must not leave pages permanently loading or saving. Local
 // storage remains the immediate source of truth and requests retry on the next
 // normal page action.
-const SUPABASE_REQUEST_TIMEOUT_MS = 8_000;
+const SUPABASE_REQUEST_TIMEOUT_MS = 15_000;
 
 const fetchWithTimeout: typeof fetch = async (input, init) => {
   const controller = new AbortController();

@@ -237,7 +237,7 @@ const Customers = () => {
         // Background sync to Supabase without blocking UI
         void (async () => {
           try {
-            await supabase
+            const { error: updateErr } = await supabase
               .from('customers')
               .update({
                 name: formData.name,
@@ -249,6 +249,9 @@ const Customers = () => {
                 type: formData.type,
               })
               .eq('id', editingId);
+            if (updateErr) {
+              console.warn('Customer Supabase update blocked/failed:', updateErr.message);
+            }
           } catch (dbErr) {
             console.warn('Customer update offline notice:', dbErr);
           }
@@ -276,12 +279,16 @@ const Customers = () => {
         // Background sync to Supabase without blocking UI
         void (async () => {
           try {
-            const { data: insertedData } = await supabase.from('customers').insert([
+            const { data: insertedData, error: insertErr } = await supabase.from('customers').insert([
               {
                 customer_id: newId,
                 ...formData
               }
             ]).select();
+
+            if (insertErr) {
+              console.warn('Customer Supabase insert blocked/failed:', insertErr.message);
+            }
 
             if (insertedData?.[0]?.id) {
               const currentRaw = localStorage.getItem('aslenix_customers');
