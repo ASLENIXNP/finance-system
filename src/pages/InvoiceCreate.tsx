@@ -1528,7 +1528,6 @@ export const InvoiceCreate: React.FC = () => {
                       <th className="py-2.5 px-3 w-10 text-center">#</th>
                       <th className="py-2.5 px-3">Item / Description</th>
                       <th className="py-2.5 px-2 w-16 text-center">Qty</th>
-                      <th className="py-2.5 px-2 w-20 text-center">Unit</th>
                       <th className="py-2.5 px-3 w-28 text-right">Rate (Rs)</th>
                       <th className="py-2.5 px-3 w-24 text-right">Disc (Rs)</th>
                       <th className="py-2.5 px-3 w-28 text-center">Tax Type</th>
@@ -1567,14 +1566,6 @@ export const InvoiceCreate: React.FC = () => {
                               value={item.qty}
                               onChange={(e) => updateItem(item.id, 'qty', Number(e.target.value))}
                               className="w-full px-2 py-1.5 text-center border border-slate-200 rounded-lg text-xs"
-                            />
-                          </td>
-                          <td className="py-2.5 px-2">
-                            <input
-                              type="text"
-                              value={item.unit}
-                              onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
-                              className="w-full px-2 py-1.5 text-center border border-slate-200 rounded-lg text-xs text-slate-600"
                             />
                           </td>
                           <td className="py-2.5 px-3">
@@ -1951,7 +1942,6 @@ export const InvoiceCreate: React.FC = () => {
                       <th className="py-2.5 px-3 text-center w-10">S.N.</th>
                       <th className="py-2.5 px-3">Description of Goods / Services</th>
                       <th className="py-2.5 px-2 text-center w-14">Qty</th>
-                      <th className="py-2.5 px-2 text-center w-16">Unit</th>
                       <th className="py-2.5 px-3 text-right w-24">Rate (Rs)</th>
                       <th className="py-2.5 px-3 text-right w-20">Disc (Rs)</th>
                       <th className="py-2.5 px-2 text-center w-20">Tax</th>
@@ -1969,7 +1959,6 @@ export const InvoiceCreate: React.FC = () => {
                             {item.desc && <p className="text-slate-500 text-[11px] mt-0.5">{item.desc}</p>}
                           </td>
                           <td className="py-3 px-2 text-center align-top font-mono">{item.qty}</td>
-                          <td className="py-3 px-2 text-center align-top text-slate-600">{item.unit}</td>
                           <td className="py-3 px-3 text-right align-top font-mono text-[11px] whitespace-nowrap">{formatNPR(item.rate)}</td>
                           <td className="py-3 px-3 text-right align-top font-mono text-slate-500 text-[11px] whitespace-nowrap">{formatNPR(item.discount)}</td>
                           <td className="py-3 px-2 text-center align-top text-[11px] font-semibold text-purple-700">
@@ -2080,10 +2069,28 @@ export const InvoiceCreate: React.FC = () => {
               </div>
 
               {/* 6. Signature Area */}
-              <div className="print-signatures mt-6 pt-16 sm:pt-20 border-t border-slate-200 flex justify-between items-end print:mt-4 print:pt-14">
-                <div className="text-left w-52">
+              <div
+                className={`print-signatures mt-6 border-t border-slate-200 flex justify-between items-end print:mt-4 ${
+                  companySettings.authorized_signature
+                    ? 'pt-6 sm:pt-8 print:pt-5'
+                    : 'pt-16 sm:pt-20 print:pt-14'
+                }`}
+              >
+                <div className="text-left w-56">
+                  {companySettings.authorized_signature && (
+                    <div className="mb-1.5 h-12 flex items-end">
+                      <img
+                        src={companySettings.authorized_signature}
+                        alt="Authorized Signature"
+                        className="max-h-12 max-w-[170px] object-contain"
+                      />
+                    </div>
+                  )}
                   <div className="border-t border-slate-400 w-44 mb-2"></div>
                   <p className="text-xs font-bold text-slate-900">Authorized Signature</p>
+                  {companySettings.authorized_signatory_name && (
+                    <p className="text-[10px] font-semibold text-slate-700">{companySettings.authorized_signatory_name}</p>
+                  )}
                   <p className="text-[10px] text-slate-500">For {companySettings.company_name || 'ASLENIX TECH & SOLUTION'}</p>
                 </div>
 

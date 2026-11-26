@@ -1,22 +1,22 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  Banknote, 
-  Calendar, 
-  Printer, 
-  CheckCircle2, 
-  Clock, 
-  Building2, 
-  DollarSign, 
-  CreditCard, 
-  FileText, 
-  UserCheck, 
-  Edit, 
-  Trash2, 
-  Check, 
-  UserPlus, 
+import {
+  Search,
+  Plus,
+  Filter,
+  Banknote,
+  Calendar,
+  Printer,
+  CheckCircle2,
+  Clock,
+  Building2,
+  DollarSign,
+  CreditCard,
+  FileText,
+  UserCheck,
+  Edit,
+  Trash2,
+  Check,
+  UserPlus,
   Percent,
   Receipt,
   User,
@@ -245,11 +245,11 @@ const formatNPR = (amount: number) => {
 const numberToWordsNepali = (num: number): string => {
   const rounded = Math.round(num);
   if (rounded === 0) return 'Zero Rupees Only';
-  
-  const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
+
+  const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
     'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
   const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-  
+
   function convertLessThanOneThousand(n: number): string {
     let current = '';
     if (n >= 100) {
@@ -288,7 +288,7 @@ const numberToWordsNepali = (num: number): string => {
 
 const Payroll = () => {
   const [activeTab, setActiveTab] = useState<'payroll' | 'employees'>('payroll');
-  
+
   // Persistent state for Employees
   // Persistent state for Employees (with automatic migration from legacy EMP- to fixed ASL-)
   const [employees, setEmployees] = useState<Employee[]>(() => {
@@ -300,19 +300,19 @@ const Payroll = () => {
         const migrated: Employee[] = parsed
           .filter((e: any) => !DUMMY_SEED_EMPLOYEE_CODES.has(e.employee_code) && !DUMMY_SEED_EMPLOYEE_CODES.has(e.id))
           .map((e: Employee, idx: number) => {
-          const rawCode = e.employee_code || e.id || `ASL-${String(idx + 1).padStart(3, '0')}`;
-          const cleanSuffix = rawCode.replace(/^(EMP|ASL)-?/i, '');
-          const newCode = `ASL-${cleanSuffix || String(idx + 1).padStart(3, '0')}`;
-          const newId = e.id?.startsWith('ASL-') ? e.id : (e.id?.startsWith('EMP-') ? e.id.replace(/^EMP-/i, 'ASL-') : newCode);
-          if (newCode !== e.employee_code || newId !== e.id) {
-            hasMigrated = true;
-          }
-          return {
-            ...e,
-            id: newId,
-            employee_code: newCode,
-          };
-        });
+            const rawCode = e.employee_code || e.id || `ASL-${String(idx + 1).padStart(3, '0')}`;
+            const cleanSuffix = rawCode.replace(/^(EMP|ASL)-?/i, '');
+            const newCode = `ASL-${cleanSuffix || String(idx + 1).padStart(3, '0')}`;
+            const newId = e.id?.startsWith('ASL-') ? e.id : (e.id?.startsWith('EMP-') ? e.id.replace(/^EMP-/i, 'ASL-') : newCode);
+            if (newCode !== e.employee_code || newId !== e.id) {
+              hasMigrated = true;
+            }
+            return {
+              ...e,
+              id: newId,
+              employee_code: newCode,
+            };
+          });
         if (hasMigrated) {
           localStorage.setItem('aslenix_employees', JSON.stringify(migrated));
         }
@@ -338,7 +338,7 @@ const Payroll = () => {
     }
     return Array.from(map.values());
   };
-  
+
   // Persistent state for Payroll Records with backward-compatible mapper and automatic deduplication
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>(() => {
     const saved = localStorage.getItem('aslenix_payroll_records');
@@ -409,7 +409,7 @@ const Payroll = () => {
   // Modals
   const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
   const [editingPayrollId, setEditingPayrollId] = useState<string | null>(null);
-  
+
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
 
@@ -723,8 +723,8 @@ const Payroll = () => {
 
   // Filtered Payroll Records for Selected Period: guaranteed strictly 1 row per employee
   const periodPayrollRecords = useMemo(() => {
-    const periodList = payrollRecords.filter(record => 
-      record.month === selectedMonth && 
+    const periodList = payrollRecords.filter(record =>
+      record.month === selectedMonth &&
       record.year === selectedYear
     );
     return deduplicatePayrollRecords(periodList).sort((a, b) =>
@@ -734,14 +734,14 @@ const Payroll = () => {
 
   const displayedPayroll = useMemo(() => {
     return periodPayrollRecords.filter(record => {
-      const matchesSearch = 
+      const matchesSearch =
         record.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         record.employee_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         record.designation.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesDept = departmentFilter === 'All' || record.department === departmentFilter;
       const matchesStatus = statusFilter === 'All' || record.payment_status === statusFilter;
-      
+
       return matchesSearch && matchesDept && matchesStatus;
     });
   }, [periodPayrollRecords, searchTerm, departmentFilter, statusFilter]);
@@ -758,8 +758,8 @@ const Payroll = () => {
 
     const totalWorkingDaysSum = periodPayrollRecords.reduce((acc, curr) => acc + curr.total_working_days, 0);
     const totalEffectiveDaysSum = periodPayrollRecords.reduce((acc, curr) => acc + curr.effective_days, 0);
-    const avgAttendance = totalWorkingDaysSum > 0 
-      ? ((totalEffectiveDaysSum / totalWorkingDaysSum) * 100).toFixed(1) 
+    const avgAttendance = totalWorkingDaysSum > 0
+      ? ((totalEffectiveDaysSum / totalWorkingDaysSum) * 100).toFixed(1)
       : '0.0';
 
     return {
@@ -784,7 +784,7 @@ const Payroll = () => {
   const calculatedSalaryDetails = useMemo(() => {
     const selectedEmp = employees.find(e => e.id === salaryFormData.employee_id);
     const fixed_salary = selectedEmp ? selectedEmp.fixed_salary : 0;
-    
+
     return {
       selectedEmp,
       ...calculatePayrollValues(
@@ -820,7 +820,7 @@ const Payroll = () => {
     } else {
       const targetEmpId = empId || (employees.length > 0 ? employees[0].id : '');
       // Check if this employee ALREADY has a payroll record for the selected month and year
-      const existing = payrollRecords.find(r => 
+      const existing = payrollRecords.find(r =>
         (r.employee_id === targetEmpId || r.employee_code === targetEmpId) &&
         r.month === selectedMonth &&
         r.year === selectedYear
@@ -864,7 +864,7 @@ const Payroll = () => {
 
   // Auto-detect existing record when changing employee in salary modal
   const handleEmployeeChangeInSalaryModal = (newEmpId: string) => {
-    const existing = payrollRecords.find(r => 
+    const existing = payrollRecords.find(r =>
       (r.employee_id === newEmpId || r.employee_code === newEmpId) &&
       r.month === salaryFormData.month &&
       r.year === salaryFormData.year
@@ -903,7 +903,7 @@ const Payroll = () => {
 
   // Auto-detect existing record when changing period in salary modal
   const handlePeriodChangeInSalaryModal = (newMonth: string, newYear: number) => {
-    const existing = payrollRecords.find(r => 
+    const existing = payrollRecords.find(r =>
       (r.employee_id === salaryFormData.employee_id || r.employee_code === salaryFormData.employee_id) &&
       r.month === newMonth &&
       r.year === newYear
@@ -956,7 +956,7 @@ const Payroll = () => {
     const calc = calculatedSalaryDetails;
 
     // Look for existing record: by editingPayrollId OR by (employee_id/code + month + year)
-    const existingIndex = payrollRecords.findIndex(item => 
+    const existingIndex = payrollRecords.findIndex(item =>
       (editingPayrollId && item.id === editingPayrollId) ||
       ((item.employee_id === selectedEmp.id || item.employee_code === selectedEmp.employee_code) &&
         item.month === salaryFormData.month &&
@@ -1052,7 +1052,7 @@ const Payroll = () => {
     if (emp) {
       setEditingEmployeeId(emp.id);
       const cleanSuffix = (emp.employee_code || emp.id || '').replace(/^(EMP|ASL)-?/i, '');
-      setEmployeeFormData({ 
+      setEmployeeFormData({
         ...emp,
         employee_code: `ASL-${cleanSuffix}`,
         photo_url: emp.photo_url || ''
@@ -1767,22 +1767,20 @@ const Payroll = () => {
       <div className="flex border-b border-slate-200">
         <button
           onClick={() => setActiveTab('payroll')}
-          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'payroll'
-              ? 'border-accent text-accent'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'payroll'
+            ? 'border-accent text-accent'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
         >
           <Calendar size={18} />
           <span>Monthly Payroll & Attendance ({periodPayrollRecords.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('employees')}
-          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'employees'
-              ? 'border-accent text-accent'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'employees'
+            ? 'border-accent text-accent'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
         >
           <Building2 size={18} />
           <span>Employees & Fixed Salaries ({employees.length})</span>
@@ -1930,7 +1928,7 @@ const Payroll = () => {
                     </tr>
                   ) : (
                     displayedPayroll.map((record) => {
-                      const matchingEmp = employees.find(e => 
+                      const matchingEmp = employees.find(e =>
                         (record.employee_id && (e.id === record.employee_id || e.employee_code === record.employee_id)) ||
                         (record.employee_code && (e.employee_code === record.employee_code || e.id === record.employee_code)) ||
                         (e.name && record.employee_name && e.name.trim().toLowerCase() === record.employee_name.trim().toLowerCase())
@@ -2029,168 +2027,166 @@ const Payroll = () => {
                             </div>
                           </td>
 
-                        {/* 2. Fixed Salary */}
-                        <td className="px-3 py-3.5 text-right font-medium text-slate-900 whitespace-nowrap">
-                          {formatNPR(record.fixed_salary)}
-                        </td>
+                          {/* 2. Fixed Salary */}
+                          <td className="px-3 py-3.5 text-right font-medium text-slate-900 whitespace-nowrap">
+                            {formatNPR(record.fixed_salary)}
+                          </td>
 
-                        {/* 3. Working Days */}
-                        <td className="px-2 py-3.5 text-center font-medium text-slate-700">
-                          <span className="px-2 py-0.5 bg-slate-100 rounded text-xs">
-                            {record.total_working_days}
-                          </span>
-                        </td>
-
-                        {/* 4. Present */}
-                        <td className="px-2 py-3.5 text-center">
-                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            {record.present_days}
-                          </span>
-                        </td>
-
-                        {/* 5. Half Day */}
-                        <td className="px-2 py-3.5 text-center">
-                          {record.half_days > 0 ? (
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="Two half-day absences = 1 absent day">
-                              {record.half_days} <span className="text-[10px] ml-0.5 opacity-75">(0.5x)</span>
+                          {/* 3. Working Days */}
+                          <td className="px-2 py-3.5 text-center font-medium text-slate-700">
+                            <span className="px-2 py-0.5 bg-slate-100 rounded text-xs">
+                              {record.total_working_days}
                             </span>
-                          ) : (
-                            <span className="text-slate-300 text-xs">0</span>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* 6. Absent */}
-                        <td className="px-2 py-3.5 text-center">
-                          {record.absent_days > 0 ? (
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-                              {record.absent_days}
+                          {/* 4. Present */}
+                          <td className="px-2 py-3.5 text-center">
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              {record.present_days}
                             </span>
-                          ) : (
-                            <span className="text-slate-300 text-xs">0</span>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* 7. Effective Days */}
-                        <td className="px-2 py-3.5 text-center font-bold text-slate-800">
-                          <div className="flex flex-col items-center">
-                            <span>{record.effective_days}</span>
-                            <span className="text-[10px] text-slate-400 font-normal">
-                              ({((record.effective_days / record.total_working_days) * 100).toFixed(0)}%)
-                            </span>
-                          </div>
-                        </td>
+                          {/* 5. Half Day */}
+                          <td className="px-2 py-3.5 text-center">
+                            {record.half_days > 0 ? (
+                              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="Two half-day absences = 1 absent day">
+                                {record.half_days} <span className="text-[10px] ml-0.5 opacity-75">(0.5x)</span>
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 text-xs">0</span>
+                            )}
+                          </td>
 
-                        {/* 8. Daily Rate */}
-                        <td className="px-3 py-3.5 text-right text-xs font-mono text-slate-600 whitespace-nowrap">
-                          {formatNPR(record.per_day_rate)}
-                        </td>
+                          {/* 6. Absent */}
+                          <td className="px-2 py-3.5 text-center">
+                            {record.absent_days > 0 ? (
+                              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                                {record.absent_days}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 text-xs">0</span>
+                            )}
+                          </td>
 
-                        {/* 9. Gross/Attendance Salary */}
-                        <td className="px-3 py-3.5 text-right font-medium text-slate-800 whitespace-nowrap">
-                          {formatNPR(record.attendance_salary)}
-                        </td>
+                          {/* 7. Effective Days */}
+                          <td className="px-2 py-3.5 text-center font-bold text-slate-800">
+                            <div className="flex flex-col items-center">
+                              <span>{record.effective_days}</span>
+                              <span className="text-[10px] text-slate-400 font-normal">
+                                ({((record.effective_days / record.total_working_days) * 100).toFixed(0)}%)
+                              </span>
+                            </div>
+                          </td>
 
-                        {/* 10. Allowances */}
-                        <td className="px-2 py-3.5 text-right text-xs whitespace-nowrap">
-                          {record.bonus_allowance > 0 ? (
-                            <span className="text-emerald-700 font-medium">+{formatNPR(record.bonus_allowance)}</span>
-                          ) : (
-                            <span className="text-slate-300">रु. 0</span>
-                          )}
-                        </td>
+                          {/* 8. Daily Rate */}
+                          <td className="px-3 py-3.5 text-right text-xs font-mono text-slate-600 whitespace-nowrap">
+                            {formatNPR(record.per_day_rate)}
+                          </td>
 
-                        {/* 11. Other Deductions */}
-                        <td className="px-2 py-3.5 text-right text-xs whitespace-nowrap">
-                          {record.deductions > 0 ? (
-                            <span className="text-red-600 font-medium">-{formatNPR(record.deductions)}</span>
-                          ) : (
-                            <span className="text-slate-300">रु. 0</span>
-                          )}
-                        </td>
+                          {/* 9. Gross/Attendance Salary */}
+                          <td className="px-3 py-3.5 text-right font-medium text-slate-800 whitespace-nowrap">
+                            {formatNPR(record.attendance_salary)}
+                          </td>
 
-                        {/* 12. TDS (1%) */}
-                        <td className="px-3 py-3.5 text-right text-xs font-mono text-red-600 font-medium whitespace-nowrap">
-                          -{formatNPR(record.tds_amount)}
-                        </td>
+                          {/* 10. Allowances */}
+                          <td className="px-2 py-3.5 text-right text-xs whitespace-nowrap">
+                            {record.bonus_allowance > 0 ? (
+                              <span className="text-emerald-700 font-medium">+{formatNPR(record.bonus_allowance)}</span>
+                            ) : (
+                              <span className="text-slate-300">रु. 0</span>
+                            )}
+                          </td>
 
-                        {/* 13. Net Payable */}
-                        <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                          <p className="font-extrabold text-emerald-700 text-sm leading-tight">
-                            {formatNPR(record.net_salary)}
-                          </p>
-                        </td>
+                          {/* 11. Other Deductions */}
+                          <td className="px-2 py-3.5 text-right text-xs whitespace-nowrap">
+                            {record.deductions > 0 ? (
+                              <span className="text-red-600 font-medium">-{formatNPR(record.deductions)}</span>
+                            ) : (
+                              <span className="text-slate-300">रु. 0</span>
+                            )}
+                          </td>
 
-                        {/* 14. Status */}
-                        <td className="px-2 py-3.5 text-center">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
-                            record.payment_status === 'Paid'
+                          {/* 12. TDS (1%) */}
+                          <td className="px-3 py-3.5 text-right text-xs font-mono text-red-600 font-medium whitespace-nowrap">
+                            -{formatNPR(record.tds_amount)}
+                          </td>
+
+                          {/* 13. Net Payable */}
+                          <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                            <p className="font-extrabold text-emerald-700 text-sm leading-tight">
+                              {formatNPR(record.net_salary)}
+                            </p>
+                          </td>
+
+                          {/* 14. Status */}
+                          <td className="px-2 py-3.5 text-center">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${record.payment_status === 'Paid'
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : record.payment_status === 'Approved'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-200'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              record.payment_status === 'Paid'
+                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                              }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${record.payment_status === 'Paid'
                                 ? 'bg-emerald-500'
                                 : record.payment_status === 'Approved'
-                                ? 'bg-blue-500'
-                                : 'bg-amber-500'
-                            }`} />
-                            {record.payment_status}
-                          </span>
-                        </td>
+                                  ? 'bg-blue-500'
+                                  : 'bg-amber-500'
+                                }`} />
+                              {record.payment_status}
+                            </span>
+                          </td>
 
-                        {/* 15. Actions */}
-                        <td className="px-3 py-3.5 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            {/* Payslip */}
-                            <button
-                              onClick={() => handleOpenPayslip(record)}
-                              title={`View & print salary slip for ${record.employee_name}`}
-                              aria-label={`View and print salary slip for ${record.employee_name}`}
-                              className="p-1.5 text-slate-500 hover:text-accent hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                            >
-                              <Printer size={15} />
-                            </button>
-
-                            {/* Pay Salary button (if not already paid) */}
-                            {record.payment_status !== 'Paid' && (
+                          {/* 15. Actions */}
+                          <td className="px-3 py-3.5 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {/* Payslip */}
                               <button
-                                onClick={() => handleOpenPayModal(record)}
-                                title="Mark Salary as Disbursed / Paid"
-                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                                onClick={() => handleOpenPayslip(record)}
+                                title={`View & print salary slip for ${record.employee_name}`}
+                                aria-label={`View and print salary slip for ${record.employee_name}`}
+                                className="p-1.5 text-slate-500 hover:text-accent hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                               >
-                                <CreditCard size={15} />
+                                <Printer size={15} />
                               </button>
-                            )}
 
-                            {/* Quick Mark Full Present */}
-                            {record.payment_status !== 'Paid' && record.effective_days < record.total_working_days && (
+                              {/* Pay Salary button (if not already paid) */}
+                              {record.payment_status !== 'Paid' && (
+                                <button
+                                  onClick={() => handleOpenPayModal(record)}
+                                  title="Mark Salary as Disbursed / Paid"
+                                  className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  <CreditCard size={15} />
+                                </button>
+                              )}
+
+                              {/* Quick Mark Full Present */}
+                              {record.payment_status !== 'Paid' && record.effective_days < record.total_working_days && (
+                                <button
+                                  onClick={() => handleMarkFullPresent(record)}
+                                  title="Quick mark 100% full present (auto-recalculates salary and TDS)"
+                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  <Check size={15} />
+                                </button>
+                              )}
+
+                              {/* Edit */}
                               <button
-                                onClick={() => handleMarkFullPresent(record)}
-                                title="Quick mark 100% full present (auto-recalculates salary and TDS)"
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                onClick={() => handleOpenSalaryModal(record)}
+                                title="Edit Attendance & Salary"
+                                className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                               >
-                                <Check size={15} />
+                                <Edit size={15} />
                               </button>
-                            )}
 
-                            {/* Edit */}
-                            <button
-                              onClick={() => handleOpenSalaryModal(record)}
-                              title="Edit Attendance & Salary"
-                              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                            >
-                              <Edit size={15} />
-                            </button>
-
-                            {/* Delete */}
-                            <SlideToDelete onDelete={() => handleDeleteClick(record.id, 'payroll')} label="Slide to delete" />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
+                              {/* Delete */}
+                              <SlideToDelete onDelete={() => handleDeleteClick(record.id, 'payroll')} label="Slide to delete" />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -2248,11 +2244,10 @@ const Payroll = () => {
                   <button
                     type="button"
                     onClick={() => setEmployeeViewMode('cards')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      employeeViewMode === 'cards'
-                        ? 'bg-white text-indigo-700 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${employeeViewMode === 'cards'
+                      ? 'bg-white text-indigo-700 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                      }`}
                     title="Official Digital Employee ID Cards"
                   >
                     <QrCode size={13} className={employeeViewMode === 'cards' ? 'text-indigo-600' : 'text-slate-400'} />
@@ -2261,11 +2256,10 @@ const Payroll = () => {
                   <button
                     type="button"
                     onClick={() => setEmployeeViewMode('detailed')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      employeeViewMode === 'detailed'
-                        ? 'bg-white text-emerald-700 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${employeeViewMode === 'detailed'
+                      ? 'bg-white text-emerald-700 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                      }`}
                     title="Detailed Salary Benchmark View"
                   >
                     <CreditCard size={13} className={employeeViewMode === 'detailed' ? 'text-emerald-600' : 'text-slate-400'} />
@@ -2274,11 +2268,10 @@ const Payroll = () => {
                   <button
                     type="button"
                     onClick={() => setEmployeeViewMode('table')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      employeeViewMode === 'table'
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${employeeViewMode === 'table'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                      }`}
                     title="List Table View"
                   >
                     <List size={13} />
@@ -2464,7 +2457,7 @@ const Payroll = () => {
                                     <img
                                       src={photoSrc}
                                       alt={emp.name}
-                                      style={{ 
+                                      style={{
                                         imageRendering: '-webkit-optimize-contrast',
                                         filter: 'contrast(1.07) brightness(1.02) saturate(1.04)'
                                       }}
@@ -2610,11 +2603,10 @@ const Payroll = () => {
                             </div>
 
                             {/* Status Pill */}
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 shadow-2xs ${
-                              emp.is_active
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                                : 'bg-slate-100 text-slate-600 border border-slate-200'
-                            }`}>
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 shadow-2xs ${emp.is_active
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                              : 'bg-slate-100 text-slate-600 border border-slate-200'
+                              }`}>
                               <span className={`w-1.5 h-1.5 rounded-full ${emp.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                               {emp.is_active ? 'Active' : 'Inactive'}
                             </span>
@@ -2772,7 +2764,7 @@ const Payroll = () => {
                                   <img
                                     src={photoSrc}
                                     alt={emp.name}
-                                    style={{ 
+                                    style={{
                                       imageRendering: '-webkit-optimize-contrast',
                                       filter: 'contrast(1.07) brightness(1.02) saturate(1.04)'
                                     }}
@@ -2888,9 +2880,8 @@ const Payroll = () => {
 
                           {/* Status */}
                           <td className="px-4 py-4 text-center">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
-                              emp.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'
-                            }`}>
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${emp.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'
+                              }`}>
                               {emp.is_active ? 'Active' : 'Inactive'}
                             </span>
                           </td>
@@ -2949,7 +2940,7 @@ const Payroll = () => {
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsSalaryModalOpen(false)}
                 className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 cursor-pointer"
@@ -3306,7 +3297,7 @@ const Payroll = () => {
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsEmployeeModalOpen(false)}
                 className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 cursor-pointer"
@@ -3360,7 +3351,7 @@ const Payroll = () => {
                         <span className="text-[9px] font-bold tracking-wider">PREPARING...</span>
                       </div>
                     )}
-                    <label 
+                    <label
                       className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full shadow-md hover:bg-indigo-700 transition-colors cursor-pointer border-2 border-white"
                       title="Upload custom photo"
                     >
@@ -3566,11 +3557,10 @@ const Payroll = () => {
                       key={amt}
                       type="button"
                       onClick={() => setEmployeeFormData({ ...employeeFormData, fixed_salary: amt })}
-                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer ${
-                        employeeFormData.fixed_salary === amt
-                          ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
-                          : 'bg-white hover:bg-emerald-100/60 text-slate-700 border border-slate-200 hover:border-emerald-300'
-                      }`}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer ${employeeFormData.fixed_salary === amt
+                        ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
+                        : 'bg-white hover:bg-emerald-100/60 text-slate-700 border border-slate-200 hover:border-emerald-300'
+                        }`}
                     >
                       रु. {(amt / 1000)}k
                     </button>
@@ -3681,7 +3671,7 @@ const Payroll = () => {
 
               {/* Section 4: Official Appointment Date in Nepali BS */}
               <div>
-                <NepaliDatePicker 
+                <NepaliDatePicker
                   label="Joining Date (नियुक्ति मिति)"
                   value={employeeFormData.joining_date || getTodayBsDate()}
                   onChange={(val) => setEmployeeFormData({ ...employeeFormData, joining_date: val })}
@@ -3733,7 +3723,7 @@ const Payroll = () => {
                   <p className="text-xs text-slate-500">Record salary disbursement and payment reference</p>
                 </div>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsPayModalOpen(false)}
                 className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 cursor-pointer"
@@ -3748,7 +3738,7 @@ const Payroll = () => {
                 <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">Paying To</p>
                 <p className="text-base font-bold text-slate-900">{payingRecord.employee_name}</p>
                 <p className="text-xs text-slate-500">{payingRecord.designation} • {payingRecord.department}</p>
-                
+
                 <div className="mt-3 pt-3 border-t border-slate-200/80 flex justify-between items-center">
                   <span className="text-xs text-slate-600 font-medium">Net Payable (After 1% TDS):</span>
                   <span className="text-xl font-extrabold text-emerald-700 font-mono">{formatNPR(payingRecord.net_salary)}</span>
@@ -3756,7 +3746,7 @@ const Payroll = () => {
               </div>
 
               <div>
-                <NepaliDatePicker 
+                <NepaliDatePicker
                   label="Payment Date (भुक्तानी मिति)"
                   value={paymentFormData.payment_date}
                   onChange={(val) => setPaymentFormData({ ...paymentFormData, payment_date: val })}
@@ -3867,7 +3857,7 @@ const Payroll = () => {
                 try {
                   const raw = localStorage.getItem('aslenix_company_settings');
                   if (raw) comp = JSON.parse(raw);
-                } catch (e) {}
+                } catch (e) { }
                 const compName = comp?.company_name || 'ASLENIX TECH AND SOLUTION';
                 const compAddr = comp?.address || 'Budhanagar, Kathmandu, Nepal';
                 const compPhone = comp?.phone || '+977-1-4400000';
@@ -3898,7 +3888,7 @@ const Payroll = () => {
 
               {/* Employee Meta Grid */}
               {(() => {
-                const payslipEmp = employees.find(e => 
+                const payslipEmp = employees.find(e =>
                   (activePayslip.employee_id && (e.id === activePayslip.employee_id || e.employee_code === activePayslip.employee_id)) ||
                   (activePayslip.employee_code && (e.employee_code === activePayslip.employee_code || e.id === activePayslip.employee_code)) ||
                   (e.name && activePayslip.employee_name && e.name.trim().toLowerCase() === activePayslip.employee_name.trim().toLowerCase())
@@ -4096,7 +4086,7 @@ const Payroll = () => {
                   try {
                     const raw = localStorage.getItem('aslenix_company_settings');
                     if (raw) return JSON.parse(raw).company_name || 'ASLENIX TECH AND SOLUTION';
-                  } catch (e) {}
+                  } catch (e) { }
                   return 'ASLENIX TECH AND SOLUTION';
                 })()} Finance Management System.
               </p>
@@ -4107,11 +4097,11 @@ const Payroll = () => {
 
       {/* MODAL 4: FULL RESOLUTION HD PHOTO LIGHTBOX */}
       {lightboxPhoto.isOpen && lightboxPhoto.emp && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
           onClick={() => setLightboxPhoto({ isOpen: false, emp: null, photoSrc: '' })}
         >
-          <div 
+          <div
             className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col ring-1 ring-slate-900/10"
             onClick={(e) => e.stopPropagation()}
           >
@@ -4226,11 +4216,11 @@ const Payroll = () => {
 
       {/* MODAL 5: OFFICIAL DIGITAL EMPLOYEE ID BADGE LIGHTBOX & PRINT */}
       {idCardModalEmp && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
           onClick={() => setIdCardModalEmp(null)}
         >
-          <div 
+          <div
             className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 p-6 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -4291,9 +4281,8 @@ const Payroll = () => {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
         title={`Delete ${itemToDelete?.type === 'payroll' ? 'Salary Record' : 'Employee'}`}
-        message={`Are you sure you want to delete this ${
-          itemToDelete?.type === 'payroll' ? 'payroll entry' : 'employee record'
-        }? This action cannot be undone.`}
+        message={`Are you sure you want to delete this ${itemToDelete?.type === 'payroll' ? 'payroll entry' : 'employee record'
+          }? This action cannot be undone.`}
         confirmText="Delete"
         isDanger={true}
       />

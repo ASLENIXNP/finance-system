@@ -35,6 +35,8 @@ export interface CompanySettingsData {
   email: string;
   website: string;
   logo_url: string;
+  authorized_signature?: string;
+  authorized_signatory_name?: string;
   bank_name: string;
   bank_account_name: string;
   bank_account_no: string;
@@ -59,6 +61,8 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettingsData = {
   email: 'aslenixtech@gmail.com',
   website: 'www.aslenix.tech',
   logo_url: '/logo.png',
+  authorized_signature: '',
+  authorized_signatory_name: '',
   bank_name: 'Global IME Bank',
   bank_account_name: 'ASLENIX TECH & SOLUTION',
   bank_account_no: '01234567890123',
@@ -100,8 +104,10 @@ const CompanySettings: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const [isDraggingSignature, setIsDraggingSignature] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
 
   // Load from Supabase on mount if available
   useEffect(() => {
@@ -166,8 +172,8 @@ const CompanySettings: React.FC = () => {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  // Optimize and process uploaded logo using HTML5 Canvas (max 512x512, crisp web quality)
-  const processImageFile = (file: File) => {
+  // Optimize and process uploaded logo/signature using HTML5 Canvas (max 512x512, crisp web quality)
+  const processImageFile = (file: File, targetField: 'logo_url' | 'authorized_signature' = 'logo_url') => {
     if (!file.type.startsWith('image/')) {
       alert('Please upload a valid image file (PNG, JPG, SVG, or WebP).');
       return;
@@ -203,7 +209,7 @@ const CompanySettings: React.FC = () => {
           ctx.drawImage(img, 0, 0, width, height);
 
           const dataUrl = canvas.toDataURL('image/png', 0.95);
-          handleChange('logo_url', dataUrl);
+          handleChange(targetField, dataUrl);
         }
       };
       img.src = event.target?.result as string;
@@ -214,7 +220,14 @@ const CompanySettings: React.FC = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      processImageFile(file);
+      processImageFile(file, 'logo_url');
+    }
+  };
+
+  const handleSignatureSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file, 'authorized_signature');
     }
   };
 
@@ -223,7 +236,16 @@ const CompanySettings: React.FC = () => {
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      processImageFile(file);
+      processImageFile(file, 'logo_url');
+    }
+  };
+
+  const handleSignatureDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingSignature(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processImageFile(file, 'authorized_signature');
     }
   };
 
@@ -1010,6 +1032,88 @@ const CompanySettings: React.FC = () => {
               >
                 <Upload size={14} />
                 {formData.logo_url ? 'Choose New Logo' : 'Select Image File'}
+              </button>
+            </div>
+
+            {/* Authorized Signature Upload Card (Fixed on Invoices) */}
+            <div className="bg-white p-6 rounded-3xl shadow-xs border border-slate-200/80 flex flex-col items-center">
+              <div className="w-full flex items-center justify-between mb-4">
+                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <FileText size={16} className="text-slate-700" /> Authorized Signature
+                </h4>
+                {formData.authorized_signature && (
+                  <button
+                    type="button"
+                    onClick={() => handleChange('authorized_signature', '')}
+                    className="text-xs text-rose-600 hover:text-rose-800 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Remove authorized signature"
+                  >
+                    <Trash2 size={12} /> Clear
+                  </button>
+                )}
+              </div>
+
+              <input
+                type="file"
+                ref={signatureInputRef}
+                onChange={handleSignatureSelect}
+                accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                className="hidden"
+              />
+
+              <div
+                onClick={() => signatureInputRef.current?.click()}
+                onDrop={handleSignatureDrop}
+                onDragOver={(e) => { e.preventDefault(); setIsDraggingSignature(true); }}
+                onDragLeave={() => setIsDraggingSignature(false)}
+                className={`w-full h-32 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all duration-200 group relative overflow-hidden ${
+                  isDraggingSignature
+                    ? 'border-slate-950 bg-slate-100 scale-102'
+                    : 'border-slate-300 bg-slate-50/70 hover:bg-slate-100/70 hover:border-slate-400'
+                }`}
+                title="Click or drag a signature image here"
+              >
+                {formData.authorized_signature ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center">
+                    <img
+                      src={formData.authorized_signature}
+                      alt="Authorized Signature Preview"
+                      className="max-h-20 max-w-full object-contain group-hover:opacity-40 transition-opacity"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/60 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl backdrop-blur-xs">
+                      <Upload size={20} className="mb-1" />
+                      <span className="text-xs font-bold">Replace Signature</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <Upload size={20} className="mb-1.5 text-slate-400 group-hover:text-slate-900 transition-colors" />
+                    <span className="text-xs font-bold text-slate-700">Upload Authorized Signature</span>
+                    <span className="text-[11px] text-slate-400 mt-0.5">Transparent PNG recommended</span>
+                  </>
+                )}
+              </div>
+
+              <div className="w-full mt-3">
+                <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Signatory Name / Designation (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.authorized_signatory_name || ''}
+                  onChange={(e) => handleChange('authorized_signatory_name', e.target.value)}
+                  placeholder="e.g. Suwam Subedi — Managing Director"
+                  className="w-full px-3 py-2 bg-slate-50/70 focus:bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => signatureInputRef.current?.click()}
+                className="w-full mt-3 py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              >
+                <Upload size={14} />
+                {formData.authorized_signature ? 'Change Signature Image' : 'Select Signature File'}
               </button>
             </div>
 
