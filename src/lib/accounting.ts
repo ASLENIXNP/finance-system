@@ -127,53 +127,60 @@ export interface TaxCalculationResult {
 export const calculateTaxBreakdown = (
   lines: TaxCalculationLine[],
   isVatRegistered: boolean = true,
-  invoiceDiscount: number = 0
+  invoiceDiscount: number = 0,
+  vatRate: number = 13
 ): TaxCalculationResult => {
   let grossSubtotal = 0;
   let totalLineDiscount = 0;
   let taxableSubtotal = 0;
   let exemptSubtotal = 0;
   let zeroRatedSubtotal = 0;
-  let vatAmount = 0;
 
   for (const line of lines) {
-    const lineGross = roundToTwoDecimals(line.quantity * line.rate);
-    const lineDiscount = Math.min(lineGross, roundToTwoDecimals(line.discount || 0));
-    const lineNet = Math.max(0, lineGross - lineDiscount);
+    const lineGross = roundToTwoDecimals((Number(line.quantity) || 0) * (Number(line.rate) || 0));
+    const lineDiscount = Math.min(lineGross, Math.max(0, roundToTwoDecimals(Number(line.discount) || 0)));
+    const lineNet = Math.max(0, roundToTwoDecimals(lineGross - lineDiscount));
 
-    grossSubtotal += lineGross;
-    totalLineDiscount += lineDiscount;
+    grossSubtotal = roundToTwoDecimals(grossSubtotal + lineGross);
+    totalLineDiscount = roundToTwoDecimals(totalLineDiscount + lineDiscount);
 
     if (!isVatRegistered || line.taxClassification === 'Exempt') {
-      exemptSubtotal += lineNet;
+      exemptSubtotal = roundToTwoDecimals(exemptSubtotal + lineNet);
     } else if (line.taxClassification === 'Zero-Rated') {
-      zeroRatedSubtotal += lineNet;
+      zeroRatedSubtotal = roundToTwoDecimals(zeroRatedSubtotal + lineNet);
     } else {
-      // Taxable at 13% (or custom)
-      const vatRate = line.customVatRate !== undefined ? line.customVatRate : 13;
-      taxableSubtotal += lineNet;
-      vatAmount += roundToTwoDecimals(lineNet * (vatRate / 100));
+      taxableSubtotal = roundToTwoDecimals(taxableSubtotal + lineNet);
     }
   }
 
   // Apply invoice-level overall discount proportionally if present
-  const totalDiscount = roundToTwoDecimals(totalLineDiscount + (invoiceDiscount || 0));
-  if (invoiceDiscount > 0 && taxableSubtotal > 0) {
-    const proportion = Math.min(1, invoiceDiscount / (taxableSubtotal + exemptSubtotal + zeroRatedSubtotal));
-    const taxDiscount = roundToTwoDecimals(taxableSubtotal * proportion);
-    taxableSubtotal = Math.max(0, taxableSubtotal - taxDiscount);
-    vatAmount = roundToTwoDecimals(taxableSubtotal * 0.13);
+  const netBeforeInvoiceDiscount = roundToTwoDecimals(taxableSubtotal + exemptSubtotal + zeroRatedSubtotal);
+  const safeInvoiceDiscount = Math.min(netBeforeInvoiceDiscount, Math.max(0, roundToTwoDecimals(Number(invoiceDiscount) || 0)));
+  const totalDiscount = roundToTwoDecimals(totalLineDiscount + safeInvoiceDiscount);
+
+  if (safeInvoiceDiscount > 0 && netBeforeInvoiceDiscount > 0) {
+    const ratio = safeInvoiceDiscount / netBeforeInvoiceDiscount;
+    const taxDiscount = roundToTwoDecimals(taxableSubtotal * ratio);
+    const exemptDiscount = roundToTwoDecimals(exemptSubtotal * ratio);
+    const zeroDiscount = roundToTwoDecimals(safeInvoiceDiscount - taxDiscount - exemptDiscount);
+
+    taxableSubtotal = Math.max(0, roundToTwoDecimals(taxableSubtotal - taxDiscount));
+    exemptSubtotal = Math.max(0, roundToTwoDecimals(exemptSubtotal - exemptDiscount));
+    zeroRatedSubtotal = Math.max(0, roundToTwoDecimals(zeroRatedSubtotal - zeroDiscount));
   }
 
+  // Apply VAT only once at the end on the final taxable amount
+  const effectiveVatRate = isVatRegistered ? Math.max(0, Number(vatRate) || 0) : 0;
+  const vatAmount = roundToTwoDecimals(taxableSubtotal * (effectiveVatRate / 100));
   const grandTotal = roundToTwoDecimals(taxableSubtotal + exemptSubtotal + zeroRatedSubtotal + vatAmount);
 
   return {
-    grossSubtotal: roundToTwoDecimals(grossSubtotal),
-    totalDiscount: roundToTwoDecimals(totalDiscount),
-    taxableAmount: roundToTwoDecimals(taxableSubtotal),
-    exemptAmount: roundToTwoDecimals(exemptSubtotal),
-    zeroRatedAmount: roundToTwoDecimals(zeroRatedSubtotal),
-    vatAmount: roundToTwoDecimals(vatAmount),
+    grossSubtotal,
+    totalDiscount,
+    taxableAmount: taxableSubtotal,
+    exemptAmount: exemptSubtotal,
+    zeroRatedAmount: zeroRatedSubtotal,
+    vatAmount,
     grandTotal,
   };
 };

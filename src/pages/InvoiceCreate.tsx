@@ -35,6 +35,7 @@ import {
 import { getStoredCompanySettings, type CompanySettingsData } from './CompanySettings';
 import { 
   formatNPR, 
+  roundToTwoDecimals,
   numberToWordsNPR, 
   isValidNepalPAN, 
   calculateTaxBreakdown, 
@@ -85,6 +86,7 @@ export interface StoredInvoice {
   taxable_amount: number;
   exempt_amount: number;
   total_tax: number;
+  vat_rate?: number;
   grand_total: number;
   amount_paid: number;
   balance_due: number;
@@ -263,6 +265,7 @@ export const InvoiceCreate: React.FC = () => {
     return toBsDateString(d);
   });
   const [isVatInvoice, setIsVatInvoice] = useState(true);
+  const [vatRate, setVatRate] = useState<number>(() => companySettings.default_tax_rate ?? 13);
   const [overallDiscount, setOverallDiscount] = useState(0);
   const [advancePaymentAmount, setAdvancePaymentAmount] = useState(0);
 
@@ -475,8 +478,8 @@ export const InvoiceCreate: React.FC = () => {
   }, [items]);
 
   const taxBreakdown = useMemo(() => {
-    return calculateTaxBreakdown(taxLines, isVatInvoice, Number(overallDiscount) || 0);
-  }, [taxLines, isVatInvoice, overallDiscount]);
+    return calculateTaxBreakdown(taxLines, isVatInvoice, Number(overallDiscount) || 0, vatRate);
+  }, [taxLines, isVatInvoice, overallDiscount, vatRate]);
 
   // Items manipulation
   const addItem = () => {
@@ -522,7 +525,9 @@ export const InvoiceCreate: React.FC = () => {
     setInvoiceDate(invoice.invoice_date_bs);
     setDueDate(invoice.due_date ? toBsDateString(invoice.due_date) : invoice.invoice_date_bs);
     setIsVatInvoice(invoice.is_vat_invoice);
-    setOverallDiscount(invoice.total_discount || 0);
+    setVatRate(invoice.vat_rate ?? (invoice.is_vat_invoice ? (companySettings.default_tax_rate ?? 13) : 0));
+    const itemDiscountsSum = invoice.items.reduce((sum, item) => sum + (Number(item.discount) || 0), 0);
+    setOverallDiscount(Math.max(0, roundToTwoDecimals((invoice.total_discount || 0) - itemDiscountsSum)));
     setAdvancePaymentAmount(invoice.amount_paid || 0);
     setCustomerInfo({
       name: invoice.customer_name,
@@ -597,9 +602,10 @@ export const InvoiceCreate: React.FC = () => {
       taxable_amount: taxBreakdown.taxableAmount,
       exempt_amount: taxBreakdown.exemptAmount,
       total_tax: taxBreakdown.vatAmount,
+      vat_rate: isVatInvoice ? vatRate : 0,
       grand_total: taxBreakdown.grandTotal,
       amount_paid: totalPaid,
-      balance_due: Math.max(0, taxBreakdown.grandTotal - totalPaid),
+      balance_due: roundToTwoDecimals(Math.max(0, taxBreakdown.grandTotal - totalPaid)),
       status: totalPaid
         ? ((totalPaid >= taxBreakdown.grandTotal) ? 'Paid' : 'Partially Paid')
         : 'Unpaid',
@@ -1624,18 +1630,35 @@ export const InvoiceCreate: React.FC = () => {
             {/* Totals Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
               <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Invoice-Level Additional Discount (Rs.)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={overallDiscount}
-                    onChange={(e) => setOverallDiscount(Number(e.target.value))}
-                    className="w-48 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold"
-                    placeholder="0.00"
-                  />
+                <div className="flex flex-wrap gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      Invoice-Level Discount (Rs.)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={overallDiscount}
+                      onChange={(e) => setOverallDiscount(Number(e.target.value))}
+                      className="w-44 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      VAT Rate (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="any"
+                      disabled={!isVatInvoice}
+                      value={isVatInvoice ? vatRate : 0}
+                      onChange={(e) => setVatRate(Math.max(0, Number(e.target.value) || 0))}
+                      className="w-28 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold disabled:opacity-50"
+                    />
+                  </div>
                 </div>
                 <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200 text-xs">
                   <label className="block font-bold uppercase tracking-wider text-emerald-800 mb-1">
@@ -1661,15 +1684,15 @@ export const InvoiceCreate: React.FC = () => {
 
               <div className="space-y-2 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 text-xs">
                 <div className="flex justify-between text-slate-600">
-                  <span>Gross Subtotal:</span>
+                  <span>Subtotal:</span>
                   <span className="font-mono font-semibold text-slate-900">{formatNPR(taxBreakdown.grossSubtotal)}</span>
                 </div>
-                {taxBreakdown.totalDiscount > 0 && (
-                  <div className="flex justify-between text-emerald-600">
-                    <span>Total Discount:</span>
-                    <span className="font-mono font-semibold">-{formatNPR(taxBreakdown.totalDiscount)}</span>
-                  </div>
-                )}
+                <div className="flex justify-between text-emerald-600">
+                  <span>Discount:</span>
+                  <span className="font-mono font-semibold">
+                    {taxBreakdown.totalDiscount > 0 ? `-${formatNPR(taxBreakdown.totalDiscount)}` : formatNPR(0)}
+                  </span>
+                </div>
                 {taxBreakdown.exemptAmount > 0 && (
                   <div className="flex justify-between text-slate-600">
                     <span>Non-Taxable / Exempt Sales:</span>
@@ -1681,27 +1704,25 @@ export const InvoiceCreate: React.FC = () => {
                   <span className="font-mono font-semibold text-slate-900">{formatNPR(taxBreakdown.taxableAmount)}</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
-                  <span>13% Value Added Tax (१३% मू.अ.कर):</span>
+                  <span>VAT ({isVatInvoice ? vatRate : 0}%):</span>
                   <span className="font-mono font-bold text-purple-700">{formatNPR(taxBreakdown.vatAmount)}</span>
                 </div>
                 <div className="pt-2 border-t border-slate-300 flex justify-between items-baseline text-sm font-bold text-slate-900">
-                  <span>Grand Total (कुल जम्मा):</span>
+                  <span>GRAND TOTAL (कुल जम्मा):</span>
                   <span className="font-mono text-base font-black text-slate-950">{formatNPR(taxBreakdown.grandTotal)}</span>
                 </div>
-                {advancePaymentAmount > 0 && (
-                  <>
-                    <div className="flex justify-between text-emerald-700 font-bold pt-1">
-                      <span>Total Advance Received:</span>
-                      <span className="font-mono">-{formatNPR(advancePaymentAmount)}</span>
-                    </div>
-                    <div className="flex justify-between text-rose-700 font-bold">
-                      <span>Balance Due:</span>
-                      <span className="font-mono">
-                        {formatNPR(Math.max(0, taxBreakdown.grandTotal - advancePaymentAmount))}
-                      </span>
-                    </div>
-                  </>
-                )}
+                <div className="flex justify-between text-emerald-700 font-bold pt-1">
+                  <span>Advance / Amount Received:</span>
+                  <span className="font-mono">
+                    {advancePaymentAmount > 0 ? `-${formatNPR(advancePaymentAmount)}` : formatNPR(0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-rose-700 font-bold">
+                  <span>BALANCE DUE:</span>
+                  <span className="font-mono">
+                    {formatNPR(roundToTwoDecimals(Math.max(0, taxBreakdown.grandTotal - advancePaymentAmount)))}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1942,10 +1963,9 @@ export const InvoiceCreate: React.FC = () => {
                       <th className="py-2.5 px-3 text-center w-10">S.N.</th>
                       <th className="py-2.5 px-3">Description of Goods / Services</th>
                       <th className="py-2.5 px-2 text-center w-14">Qty</th>
-                      <th className="py-2.5 px-3 text-right w-24">Rate (Rs)</th>
-                      <th className="py-2.5 px-3 text-right w-20">Disc (Rs)</th>
-                      <th className="py-2.5 px-2 text-center w-20">Tax</th>
-                      <th className="py-2.5 px-3 text-right w-28">Amount (Rs)</th>
+                      <th className="py-2.5 px-3 text-right w-28">Rate (Rs)</th>
+                      <th className="py-2.5 px-3 text-right w-24">Disc (Rs)</th>
+                      <th className="py-2.5 px-3 text-right w-32">Amount (Rs)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700 text-xs">
@@ -1961,9 +1981,6 @@ export const InvoiceCreate: React.FC = () => {
                           <td className="py-3 px-2 text-center align-top font-mono">{item.qty}</td>
                           <td className="py-3 px-3 text-right align-top font-mono text-[11px] whitespace-nowrap">{formatNPR(item.rate)}</td>
                           <td className="py-3 px-3 text-right align-top font-mono text-slate-500 text-[11px] whitespace-nowrap">{formatNPR(item.discount)}</td>
-                          <td className="py-3 px-2 text-center align-top text-[11px] font-semibold text-purple-700">
-                            {item.taxClassification === 'Exempt' ? 'Exempt' : `${item.tax}%`}
-                          </td>
                           <td className="py-3 px-3 text-right font-bold text-slate-900 font-mono text-xs align-top whitespace-nowrap">
                             {formatNPR(lineNet)}
                           </td>
@@ -2017,15 +2034,15 @@ export const InvoiceCreate: React.FC = () => {
                   <div className="w-full max-w-[300px] space-y-1.5 text-xs">
                     <div className="flex justify-between text-slate-600">
                       <span>Subtotal (जम्मा):</span>
-                        <span className="font-semibold text-slate-900 font-mono whitespace-nowrap shrink-0">{formatNPR(activeDisplayInvoice.subtotal)}</span>
+                      <span className="font-semibold text-slate-900 font-mono whitespace-nowrap shrink-0">{formatNPR(activeDisplayInvoice.subtotal)}</span>
                     </div>
 
-                    {activeDisplayInvoice.total_discount > 0 && (
-                      <div className="flex justify-between text-emerald-600">
-                        <span>Total Discount (छुट):</span>
-                        <span className="font-semibold font-mono whitespace-nowrap shrink-0">-{formatNPR(activeDisplayInvoice.total_discount)}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between text-emerald-600">
+                      <span>Discount (छुट):</span>
+                      <span className="font-semibold font-mono whitespace-nowrap shrink-0">
+                        {activeDisplayInvoice.total_discount > 0 ? `-${formatNPR(activeDisplayInvoice.total_discount)}` : formatNPR(0)}
+                      </span>
+                    </div>
 
                     {activeDisplayInvoice.exempt_amount > 0 && (
                       <div className="flex justify-between text-slate-600">
@@ -2040,30 +2057,32 @@ export const InvoiceCreate: React.FC = () => {
                     </div>
 
                     <div className="flex justify-between text-slate-600">
-                      <span>13% VAT (१३% मू.अ.कर):</span>
+                      <span>
+                        VAT ({activeDisplayInvoice.is_vat_invoice
+                          ? (activeDisplayInvoice.vat_rate ?? (activeDisplayInvoice.taxable_amount > 0 ? roundToTwoDecimals((activeDisplayInvoice.total_tax / activeDisplayInvoice.taxable_amount) * 100) : 13))
+                          : 0}%):
+                      </span>
                       <span className="font-bold text-purple-700 font-mono whitespace-nowrap shrink-0">{formatNPR(activeDisplayInvoice.total_tax)}</span>
                     </div>
 
                     <div className="border-t-2 border-slate-900 pt-2 mt-1.5 flex justify-between items-baseline">
                       <span className="text-sm font-black text-slate-900 uppercase">
-                        Grand Total (कुल जम्मा):
+                        GRAND TOTAL (कुल जम्मा):
                       </span>
                       <span className="text-lg font-black text-slate-950 font-mono whitespace-nowrap shrink-0">
                         {formatNPR(activeDisplayInvoice.grand_total)}
                       </span>
                     </div>
-                    {activeDisplayInvoice.amount_paid > 0 && (
-                      <>
-                        <div className="flex justify-between text-emerald-700 font-bold pt-1">
-                          <span>Advance / Amount Received:</span>
-                          <span className="font-mono whitespace-nowrap">-{formatNPR(activeDisplayInvoice.amount_paid)}</span>
-                        </div>
-                        <div className="flex justify-between text-rose-700 font-bold">
-                          <span>Balance Due:</span>
-                          <span className="font-mono whitespace-nowrap">{formatNPR(activeDisplayInvoice.balance_due)}</span>
-                        </div>
-                      </>
-                    )}
+                    <div className="flex justify-between text-emerald-700 font-bold pt-1">
+                      <span>Advance / Amount Received:</span>
+                      <span className="font-mono whitespace-nowrap">
+                        {activeDisplayInvoice.amount_paid > 0 ? `-${formatNPR(activeDisplayInvoice.amount_paid)}` : formatNPR(0)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-rose-700 font-bold">
+                      <span>BALANCE DUE:</span>
+                      <span className="font-mono whitespace-nowrap">{formatNPR(activeDisplayInvoice.balance_due)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2076,17 +2095,17 @@ export const InvoiceCreate: React.FC = () => {
                     : 'pt-16 sm:pt-20 print:pt-14'
                 }`}
               >
-                <div className="text-left w-56">
+                <div className="text-left w-72">
                   {companySettings.authorized_signature && (
-                    <div className="mb-1.5 h-12 flex items-end">
+                    <div className="mb-2 h-24 sm:h-28 flex items-end">
                       <img
                         src={companySettings.authorized_signature}
                         alt="Authorized Signature"
-                        className="max-h-12 max-w-[170px] object-contain"
+                        className="max-h-24 sm:max-h-28 max-w-[260px] w-auto object-contain contrast-125"
                       />
                     </div>
                   )}
-                  <div className="border-t border-slate-400 w-44 mb-2"></div>
+                  <div className="border-t border-slate-400 w-60 mb-2"></div>
                   <p className="text-xs font-bold text-slate-900">Authorized Signature</p>
                   {companySettings.authorized_signatory_name && (
                     <p className="text-[10px] font-semibold text-slate-700">{companySettings.authorized_signatory_name}</p>

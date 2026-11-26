@@ -184,7 +184,7 @@ const CompanySettings: React.FC = () => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_DIM = 512;
+        const MAX_DIM = targetField === 'authorized_signature' ? 1024 : 512;
         let width = img.width;
         let height = img.height;
 
@@ -1078,7 +1078,7 @@ const CompanySettings: React.FC = () => {
                     <img
                       src={formData.authorized_signature}
                       alt="Authorized Signature Preview"
-                      className="max-h-20 max-w-full object-contain group-hover:opacity-40 transition-opacity"
+                      className="max-h-28 max-w-full object-contain contrast-125 group-hover:opacity-40 transition-opacity"
                     />
                     <div className="absolute inset-0 bg-slate-950/60 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl backdrop-blur-xs">
                       <Upload size={20} className="mb-1" />
